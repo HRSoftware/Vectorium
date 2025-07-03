@@ -24,7 +24,7 @@ class PluginContextImpl;
 	#define LoadSharedLibrary(name) dlopen(name, RTLD_NOW)
 	#define GetSymbol(handle, name) dlsym(handle, name)
 	#define UnloadLibrary(handle)   dlclose(handle)
-	#define getError() std::to_string(dlerror())
+	#define getError() dlerror()
 #endif
 
 
