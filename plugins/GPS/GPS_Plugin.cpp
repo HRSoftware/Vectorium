@@ -4,9 +4,8 @@
 
 #include <iostream>
 
-struct GPSDataHandler : IDataHandler
+struct GPSDataHandler final : IDataHandler
 {
-
 	void handle(const DataPacket& packet) override
 	{
 		auto gps = packet.get<GPSData>();
@@ -21,7 +20,7 @@ struct GPSDataHandler : IDataHandler
 	}
 };
 
-struct GPSPlugin : IPlugin
+struct GPSPlugin final : IPlugin
 {
 	void registerType(IPluginContext& context) override
 	{
@@ -38,7 +37,7 @@ struct GPSPlugin : IPlugin
 };
 
 
-extern "C" IPlugin* createPlugin()
+EXPORT IPlugin* initPlugin()
 {
 	return new GPSPlugin();
 }

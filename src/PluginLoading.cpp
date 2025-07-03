@@ -1,9 +1,9 @@
 #include <iostream>
 #include <string>
 #include <vector>
-#include "..\include\Core\PluginLoading.h"
-#include "..\include/Core/PluginContextImpl.h"
-#include "..\include/Core/IPlugin.h"
+#include "../include/Core/PluginLoading.h"
+#include "../include/Core/PluginContextImpl.h"
+#include "../include/Core/IPlugin.h"
 
 
 void tryLoadPlugin(const std::string& path, std::vector<LoadedPlugin>& vec) noexcept
@@ -15,11 +15,11 @@ void tryLoadPlugin(const std::string& path, std::vector<LoadedPlugin>& vec) noex
 		return;
 	}
 
-	const auto create = reinterpret_cast<IPlugin * (*)()> (GetSymbol(handle, "createPlugin"));
+	const auto create = reinterpret_cast<IPlugin * (*)()> (GetSymbol(handle, "initPlugin"));
 	if(!create)
 	{
 		UnloadLibrary(handle);
-		std::cout << std::format("Could not find 'createPlugin' entry point in plugin '{}' - ({})", path, getError() << "\n";
+		std::cout << std::format("Could not find 'initPlugin' entry point in plugin '{}' - ({})", path, getError() << "\n";
 		return;
 	}
 
