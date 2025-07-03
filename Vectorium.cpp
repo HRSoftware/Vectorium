@@ -15,6 +15,11 @@ int main()
 	std::vector<LoadedPlugin> plugins;
 	tryLoadPlugin("plugins_bin", plugins);
 
+	for(auto& plugin : plugins)
+	{
+		std::cout << plugin.getType().value().name() << "\n";
+	}
+
 	cout << "Hello" << "\n";
 
 	return 0;
