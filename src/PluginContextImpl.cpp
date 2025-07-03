@@ -2,6 +2,7 @@
 #include "../include/Core/PluginContextImpl.h"
 
 #include <iostream>
+#include <format>
 
 void PluginContextImpl::registerHandler(std::type_index type, std::function<std::unique_ptr<IDataHandler>()> factory)
 {
