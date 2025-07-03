@@ -6,6 +6,8 @@
 #include <unordered_map>
 
 #include "IDataHandler.h"
+#include <filesystem>
+
 struct IPlugin;
 class PluginContextImpl;
 
@@ -14,24 +16,26 @@ class PluginContextImpl;
 	#include <windows.h>
 class PluginContextImpl;
 	using LibraryHandle = HMODULE;
-	#define LoadSharedLibrary(name) LoadLibraryA(name)
+	#define LoadSharedLibrary(path) LoadLibraryA(path)
 	#define GetSymbol(handle, name) GetProcAddress(handle, name)
 	#define UnloadLibrary(handle)   FreeLibrary(handle)
 	#define getError() std::to_string(GetLastError())
+	constexpr auto PLUGIN_EXT = ".dll";
 #else
 	#include <dlfcn.h>
 	using LibraryHandle = void*;
-	#define LoadSharedLibrary(name) dlopen(name, RTLD_NOW)
+	#define LoadSharedLibrary(path) dlopen(path, RTLD_NOW)
 	#define GetSymbol(handle, name) dlsym(handle, name)
 	#define UnloadLibrary(handle)   dlclose(handle)
 	#define getError() dlerror()
+	constexpr auto PLUGIN_EXT = ".so";
 #endif
 
 
 class LoadedPlugin
 {
 public:
-	LoadedPlugin(const std::string& path);
+	LoadedPlugin(const std::filesystem::path& path);
 	LoadedPlugin(LibraryHandle h, std::unique_ptr<IPlugin> p, std::unique_ptr<PluginContextImpl> ctx);
 	~LoadedPlugin();
 
@@ -53,4 +57,4 @@ private:
 	void unload();
 };
 
-void tryLoadPlugin(const std::string& path, std::vector<LoadedPlugin>& vec) noexcept;
+void tryLoadPlugin(const std::filesystem::path& path, std::vector<LoadedPlugin>& vec) noexcept;

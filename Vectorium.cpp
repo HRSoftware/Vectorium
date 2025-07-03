@@ -13,7 +13,7 @@ using namespace std;
 int main()
 {
 	std::vector<LoadedPlugin> plugins;
-	tryLoadPlugin("plugins/GPS/libGPS_Plugin.dll", plugins);
+	tryLoadPlugin("plugins_bin/", plugins);
 
 	cout << "Hello" << "\n";
 

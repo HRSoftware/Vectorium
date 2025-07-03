@@ -6,7 +6,7 @@
 
 
 
-LoadedPlugin::LoadedPlugin(const std::string& path)
+LoadedPlugin::LoadedPlugin(const std::filesystem::path& path)
 {
 }
 

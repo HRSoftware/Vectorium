@@ -7,25 +7,36 @@
 #include "../include/Core/IPlugin.h"
 
 
-void tryLoadPlugin(const std::string& path, std::vector<LoadedPlugin>& vec) noexcept
+void tryLoadPlugin(const std::filesystem::path& pluginPath, std::vector<LoadedPlugin>& vec) noexcept
 {
-	const LibraryHandle handle = LoadSharedLibrary(path.c_str());
-	if(!handle)
+	if(!std::filesystem::exists(pluginPath))
 	{
-		std::cout << std::format("Failed to load plugin '{}' - ({})\n", path, getError());
+		std::cout << std::format("Could not find plugin at '{}'", pluginPath.string());
 		return;
 	}
 
-	const auto create = reinterpret_cast<IPlugin * (*)()> (GetSymbol(handle, "initPlugin"));
-	if(!create)
-	{
-		UnloadLibrary(handle);
-		std::cout << std::format("Could not find 'initPlugin' entry point in plugin '{}' - ({})\n", path, getError());
-		return;
-	}
+	for (const auto& entry : std::filesystem::directory_iterator(pluginPath)) {
+		if (!entry.is_regular_file()) continue;
+		if (entry.path().extension() != PLUGIN_EXT) continue;
 
-	std::unique_ptr<IPlugin> plugin(create());
-	auto                     context = std::make_unique<PluginContextImpl>();
-	plugin->registerType(*context);
-	vec.emplace_back(handle, std::move(plugin), std::move(context));
+		std::string path = entry.path().string();
+
+		const LibraryHandle handle = LoadSharedLibrary(path.c_str());
+		if (!handle) {
+			std::cout << std::format("Failed to load plugin '{}' - ({})\n", path, getError());
+			return;
+		}
+
+		const auto create = reinterpret_cast<IPlugin * (*)()> (GetSymbol(handle, "initPlugin"));
+		if (!create) {
+			UnloadLibrary(handle);
+			std::cout << std::format("Could not find 'initPlugin' entry point in plugin '{}' - ({})\n", path, getError());
+			return;
+		}
+
+		std::unique_ptr<IPlugin> plugin(create());
+		auto                     context = std::make_unique<PluginContextImpl>();
+		plugin->registerType(*context);
+		vec.emplace_back(handle, std::move(plugin), std::move(context));
+	}
 }
