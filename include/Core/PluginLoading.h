@@ -17,7 +17,7 @@ class PluginContextImpl;
 	#define LoadSharedLibrary(name) LoadLibraryA(name)
 	#define GetSymbol(handle, name) GetProcAddress(handle, name)
 	#define UnloadLibrary(handle)   FreeLibrary(handle)
-	#define getError() std::to_string(GetLastError()))
+	#define getError() std::to_string(GetLastError())
 #else
 	#include <dlfcn.h>
 	using LibraryHandle = void*;

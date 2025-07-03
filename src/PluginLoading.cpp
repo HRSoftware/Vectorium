@@ -12,7 +12,7 @@ void tryLoadPlugin(const std::string& path, std::vector<LoadedPlugin>& vec) noex
 	const LibraryHandle handle = LoadSharedLibrary(path.c_str());
 	if(!handle)
 	{
-		std::cout << std::format("Failed to load plugin '{}' - ({})", path, getError() << "\n";
+		std::cout << std::format("Failed to load plugin '{}' - ({})\n", path, getError());
 		return;
 	}
 
@@ -20,7 +20,7 @@ void tryLoadPlugin(const std::string& path, std::vector<LoadedPlugin>& vec) noex
 	if(!create)
 	{
 		UnloadLibrary(handle);
-		std::cout << std::format("Could not find 'initPlugin' entry point in plugin '{}' - ({})", path, getError() << "\n";
+		std::cout << std::format("Could not find 'initPlugin' entry point in plugin '{}' - ({})\n", path, getError());
 		return;
 	}
 
