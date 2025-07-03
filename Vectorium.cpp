@@ -13,7 +13,7 @@ using namespace std;
 int main()
 {
 	std::vector<LoadedPlugin> plugins;
-	tryLoadPlugin("plugins_bin/", plugins);
+	tryLoadPlugin("plugins_bin", plugins);
 
 	cout << "Hello" << "\n";
 
