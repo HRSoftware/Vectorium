@@ -1,6 +1,7 @@
 #include <iostream>
 #include <string>
 #include <vector>
+#include <format>
 #include "../include/Core/PluginLoading.h"
 #include "../include/Core/PluginContextImpl.h"
 #include "../include/Core/IPlugin.h"
