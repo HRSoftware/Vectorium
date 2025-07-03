@@ -1,0 +1,14 @@
+# ninja log v6
+3	861	7732662190192661	CMakeFiles/Vectorium.dir/Vectorium.cpp.obj	53028948e513a4a9
+8	867	7732662190242659	CMakeFiles/Vectorium.dir/src/LoadedPlugin.cpp.obj	f8185f00c50653cd
+8	702	7732656060389644	CMakeFiles/Vectorium.dir/include/Plugins/GPS/GPS_Plugin.cpp.obj	86e9d81ce4c252d
+1	243	7732663165038987	build.ninja	9a815772279b92c6
+976	1472	7732639945333363	Vectorium.exe	77e84123225f768e
+1	243	7732663164978986	D:/Documents/Programming/Projects/Vectorium/out/build/x64-release/cmake_install.cmake	9a815772279b92c6
+14	1284	7732662190302660	CMakeFiles/Vectorium.dir/src/PluginLoading.cpp.obj	3b6e88c8f1baa25b
+12	493	7732665454847975	CMakeFiles/Vectorium.dir/src/PluginContextImpl.cpp.obj	bb14225093e80122
+3	854	7732665454767975	CMakeFiles/Vectorium.dir/src/LoadedPlugin.cpp.obj	f8185f00c50653cd
+7	1259	7732665454797975	CMakeFiles/Vectorium.dir/src/PluginLoading.cpp.obj	3b6e88c8f1baa25b
+1259	1820	7732665467318179	Vectorium.exe	4fb78fa707880c03
+3	1063	7732667214587110	CMakeFiles/Vectorium.dir/src/PluginContextImpl.cpp.obj	bb14225093e80122
+1063	1846	7732667225181866	Vectorium.exe	4fb78fa707880c03

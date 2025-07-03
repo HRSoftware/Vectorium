@@ -1,0 +1,23 @@
+# ninja log v6
+28	967	7732674456877714	CMakeFiles/Vectorium.dir/src/PluginContextImpl.cpp.obj	386671d05b2adc98
+2	977	7732674456622644	CMakeFiles/Vectorium.dir/Vectorium.cpp.obj	8a92518d1c886dd1
+6	997	7732674456662646	CMakeFiles/Vectorium.dir/src/LoadedPlugin.cpp.obj	bec34e10ce84ebe0
+16	1182	7732674456762664	CMakeFiles/Vectorium.dir/src/PluginLoading.cpp.obj	8f10385397d8ccac
+8	1051	7732674643098694	Vectorium.exe	543e44a349c0094d
+3	728	7732675832547397	plugins/GPS/CMakeFiles/GPS_Plugin.dir/GPS_Plugin.cpp.obj	e32eaa226e2ba6ec
+728	1564	7732675839796170	plugins/GPS/libGPS_Plugin.dll	8f0ade46c7137a3
+728	1564	7732675839796170	plugins/GPS/GPS_Plugin.lib	8f0ade46c7137a3
+3	545	7732675907298276	plugins/GPS/libGPS_Plugin.dll	8f0ade46c7137a3
+3	545	7732675907298276	plugins/GPS/GPS_Plugin.lib	8f0ade46c7137a3
+3	361	7732675947554746	plugins/GPS/libGPS_Plugin.dll	8f0ade46c7137a3
+3	361	7732675947554746	plugins/GPS/GPS_Plugin.lib	8f0ade46c7137a3
+7	787	7732676462841150	plugins/GPS/libGPS_Plugin.dll	8f0ade46c7137a3
+7	787	7732676462841150	plugins/GPS/GPS_Plugin.lib	8f0ade46c7137a3
+3	1260	7732676462811147	CMakeFiles/Vectorium.dir/Vectorium.cpp.obj	8a92518d1c886dd1
+1260	1958	7732676475369289	Vectorium.exe	543e44a349c0094d
+3	1146	7732676933956182	CMakeFiles/Vectorium.dir/src/PluginLoading.cpp.obj	8f10385397d8ccac
+1146	1657	7732676945385289	Vectorium.exe	543e44a349c0094d
+3	1064	7732677103984762	CMakeFiles/Vectorium.dir/src/PluginLoading.cpp.obj	8f10385397d8ccac
+1064	1557	7732677114596754	Vectorium.exe	543e44a349c0094d
+3	804	7732677186519022	plugins/GPS/libGPS_Plugin.dll	8f0ade46c7137a3
+3	804	7732677186519022	plugins/GPS/GPS_Plugin.lib	8f0ade46c7137a3

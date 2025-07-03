@@ -1,0 +1,8 @@
+{
+	"InstallScripts" : 
+	[
+		"D:/Documents/Programming/Projects/Vectorium/out/build/x64-debug/cmake_install.cmake",
+		"D:/Documents/Programming/Projects/Vectorium/out/build/x64-debug/plugins/GPS/cmake_install.cmake"
+	],
+	"Parallel" : false
+}

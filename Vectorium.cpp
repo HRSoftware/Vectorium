@@ -3,10 +3,19 @@
 
 #include "Vectorium.h"
 
+#include "include/Core/IPlugin.h"
+#include "include/Core/PluginLoading.h"
+
 using namespace std;
+
+
 
 int main()
 {
-	cout << "Hello CMake." << endl;
+	std::vector<LoadedPlugin> plugins;
+	tryLoadPlugin("plugins/GPS/libGPS_Plugin.dll", plugins);
+
+	cout << "Hello" << "\n";
+
 	return 0;
 }
