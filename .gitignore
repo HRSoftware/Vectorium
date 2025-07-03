@@ -39,5 +39,4 @@
 
 # debug information files
 *.dwo
-/.vs/ProjectSettings.json
-/.vs/slnx.sqlite
+/.vs
