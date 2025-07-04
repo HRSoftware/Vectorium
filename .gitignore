@@ -41,9 +41,10 @@
 *.dwo
 
 # ignore folders
-/.vs
-/out
-/docs
+.vs/
+out/
+docs/
+_deps/
 
 #ignore clion/CMake build files
 cmake-build-*/

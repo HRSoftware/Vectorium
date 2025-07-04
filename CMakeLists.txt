@@ -11,6 +11,7 @@ endif()
 
 project ("Vectorium")
 
+
 # Add source to this project's executable.
 add_executable (Vectorium "Vectorium.cpp" "Vectorium.h" "include/Core/IDataHandler.h" "include/Core/IPlugin.h" "include/Core/PluginLoading.h" "src/LoadedPlugin.cpp" "include/Core/PluginContextImpl.h" "src/PluginLoading.cpp" "src/PluginContextImpl.cpp")
 
@@ -19,4 +20,7 @@ set_property(TARGET Vectorium PROPERTY CXX_STANDARD 23)
 
 
 add_subdirectory(plugins/GPS)
+add_subdirectory(ui)
+
+
 # TODO: Add tests and install targets if needed.
