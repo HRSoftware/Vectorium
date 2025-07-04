@@ -43,3 +43,4 @@
 # ignore folders
 /.vs
 /out
+/docs
