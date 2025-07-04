@@ -49,6 +49,7 @@
 cmake-build-*/
 CMakeFiles/
 CMakeCache.txt
-MakeFile
+Makefile
+build/
 *.cmake
 .idea/
