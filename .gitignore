@@ -44,3 +44,11 @@
 /.vs
 /out
 /docs
+
+#ignore clion/CMake build files
+cmake-build-*/
+CMakeFiles/
+CMakeCache.txt
+MakeFile
+*.cmake
+.idea/
