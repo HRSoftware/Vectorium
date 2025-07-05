@@ -1,6 +1,6 @@
 #pragma once
-#include "DataPacket\DataPacketRegistry.h"
-#include "Plugin\PluginManager.h"
+#include "DataPacket/DataPacketRegistry.h"
+#include "Plugin/PluginManager.h"
 
 class Engine
 {
