@@ -5,7 +5,7 @@
 #include <typeindex>
 #include <unordered_map>
 
-#include "IDataHandler.h"
+#include "../DataPacket/IDataHandler.h"
 #include <filesystem>
 
 struct IPlugin;
@@ -32,11 +32,14 @@ class PluginContextImpl;
 #endif
 
 
+/// <summary>
+/// LoadPlugin is used to own a IPlugin, and controls it's lifecycle
+/// </summary>
+
 class LoadedPlugin
 {
 public:
-	LoadedPlugin(const std::filesystem::path& path);
-	LoadedPlugin(LibraryHandle h, std::unique_ptr<IPlugin> p, std::unique_ptr<PluginContextImpl> ctx);
+	LoadedPlugin(LibraryHandle h, std::unique_ptr<IPlugin> p, std::unique_ptr<PluginContextImpl> ctx, std::string name = "");
 	~LoadedPlugin();
 
 	LoadedPlugin(const LoadedPlugin&) = delete;
@@ -45,16 +48,15 @@ public:
 	LoadedPlugin(LoadedPlugin&&) noexcept;
 	LoadedPlugin& operator=(LoadedPlugin&& other) noexcept;
 
-	IPlugin* get() const;
-	std::expected<std::type_index, std::string> getType() const;
-	PluginContextImpl* getContext() const;
+	[[nodiscard]] IPlugin*                                    get() const;
+	[[nodiscard]] std::expected<std::type_index, std::string> getType() const;
+	[[nodiscard]] PluginContextImpl*                          getContext() const;
 
 private:
 	LibraryHandle handle = nullptr;
 	std::unique_ptr<IPlugin> plugin;
 	std::unique_ptr<PluginContextImpl> context;
+	std::string pluginName;
 
 	void unload();
 };
-
-void tryLoadPlugin(const std::filesystem::path& path, std::vector<LoadedPlugin>& vec) noexcept;

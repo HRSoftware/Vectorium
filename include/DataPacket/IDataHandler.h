@@ -1,7 +1,9 @@
 #pragma once
 #include "DataPacket.h"
 
-// The idea is that all datapackets type will be added via their own plugin. This plugin will also register the handler for this type.
+/// <summary>
+/// IDataHandler is how the DataPacket is processes
+/// </summary>
 class IDataHandler
 {
 public:

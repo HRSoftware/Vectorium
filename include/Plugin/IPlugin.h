@@ -1,11 +1,14 @@
 #pragma once
 
 #include <functional>
-#include "DataPacket.h"
+#include "../DataPacket/DataPacket.h"
 
 class IDataHandler;
 
-// Keep the registry of plugins and the actual plugin decoupled
+/// <summary>
+/// IPluginContext acts as a contract between the engine and a given plugin - what it can do, what other services it can access (ie handlers, loggers etc)
+/// </summary>
+
 struct IPluginContext
 {
 	virtual void registerHandler(std::type_index type, std::function<std::unique_ptr<IDataHandler>()>);
@@ -25,7 +28,9 @@ inline IPluginContext::~IPluginContext() = default;
 
 
 
-
+/// <summary>
+/// 
+/// </summary>
 struct IPlugin
 {
 	virtual void registerType(IPluginContext& context) = 0;

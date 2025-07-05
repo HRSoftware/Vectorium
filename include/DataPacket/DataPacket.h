@@ -5,6 +5,10 @@
 #include <string>
 #include <typeindex>
 
+
+/// <summary>
+/// DataPacket is the atom form of a type of data
+/// </summary>
 struct DataPacket
 {
 	std::shared_ptr<void> payload;

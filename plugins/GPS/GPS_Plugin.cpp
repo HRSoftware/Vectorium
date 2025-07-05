@@ -1,6 +1,6 @@
 #include "GPS_Plugin.h"
-#include "../Core/IDataHandler.h"
-#include "../Core/PluginContextImpl.h"
+#include "../DataPacket/IDataHandler.h"
+#include "../Plugin/PluginContextImpl.h"
 
 #include <iostream>
 

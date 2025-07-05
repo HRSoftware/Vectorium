@@ -1,26 +1,30 @@
-﻿// Vectorium.cpp : Defines the entry point for the application.
-//
-
+﻿
 #include "Vectorium.h"
 
-#include "include/Core/IPlugin.h"
-#include "include/Core/PluginLoading.h"
-
-using namespace std;
-
-
+#include "include/DataPacket/DataPacketRegistry.h"
+#include "include/Plugin/IPlugin.h"
+#include "include/Plugin/LoadedPlugin.h"
+#include "include/Plugin/PluginManager.h"
+#include "ui/UI.h"
+#include "include/Engine.h"
 
 int main()
 {
-	std::vector<LoadedPlugin> plugins;
-	tryLoadPlugin("plugins_bin", plugins);
+	Engine dataEngine;
+	dataEngine.init();
 
-	for(auto& plugin : plugins)
+	UI ui(dataEngine);
+	ui.init();
+
+	while(!ui.shouldClose())
 	{
-		std::cout << plugin.getType().value().name() << "\n";
+		dataEngine.tick();
+		ui.render();
 	}
 
-	cout << "Hello" << "\n";
+	ui.shutdown();
+	dataEngine.shutdown();
+
 
 	return 0;
 }

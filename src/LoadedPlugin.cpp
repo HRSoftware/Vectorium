@@ -1,16 +1,18 @@
 #include "format"
-#include "../include/Core/PluginLoading.h"
-#include "../include/Core/IPlugin.h"
-#include "../include/Core/PluginContextImpl.h"
+#include "../include/Plugin/LoadedPlugin.h"
+#include "../include/Plugin/IPlugin.h"
+#include "../include/Plugin/PluginContextImpl.h"
 #include <utility>
+#include <format>
 
 
 
-LoadedPlugin::LoadedPlugin(const std::filesystem::path& path)
-{
-}
-
-LoadedPlugin::LoadedPlugin(LibraryHandle h, std::unique_ptr<IPlugin> p, std::unique_ptr<PluginContextImpl> ctx) : handle(h), plugin(std::move(p)), context(std::move(ctx))
+LoadedPlugin::LoadedPlugin(LibraryHandle h, std::unique_ptr<IPlugin> p, std::unique_ptr<PluginContextImpl> ctx, std::string name)
+: handle(h)
+, plugin(std::move(p))
+, context(std::move(ctx))
+, pluginName(
+	std::move(name))
 {}
 
 LoadedPlugin::~LoadedPlugin()
@@ -51,6 +53,7 @@ PluginContextImpl* LoadedPlugin::getContext() const
 
 void LoadedPlugin::unload()
 {
+	std::cout << std::format("[Plugin] - unloaded plugin '%'\n", pluginName);
 	if(plugin)
 	{
 		if(context)
@@ -77,4 +80,3 @@ std::expected<std::type_index, std::string> LoadedPlugin::getType() const
 
 	return std::unexpected("Could not get type for plugin");
 }
-
