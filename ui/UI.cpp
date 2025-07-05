@@ -49,6 +49,7 @@ bool UI::init()
 	uiBridge = std::make_unique<EngineUIBridge>(engine.getPluginManager(), engine.getDataPacketRegistry());
 
 	std::cout << "[UI::init] - complete\n";
+	return true;
 }
 
 void UI::render() const
