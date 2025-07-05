@@ -1,9 +1,11 @@
 #include "../include/Plugin/PluginManager.h"
 #include "../include/Plugin/LoadedPlugin.h"
+#include "../include/Plugin/PluginContextImpl.h"
+
 #include <ranges>
 #include <memory>
+#include <format>
 
-#include "../include/Plugin/PluginContextImpl.h"
 
 void PluginManager::loadPluginsFolder()
 {
