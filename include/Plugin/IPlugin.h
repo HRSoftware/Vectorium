@@ -1,7 +1,8 @@
 #pragma once
 
 #include <functional>
-#include "../DataPacket/DataPacket.h"
+#include "../Include/DataPacket/DataPacket.h"
+#include "Logger/ILogger.h"
 
 class IDataHandler;
 
@@ -14,6 +15,7 @@ struct IPluginContext
 	virtual void registerHandler(std::type_index type, std::function<std::unique_ptr<IDataHandler>()>);
 	virtual void unregisterHandler(std::type_index type);
 	virtual      ~IPluginContext();
+	virtual ILogger* getLogger() = 0;
 };
 
 inline void IPluginContext::registerHandler(std::type_index type, std::function<std::unique_ptr<IDataHandler>()>)

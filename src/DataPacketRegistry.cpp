@@ -1,5 +1,10 @@
 #include "../include/DataPacket/DataPacketRegistry.h"
 #include <string>
+#include <utility>
+
+DataPacketRegistry::DataPacketRegistry(std::shared_ptr<ILogger> log) : logger(std::move(log))
+{
+}
 
 void DataPacketRegistry::registerDataPackets()
 {

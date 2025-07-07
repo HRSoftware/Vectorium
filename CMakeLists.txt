@@ -1,7 +1,5 @@
-﻿# CMakeList.txt : CMake project for Vectorium, include source and define
-# project specific logic here.
-#
-cmake_minimum_required (VERSION 3.12)
+﻿
+cmake_minimum_required (VERSION 3.16)
 
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
@@ -11,8 +9,44 @@ endif()
 
 project ("Vectorium")
 
+#################################
+## Fetching
+################################
+include(FetchContent)
+
+find_package(OpenGL REQUIRED)
+
+###			 GLFW
+FetchContent_Declare(
+  glfw
+  GIT_REPOSITORY https://github.com/glfw/glfw.git
+  GIT_TAG        3.3.8
+)
+
+# Disable building extra stuff
+set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
+FetchContent_MakeAvailable(glfw)
+
+###			ImGui
+FetchContent_Declare(
+  imgui
+  GIT_REPOSITORY https://github.com/ocornut/imgui.git
+  GIT_TAG        v1.90.4
+)
+FetchContent_MakeAvailable(imgui)
+
+###			SPDLog
+FetchContent_Declare(
+    spdlog
+    GIT_REPOSITORY https://github.com/gabime/spdlog.git
+    GIT_TAG v1.13.0
+)
+FetchContent_MakeAvailable(spdlog)
+
 # Add source to this project's executable.
-add_executable (Vectorium "Vectorium.cpp")
+add_executable (Vectorium "Vectorium.cpp" "include/Logger/ComponentLogger.h")
 
 set_target_properties(Vectorium PROPERTIES CXX_STANDARD 23)
 

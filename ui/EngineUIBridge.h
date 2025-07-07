@@ -12,8 +12,18 @@ public:
 
 	void drawPluginUI();
 	void drawDataPacketUI();
+	void drawMenuBar();
+	void drawSideBar() const;
+	void drawMainPanels();
+	void drawStatusBar();
+	void draw();
+
+
+	bool shouldQuit() const;
 
 private:
 	PluginManager& pluginManager;
 	DataPacketRegistry& dataPacketRegistry;
+
+	bool quitRequested = false;
 };

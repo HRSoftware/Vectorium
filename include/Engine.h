@@ -1,19 +1,25 @@
 #pragma once
 #include "DataPacket/DataPacketRegistry.h"
 #include "Plugin/PluginManager.h"
+#include "Logger/SpdLogger.h"
 
 class Engine
 {
 public:
 
-	void init();
-	void tick();
-	void shutdown();
+	Engine();
+	~Engine();
 
-	DataPacketRegistry& getDataPacketRegistry();
-	PluginManager& getPluginManager();
+	void init() const;
+	void tick();
+	void shutdown() const;
+
+	DataPacketRegistry&      getDataPacketRegistry() const;
+	PluginManager&           getPluginManager() const;
+	std::shared_ptr<ILogger> getLogger();
 
 private:
-	PluginManager pluginManager;
-	DataPacketRegistry dataPacketRegistry;
+	std::unique_ptr<PluginManager> pluginManager;
+	std::unique_ptr<DataPacketRegistry> dataPacketRegistry;
+	std::shared_ptr<ILogger> logger;
 };

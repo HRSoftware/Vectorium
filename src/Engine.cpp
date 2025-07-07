@@ -1,10 +1,24 @@
 #include "../include/Engine.h"
+#include "Logger/SpdLogger.h"
 
 #include <iostream>
 
-void Engine::init()
+Engine::Engine()
 {
-	std::cout << "[Engine::init] - complete\n";
+	logger = std::make_shared<SpdLogger>();
+	pluginManager = std::make_unique<PluginManager>(logger);
+	dataPacketRegistry = std::make_unique<DataPacketRegistry>(logger);
+}
+
+Engine::~Engine() = default;
+
+void Engine::init() const
+{
+	logger->log(LogLevel::Info, "[EngineInit] - Engine starting");
+
+	pluginManager->scanPluginsFolder();
+
+	logger->log(LogLevel::Info, "[Engine::init] - complete");
 }
 
 void Engine::tick()
@@ -12,17 +26,22 @@ void Engine::tick()
 
 }
 
-void Engine::shutdown()
+void Engine::shutdown() const
 {
-	std::cout << "[Engine::shutdown] - complete\n";
+	logger->log(LogLevel::Info, "[Engine::shutdown] - complete");
 }
 
-DataPacketRegistry& Engine::getDataPacketRegistry()
+DataPacketRegistry& Engine::getDataPacketRegistry() const
 {
-	return dataPacketRegistry;
+	return *dataPacketRegistry;
 }
 
-PluginManager& Engine::getPluginManager()
+PluginManager& Engine::getPluginManager() const
 {
-	return pluginManager;
+	return *pluginManager;
+}
+
+std::shared_ptr<ILogger> Engine::getLogger()
+{
+	return logger;
 }

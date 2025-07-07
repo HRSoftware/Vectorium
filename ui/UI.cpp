@@ -67,10 +67,7 @@ void UI::render() const
 	ImGui::NewFrame();
 
 	// GUI
-	ImGui::Begin("Plugin Dashboard");
-	ImGui::Text("Welcome to the Modular Data Engine");
-	// TODO: Display loaded plugins, packet types, debug info
-	ImGui::End();
+	uiBridge->draw();
 
 	// Rendering
 	ImGui::Render();
@@ -80,7 +77,13 @@ void UI::render() const
 	glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
 	glClear(GL_COLOR_BUFFER_BIT);
 	ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
+
 	glfwSwapBuffers(window);
+
+	if(uiBridge->shouldQuit())
+	{
+		glfwSetWindowShouldClose(window, GLFW_TRUE);
+	}
 }
 
 bool UI::shouldClose() const

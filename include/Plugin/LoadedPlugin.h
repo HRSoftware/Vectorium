@@ -52,11 +52,11 @@ public:
 	[[nodiscard]] std::expected<std::type_index, std::string> getType() const;
 	[[nodiscard]] PluginContextImpl*                          getContext() const;
 
+	bool unload();
+
 private:
 	LibraryHandle handle = nullptr;
 	std::unique_ptr<IPlugin> plugin;
 	std::unique_ptr<PluginContextImpl> context;
 	std::string pluginName;
-
-	void unload();
 };

@@ -51,7 +51,7 @@ PluginContextImpl* LoadedPlugin::getContext() const
 	return context.get();
 }
 
-void LoadedPlugin::unload()
+bool LoadedPlugin::unload()
 {
 	std::cout << std::format("[Plugin] - unloaded plugin '%'\n", pluginName);
 	if(plugin)
@@ -69,6 +69,8 @@ void LoadedPlugin::unload()
 	{
 		UnloadLibrary(handle);
 	}
+
+	return true;
 }
 
 std::expected<std::type_index, std::string> LoadedPlugin::getType() const

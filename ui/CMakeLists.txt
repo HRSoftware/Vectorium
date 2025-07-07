@@ -1,30 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
 
-set_property(TARGET Vectorium PROPERTY CXX_STANDARD 23)
-# Fetch external libraries locally (only inside ui)
-include(FetchContent)
-
-find_package(OpenGL REQUIRED)
-
-FetchContent_Declare(
-  glfw
-  GIT_REPOSITORY https://github.com/glfw/glfw.git
-  GIT_TAG        3.3.8
-)
-
-# Disable building extra stuff
-set(GLFW_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
-set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
-FetchContent_MakeAvailable(glfw)
-
-FetchContent_Declare(
-  imgui
-  GIT_REPOSITORY https://github.com/ocornut/imgui.git
-  GIT_TAG        v1.90.4
-)
-FetchContent_MakeAvailable(imgui)
-
 add_library(imgui_backend
     ${imgui_SOURCE_DIR}/imgui.cpp
     ${imgui_SOURCE_DIR}/imgui_draw.cpp
