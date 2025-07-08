@@ -6,4 +6,6 @@ target_sources(logger PRIVATE ComponentLogger.cpp SpdLogger.cpp LoggablePlugin.c
 
 target_include_directories(logger PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
+set_target_properties(logger PROPERTIES POSITION_INDEPENDENT_CODE ON)
+
 target_link_libraries(logger PUBLIC spdlog::spdlog)
