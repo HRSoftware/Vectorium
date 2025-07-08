@@ -5,7 +5,7 @@
 #include <typeindex>
 #include <unordered_map>
 
-#include "../DataPacket/IDataHandler.h"
+#include "../DataPacket/IDataPacketHandler.h"
 #include <filesystem>
 
 struct IPlugin;

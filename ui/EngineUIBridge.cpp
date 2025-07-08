@@ -1,6 +1,7 @@
 #include "EngineUIBridge.h"
 //#include <cxxabi.h>
 #include <memory>
+#include <utility>
 
 #include "imgui.h"
 #include "../include/Engine.h"
@@ -15,7 +16,13 @@
 
 
 
-EngineUIBridge::EngineUIBridge(PluginManager& pm, DataPacketRegistry& dpr) : pluginManager(pm), dataPacketRegistry(dpr)
+EngineUIBridge::EngineUIBridge(
+	std::shared_ptr<PluginManager> pluginMgr,
+	std::shared_ptr<DataPacketRegistry> registry,
+	std::shared_ptr<ILogger> logger)
+: m_pluginManager(std::move(pluginMgr))
+, m_dataPacketRegistry(std::move(registry))
+, m_logger(std::move(logger))
 {
 }
 
@@ -35,16 +42,17 @@ void EngineUIBridge::drawMenuBar()
 		{
 			if (ImGui::MenuItem("Quit"))
 			{
+				m_logger->log(LogLevel::Info, "Quit requested");
 				quitRequested = true;
 			}
 			ImGui::EndMenu();
 		}
 
 		if (ImGui::BeginMenu("Plugins")) {
-			for (const auto& info : pluginManager.getDiscoveredPlugins()) {
+			for (const auto& info : m_pluginManager->getDiscoveredPlugins()) {
 				if (ImGui::MenuItem(info.name.c_str(), nullptr, info.loaded)) {
 					if (!info.loaded) {
-						pluginManager.loadPlugin(info.path);
+						m_pluginManager->loadPlugin(info.path);
 					}
 				}
 			}
@@ -60,7 +68,7 @@ void EngineUIBridge::drawSideBar() const
 {
 	ImGui::Begin("Sidebar");
 		ImGui::Text("Loaded Plugins:");
-		for (const auto& pluginName : pluginManager.getNamesOfAllLoadedPlugins()) {
+		for (const auto& pluginName : m_pluginManager->getNamesOfAllLoadedPlugins()) {
 			ImGui::BulletText("%s", pluginName.c_str());
 		}
 	ImGui::End();
@@ -68,7 +76,6 @@ void EngineUIBridge::drawSideBar() const
 
 void EngineUIBridge::drawMainPanels()
 {
-	
 }
 
 void EngineUIBridge::drawStatusBar()
@@ -77,22 +84,18 @@ void EngineUIBridge::drawStatusBar()
 		ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
 		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
 		ImGui::SameLine();
-		ImGui::Text("Loaded Plugins: %zu", pluginManager.getLoadedPlugins().size());
+		ImGui::Text("Loaded Plugins: %zu", m_pluginManager->getLoadedPlugins().size());
 	ImGui::End();
 }
 
 void EngineUIBridge::draw()
 {
-
-
 	drawMenuBar();
 	//ImGui::DockSpaceOverViewPort();
 
 	drawSideBar();
 	drawMainPanels();
 	drawStatusBar();
-
-
 }
 
 bool EngineUIBridge::shouldQuit() const

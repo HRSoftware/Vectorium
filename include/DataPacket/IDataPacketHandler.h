@@ -2,11 +2,11 @@
 #include "DataPacket.h"
 
 /// <summary>
-/// IDataHandler is how the DataPacket is processes
+///		IDataPacketHandler is how the DataPacket is processes
 /// </summary>
-class IDataHandler
+class IDataPacketHandler
 {
 public:
 	virtual void handle(const DataPacket& packet) = 0;
-	virtual ~IDataHandler() = default;
+	virtual ~IDataPacketHandler() = default;
 };

@@ -1,13 +1,16 @@
-#include "../include/Plugin/PluginManager.h"
-#include "../include/Plugin/LoadedPlugin.h"
-#include "../include/Plugin/PluginContextImpl.h"
-
-#include <ranges>
-#include <memory>
 #include <format>
+#include <memory>
+#include <ranges>
+
+#include "Plugin/LoadedPlugin.h"
+#include "Plugin/PluginContextImpl.h"
+#include "Plugin/PluginManager.h"
+
+#include <assert.h>
 
 PluginManager::PluginManager(std::shared_ptr<ILogger>& logger) : engineLogger(logger)
 {
+	assert(logger && "logger was nullptr");
 }
 
 PluginInfo& PluginManager::getOrAddPluginInfo(const std::filesystem::path& path)
@@ -52,6 +55,8 @@ void PluginManager::scanPluginsFolder()
 		discoveredPlugins.push_back({
 			.path = entry.path(),
 			.name = entry.path().stem().string(),
+			.loaded = false,
+			.errorMessage = ""
 		});
 	}
 }
@@ -70,7 +75,7 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 {
 	if(!std::filesystem::exists(path))
 	{
-		engineLogger->log(LogLevel::Error, std::format("Could not find plugin at '{}'", path.string()));
+		logMessage(LogLevel::Error, std::format("Could not find plugin at '{}'", path.string()));
 		return false;
 	}
 
@@ -104,7 +109,7 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 
 		std::unique_ptr<IPlugin>           plugin(create());
 		auto context = std::make_unique<PluginContextImpl>(engineLogger, pluginName);
-		plugin->registerType(*context);
+		plugin->onPluginLoad(*context);
 
 		// Load the plugin
 		auto newPlugin = std::make_unique<LoadedPlugin>(handle, std::move(plugin), std::move(context), path.stem().string());
@@ -126,7 +131,7 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 
 bool PluginManager::unloadPlugin(const std::string& name)
 {
-	auto plugin = loadedPlugins.find(name);
+	const auto plugin = loadedPlugins.find(name);
 	if(plugin != loadedPlugins.end())
 	{
 		return plugin->second->unload();
@@ -149,7 +154,7 @@ std::vector<std::string> PluginManager::getNamesOfAllLoadedPlugins() const
 	return keys;
 }
 
-void PluginManager::logMessage(LogLevel logLvl, const std::string& msg) const
+void PluginManager::logMessage(const LogLevel logLvl, const std::string& msg) const
 {
 	if(engineLogger)
 	{

@@ -1,10 +1,10 @@
 #include "GPS_Plugin.h"
-#include "DataPacket/IDataHandler.h"
+#include "DataPacket/IDataPacketHandler.h"
 #include "Plugin/PluginContextImpl.h"
 
 #include <iostream>
 
-struct GPSDataHandler final : IDataHandler
+struct GPSDataHandler final : IDataPacketHandler
 {
 	void handle(const DataPacket& packet) override
 	{
@@ -20,22 +20,24 @@ struct GPSDataHandler final : IDataHandler
 	}
 };
 
-struct GPSPlugin final : IPlugin
+
+
+void GPSPlugin::onPluginLoad(IPluginContext& context)
 {
-	void registerType(IPluginContext& context) override
-	{
-		context.registerHandler(typeid(GPSData), []
-		{
-			return std::make_unique<GPSDataHandler>();
-		});
-	}
+	setLogger(context.getLogger(), "GPSPlugin");
+	context.registerDataPacketHandler(typeid(GPSData), std::make_shared<GPSDataHandler>());
+	log(LogLevel::Info, "loaded");
+}
 
-	std::type_index getType() const override
-	{
-		return typeid(GPSData);
-	};
-};
+void GPSPlugin::onPluginUnload()
+{
+	log(LogLevel::Info, "unloading");
+}
 
+std::type_index GPSPlugin::getType() const
+{
+	return typeid(GPSData);
+}
 
 EXPORT IPlugin* initPlugin()
 {

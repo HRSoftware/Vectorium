@@ -8,7 +8,9 @@ class Engine;
 class EngineUIBridge
 {
 public:
-	EngineUIBridge(PluginManager& pm, DataPacketRegistry& dpr);
+	EngineUIBridge(std::shared_ptr<PluginManager> pluginMgr,
+		std::shared_ptr<DataPacketRegistry> registry,
+		std::shared_ptr<ILogger> logger);
 
 	void drawPluginUI();
 	void drawDataPacketUI();
@@ -22,8 +24,9 @@ public:
 	bool shouldQuit() const;
 
 private:
-	PluginManager& pluginManager;
-	DataPacketRegistry& dataPacketRegistry;
+	std::shared_ptr<PluginManager> m_pluginManager;
+	std::shared_ptr<DataPacketRegistry> m_dataPacketRegistry;
+	std::shared_ptr<ILogger> m_logger;
 
 	bool quitRequested = false;
 };

@@ -28,9 +28,9 @@ class PluginManager
 public:
 	explicit PluginManager(std::shared_ptr<ILogger>& logger);
 
-	PluginInfo&                 getOrAddPluginInfo(const std::filesystem::path& path);
-	void                        scanPluginsFolder();
-	std::span<const PluginInfo> getDiscoveredPlugins() const;
+	PluginInfo&                               getOrAddPluginInfo(const std::filesystem::path& path);
+	void                                      scanPluginsFolder();
+	[[nodiscard]] std::span<const PluginInfo> getDiscoveredPlugins() const;
 
 	std::unordered_map<std::string, std::unique_ptr<LoadedPlugin>>& getLoadedPlugins();
 

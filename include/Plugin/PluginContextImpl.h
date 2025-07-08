@@ -10,14 +10,14 @@ class PluginContextImpl : public IPluginContext
 public:
 	PluginContextImpl(std::shared_ptr<ILogger> centralLogger, std::string pluginName);
 
-	ILogger* getLogger() override;
+	std::shared_ptr<ILogger> getLogger() override;
 	std::shared_ptr<ILogger> getLoggerShared();
 
-	void registerHandler(std::type_index type, std::function<std::unique_ptr<IDataHandler>()> factory) override;
-	void unregisterHandler(std::type_index type) override;
+	void registerDataPacketHandler(std::type_index type, std::shared_ptr<IDataPacketHandler> factory) override;
+	void unregisterDataPacketHandler(std::type_index type) override;
 
 private:
-	std::unordered_map<std::type_index, std::function<std::unique_ptr<IDataHandler>()>> pluginRegister;
+	std::unordered_map<std::type_index, std::shared_ptr<IDataPacketHandler>> pluginRegister;
 	std::set<std::type_index> registeredTypes;
 	std::shared_ptr<ILogger> scopedLogger;
 };

@@ -1,10 +1,18 @@
 #include "Logger/ComponentLogger.h"
 
+#include <cassert>
+
 ComponentLogger::ComponentLogger(std::shared_ptr<ILogger> baseLogger, std::string prefix)
-	: base(std::move(baseLogger)), prefix(std::move(prefix))
-{}
+	: m_baseLogger(std::move(baseLogger)), m_loggingPrefix(std::move(prefix))
+{
+	assert(m_baseLogger && "baseLogger is nullptr");
+}
 
 void ComponentLogger::log(LogLevel level, const std::string& message)
 {
-	base->log(level, "[" + prefix + "] " + message);
+	assert(m_baseLogger && "baseLogger is nullptr");
+	if(m_baseLogger)
+	{
+		m_baseLogger->log(level, "[" + m_loggingPrefix + "] " + message);
+	}
 }

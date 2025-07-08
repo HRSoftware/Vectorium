@@ -17,4 +17,5 @@ public:
 		std::unique_ptr<EngineUIBridge> uiBridge;
 		Engine& engine;
 		GLFWwindow* window = nullptr;
+		std::shared_ptr<ILogger> m_logger;
 };

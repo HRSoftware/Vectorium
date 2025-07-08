@@ -5,20 +5,20 @@
 
 Engine::Engine()
 {
-	logger = std::make_shared<SpdLogger>();
-	pluginManager = std::make_unique<PluginManager>(logger);
-	dataPacketRegistry = std::make_unique<DataPacketRegistry>(logger);
+	m_logger = std::make_shared<SpdLogger>();
+	m_pluginManager = std::make_unique<PluginManager>(m_logger);
+	m_dataPacketRegistry = std::make_unique<DataPacketRegistry>(m_logger);
 }
 
 Engine::~Engine() = default;
 
 void Engine::init() const
 {
-	logger->log(LogLevel::Info, "[EngineInit] - Engine starting");
+	m_logger->log(LogLevel::Info, "[EngineInit] - Engine starting");
 
-	pluginManager->scanPluginsFolder();
+	m_pluginManager->scanPluginsFolder();
 
-	logger->log(LogLevel::Info, "[Engine::init] - complete");
+	m_logger->log(LogLevel::Info, "[Engine::init] - complete");
 }
 
 void Engine::tick()
@@ -28,20 +28,20 @@ void Engine::tick()
 
 void Engine::shutdown() const
 {
-	logger->log(LogLevel::Info, "[Engine::shutdown] - complete");
+	m_logger->log(LogLevel::Info, "[Engine::shutdown] - complete");
 }
 
-DataPacketRegistry& Engine::getDataPacketRegistry() const
+std::shared_ptr<DataPacketRegistry> Engine::getDataPacketRegistry() const
 {
-	return *dataPacketRegistry;
+	return m_dataPacketRegistry;
 }
 
-PluginManager& Engine::getPluginManager() const
+std::shared_ptr<PluginManager> Engine::getPluginManager() const
 {
-	return *pluginManager;
+	return m_pluginManager;
 }
 
 std::shared_ptr<ILogger> Engine::getLogger()
 {
-	return logger;
+	return m_logger;
 }

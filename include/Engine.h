@@ -14,12 +14,12 @@ public:
 	void tick();
 	void shutdown() const;
 
-	DataPacketRegistry&      getDataPacketRegistry() const;
-	PluginManager&           getPluginManager() const;
-	std::shared_ptr<ILogger> getLogger();
+	[[nodiscard]] std::shared_ptr<DataPacketRegistry> getDataPacketRegistry() const;
+	[[nodiscard]] std::shared_ptr<PluginManager> getPluginManager() const;
+	std::shared_ptr<ILogger>     getLogger();
 
 private:
-	std::unique_ptr<PluginManager> pluginManager;
-	std::unique_ptr<DataPacketRegistry> dataPacketRegistry;
-	std::shared_ptr<ILogger> logger;
+	std::shared_ptr<PluginManager> m_pluginManager;
+	std::shared_ptr<DataPacketRegistry> m_dataPacketRegistry;
+	std::shared_ptr<ILogger> m_logger;
 };

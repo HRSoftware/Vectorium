@@ -1,28 +1,29 @@
 #pragma once
 
 #include <functional>
-#include "../Include/DataPacket/DataPacket.h"
+#include "../DataPacket/DataPacket.h"
+#include "../DataPacket/IDataPacketHandler.h"
 #include "Logger/ILogger.h"
 
-class IDataHandler;
+class IDataPacketHandler;
 
 /// <summary>
-/// IPluginContext acts as a contract between the engine and a given plugin - what it can do, what other services it can access (ie handlers, loggers etc)
+///		IPluginContext acts as a contract between the engine and a given plugin - what it can do, what other services it can access (ie handlers, loggers etc.)
 /// </summary>
 
 struct IPluginContext
 {
-	virtual void registerHandler(std::type_index type, std::function<std::unique_ptr<IDataHandler>()>);
-	virtual void unregisterHandler(std::type_index type);
+	virtual void registerDataPacketHandler(std::type_index type, std::shared_ptr<IDataPacketHandler>);
+	virtual void unregisterDataPacketHandler(std::type_index type);
 	virtual      ~IPluginContext();
-	virtual ILogger* getLogger() = 0;
+	virtual std::shared_ptr<ILogger> getLogger() = 0;
 };
 
-inline void IPluginContext::registerHandler(std::type_index type, std::function<std::unique_ptr<IDataHandler>()>)
+inline void IPluginContext::registerDataPacketHandler(std::type_index type, std::shared_ptr<IDataPacketHandler>)
 {
 }
 
-inline void IPluginContext::unregisterHandler(std::type_index type)
+inline void IPluginContext::unregisterDataPacketHandler(std::type_index type)
 {
 }
 
@@ -35,7 +36,8 @@ inline IPluginContext::~IPluginContext() = default;
 /// </summary>
 struct IPlugin
 {
-	virtual void registerType(IPluginContext& context) = 0;
+	virtual void onPluginLoad(IPluginContext& context) = 0;
+	virtual void onPluginUnload() = 0;
 	virtual std::type_index getType() const = 0;
 	virtual ~IPlugin() = default;
 };

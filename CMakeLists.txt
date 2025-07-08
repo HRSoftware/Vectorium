@@ -46,7 +46,7 @@ FetchContent_Declare(
 FetchContent_MakeAvailable(spdlog)
 
 # Add source to this project's executable.
-add_executable (Vectorium "Vectorium.cpp" "include/Logger/ComponentLogger.h")
+add_executable (Vectorium "Vectorium.cpp" "include/Logger/ComponentLogger.h" "include/Logger/LoggablePlugin.h")
 
 set_target_properties(Vectorium PROPERTIES CXX_STANDARD 23)
 

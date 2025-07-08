@@ -9,11 +9,13 @@
 #include <iostream>
 
 #include "../include/Engine.h"
+#include "Logger/ComponentLogger.h"
 
 const std::string appName = "Vectorium";
 
 UI::UI(Engine& engine) : engine(engine)
 {
+	m_logger = std::make_shared<ComponentLogger>(engine.getLogger(), "UI");
 }
 
 bool UI::init()
@@ -31,7 +33,7 @@ bool UI::init()
 
 	if (!window)
 	{
-		std::cout << "[UI::init] - failed to create window\n";
+		m_logger->log(LogLevel::Error, "Failed to create window");
 		return false;
 	}
 
@@ -46,9 +48,9 @@ bool UI::init()
 	ImGui::StyleColorsDark();
 
 
-	uiBridge = std::make_unique<EngineUIBridge>(engine.getPluginManager(), engine.getDataPacketRegistry());
+	uiBridge = std::make_unique<EngineUIBridge>(engine.getPluginManager(), engine.getDataPacketRegistry(), engine.getLogger());
 
-	std::cout << "[UI::init] - complete\n";
+	m_logger->log(LogLevel::Info, "Init complete");
 	return true;
 }
 
@@ -56,7 +58,7 @@ void UI::render() const
 {
 	if (!window)
 	{
-		std::cout << "[UI::Render] - no window to render to\n";
+		m_logger->log(LogLevel::Error, "No window to render to");
 		return;
 	}
 
@@ -111,5 +113,5 @@ void UI::shutdown()
 	}
 
 	glfwTerminate();
-	std::cout << "[UI::shutdown] - complete\n";
+	m_logger->log(LogLevel::Info, "Shutdown Complete");
 }

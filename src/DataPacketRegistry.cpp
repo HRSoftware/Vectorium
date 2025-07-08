@@ -1,4 +1,4 @@
-#include "../include/DataPacket/DataPacketRegistry.h"
+#include "DataPacket/DataPacketRegistry.h"
 #include <string>
 #include <utility>
 

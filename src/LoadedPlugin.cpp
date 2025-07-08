@@ -53,12 +53,13 @@ PluginContextImpl* LoadedPlugin::getContext() const
 
 bool LoadedPlugin::unload()
 {
-	std::cout << std::format("[Plugin] - unloaded plugin '%'\n", pluginName);
+	//std::cout << std::format("[Plugin] - unloaded plugin '%'\n", pluginName);
+	
 	if(plugin)
 	{
 		if(context)
 		{
-			context->unregisterHandler(plugin->getType());
+			context->unregisterDataPacketHandler(plugin->getType());
 		}
 
 		plugin.reset();

@@ -1,7 +1,8 @@
 #pragma once
-#include "Logger/ILogger.h"
 #include <memory>
 #include <string>
+
+#include "Logger/ILogger.h"
 
 class ComponentLogger : public ILogger
 {
@@ -11,6 +12,6 @@ public:
 	void log(LogLevel level, const std::string& message) override;
 
 private:
-	std::shared_ptr<ILogger> base;
-	std::string prefix;
+	std::shared_ptr<ILogger> m_baseLogger;
+	std::string m_loggingPrefix;
 };

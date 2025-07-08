@@ -7,4 +7,4 @@
 #include <set>
 #include <typeindex>
 
-class IDataHandler;
+class IDataPacketHandler;
