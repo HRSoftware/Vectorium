@@ -16,7 +16,7 @@ void Engine::init() const
 {
 	m_logger->log(LogLevel::Info, "[EngineInit] - Engine starting");
 
-	m_pluginManager->scanPluginsFolder();
+	m_pluginManager->init();
 
 	m_logger->log(LogLevel::Info, "[Engine::init] - complete");
 }

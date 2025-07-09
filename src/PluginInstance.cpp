@@ -55,7 +55,6 @@ PluginRuntimeContext* PluginInstance::getContext() const
 
 bool PluginInstance::unload()
 {
-	log(LogLevel::Info, std::format("unloaded plugin"));
 	if(m_plugin)
 	{
 		if(m_context)
@@ -64,6 +63,8 @@ bool PluginInstance::unload()
 		}
 
 		m_plugin.reset();
+
+		log(LogLevel::Info, "unloaded plugin");
 	}
 
 	// If we have a handle on the plugin, then close it
@@ -75,11 +76,11 @@ bool PluginInstance::unload()
 	return true;
 }
 
-void PluginInstance::log(LogLevel level, const std::string& msg)
+void PluginInstance::log(LogLevel level, const std::string& msg) const
 {
 	if(m_logger)
 	{
-		m_logger->log(level, std::format("[{}] - {}", m_pluginName, msg));
+		m_logger->log(level, msg);
 	}
 }
 

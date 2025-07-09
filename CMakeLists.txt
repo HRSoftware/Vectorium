@@ -45,8 +45,18 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(spdlog)
 
+
+##	nlohmannJson
+FetchContent_Declare(
+  json
+  URL https://github.com/nlohmann/json/releases/download/v3.11.3/json.tar.xz
+)
+
+FetchContent_MakeAvailable(json)
+
+
 # Add source to this project's executable.
-add_executable (Vectorium "Vectorium.cpp")
+add_executable (Vectorium "Vectorium.cpp" "include/Utils/range_utils.h" "include/Task/TaskQueue.h")
 
 set_target_properties(Vectorium PROPERTIES CXX_STANDARD 23)
 

@@ -6,11 +6,67 @@
 #include "Plugin/PluginRuntimeContext.h"
 #include "Plugin/PluginManager.h"
 
-#include <assert.h>
+#include <cassert>
+#include <fstream>
+#include <nlohmann/json.hpp>
+#include "Utils/range_utils.h"
+
+
+static constexpr std::string_view configurationLocation = "config/plugins_config.json";
+
+namespace
+{
+	std::expected<PluginManagerConfig, std::string> loadPluginConfig(const std::filesystem::path& configPath)
+	{
+		PluginManagerConfig config;
+		std::ifstream file(configPath);
+		if(!file)
+		{
+			return std::unexpected(std::format("Could not file PluginManger config file at '{}'", configPath.string()));
+		}
+
+		nlohmann::json j;
+		file >> j;
+
+		if (j.contains("autoScan")) config.autoScan = j["autoScan"].get<bool>();
+		if (j.contains("pluginDirectory")) config.pluginDirectory = j["pluginDirectory"].get<std::string>();
+		if (j.contains("pluginScanInterval_Seconds")) config.pluginScanInterval = std::chrono::seconds(j["pluginScanInterval"].get<int>());
+		if (j.contains("enabledPlugins")) config.enabledPluginsOnStartup = j["enabledPlugins"].get<std::vector<std::string>>();
+
+		return config;
+	}
+}
 
 PluginManager::PluginManager(std::shared_ptr<ILogger>& logger) : m_engineLogger(logger)
 {
 	assert(logger && "logger was nullptr");
+}
+
+void PluginManager::init()
+{
+	if(const auto config = loadPluginConfig(configurationLocation))
+	{
+		scanPluginsFolder(config.value().pluginDirectory);
+
+		logMessage(LogLevel::Info, std::format("Loading previously enabled Plugin [{}]", join_range(config.value().enabledPluginsOnStartup)));
+		for(const std::string& pluginName : config.value().enabledPluginsOnStartup)
+		{
+			auto knownPlugin = m_discoveredPlugins.find(pluginName);
+			if(knownPlugin != m_discoveredPlugins.end())
+			{
+				loadPlugin(knownPlugin->second.path, knownPlugin->second.name);
+			}
+		}
+
+		return;
+	}
+
+	logMessage(LogLevel::Error, std::format("Could not find PluginManager configuration file",configurationLocation));
+}
+
+bool PluginManager::isPluginFolderWatcherEnabled() const
+{
+	return m_scanningThread.joinable();
 }
 
 PluginInfo& PluginManager::getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& pluginPath)
@@ -33,35 +89,47 @@ PluginInfo& PluginManager::getOrAddPluginInfo(const std::string& pluginName, con
 	return iter->second;
 }
 
-void PluginManager::scanPluginsFolder()
+void PluginManager::removeKnownPlugin(const std::string& name)
 {
-	const std::filesystem::path pluginPath = "plugins";
+	logMessage(LogLevel::Info, std::format("'{}' removed from known plugins", name));
+	m_discoveredPlugins.erase(name);
+}
 
-	if(!std::filesystem::exists(pluginPath))
+void PluginManager::scanPluginsFolder(const std::string& pluginDirectory)
+{
+	logMessage(LogLevel::Info, "Scanning plugin folder");
+	if(!std::filesystem::exists(pluginDirectory))
 	{
-		m_engineLogger->log(LogLevel::Info, std::format("Could not find plugin at '{}'", pluginPath.string()));
+		m_engineLogger->log(LogLevel::Info, std::format("Could not find plugin at '{}'", pluginDirectory));
 		return;
 	}
 
-	for (const auto& entry : std::filesystem::directory_iterator(pluginPath))
+	for (const auto& entry : std::filesystem::directory_iterator(pluginDirectory))
 	{
 		if (!entry.is_regular_file()) continue;
 		if (entry.path().extension() != PLUGIN_EXT) continue;
 
 		//Add this plugin to the list
-		m_discoveredPlugins.emplace(entry.path().stem().string(),
-			PluginInfo
-			{
-				.name = entry.path().stem().string(),
-				.path = entry.path(),
-				.loaded = false,
-				.errorMessage = ""
-			}
-		);
+		const std::string discoveredPluginName = entry.path().stem().string();
+
+		const auto it = m_discoveredPlugins.find(discoveredPluginName);
+		if(it == m_discoveredPlugins.end())
+		{
+			logMessage(LogLevel::Info, std::format("Found new Plugin '{}'", discoveredPluginName));
+			m_discoveredPlugins.emplace(entry.path().stem().string(),
+				PluginInfo
+				{
+					.name = discoveredPluginName,
+					.path = entry.path(),
+					.loaded = false,
+					.errorMessage = ""
+				}
+			);
+		}
 	}
 }
 
-const std::unordered_map<std::string, PluginInfo>& PluginManager::getDiscoveredPlugins() const
+const std::unordered_map<std::string, PluginInfo> PluginManager::getDiscoveredPlugins() const
 {
 	return m_discoveredPlugins;
 }
@@ -71,6 +139,7 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 	if (!std::filesystem::exists(path))
 	{
 		logMessage(LogLevel::Error, std::format("Plugin path '{}' does not exist.", path.string()));
+		removeKnownPlugin(name.empty() ? path.stem().string() : name);
 		return false;
 	}
 
@@ -94,6 +163,8 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 		{
 			info.errorMessage = getError();
 			logMessage(LogLevel::Error, std::format("Failed to load plugin '{}': {}", pluginName, info.errorMessage));
+
+			removeKnownPlugin(pluginName);
 			return false;
 		}
 
@@ -178,10 +249,35 @@ const std::unordered_map<std::string, std::unique_ptr<PluginInstance>>& PluginMa
 	return m_loadedPlugins;
 }
 
+
+
 void PluginManager::logMessage(const LogLevel logLvl, const std::string& msg) const
 {
 	if(m_engineLogger)
 	{
 		m_engineLogger->log(logLvl, std::format("[{}] - {}", "PluginManager", msg));
 	}
+}
+
+void PluginManager::startPluginAutoScan()
+{
+	logMessage(LogLevel::Info, std::format("Starting plugin folder watcher: scanning '{}' every {}s", m_config.pluginDirectory, m_config.pluginScanInterval.count()));
+	if(!m_config.autoScan || m_scanningThread.joinable())
+	{
+		return;
+	}
+
+	m_scanningThread = std::jthread([this](std::stop_token stop_token) {
+		while (!stop_token.stop_requested()) {
+			scanPluginsFolder(m_config.pluginDirectory);
+
+			std::this_thread::sleep_for(m_config.pluginScanInterval);
+		}
+	});
+}
+
+void PluginManager::stopPluginAutoScan()
+{
+	logMessage(LogLevel::Info, "Stopping plugin folder watcher.");
+	m_scanningThread.request_stop();
 }

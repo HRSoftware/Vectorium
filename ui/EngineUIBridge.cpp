@@ -40,6 +40,10 @@ void EngineUIBridge::drawMenuBar()
 	{
 		if(ImGui::BeginMenu("File"))
 		{
+			if(ImGui::MenuItem("Plugin Dir watcher", nullptr, m_pluginManager->isPluginFolderWatcherEnabled()))
+			{
+				m_pluginManager->isPluginFolderWatcherEnabled() ? m_pluginManager->stopPluginAutoScan() : m_pluginManager->startPluginAutoScan();
+			}
 			if (ImGui::MenuItem("Quit"))
 			{
 				m_logger->log(LogLevel::Info, "Quit requested");
@@ -54,14 +58,7 @@ void EngineUIBridge::drawMenuBar()
 			{
 				if (ImGui::MenuItem(name.c_str(), nullptr, pluginInfo.loaded))
 				{
-					if (!pluginInfo.loaded)
-					{
-						m_pluginManager->loadPlugin(pluginInfo.path);
-					}
-					else
-					{
-						m_pluginManager->unloadPlugin(name);
-					}
+					pluginInfo.loaded ? m_pluginManager->unloadPlugin(name) : m_pluginManager->loadPlugin(pluginInfo.path);
 				}
 			}
 

@@ -58,7 +58,7 @@ public:
 
 private:
 
-	void log(LogLevel level, const std::string& msg);
+	void log(LogLevel level, const std::string& msg) const;
 	LibraryHandle m_handle = nullptr;
 	std::unique_ptr<IPlugin> m_plugin;
 	std::unique_ptr<PluginRuntimeContext> m_context;

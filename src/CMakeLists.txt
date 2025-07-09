@@ -20,7 +20,7 @@ target_include_directories(engine PUBLIC
 target_compile_features(engine PUBLIC cxx_std_23)
 set_target_properties(engine PROPERTIES CXX_STANDARD 23)
 
-target_link_libraries(engine PUBLIC logger spdlog::spdlog)
+target_link_libraries(engine PUBLIC logger spdlog::spdlog nlohmann_json::nlohmann_json)
 
 if (WIN32)
     target_compile_definitions(engine PRIVATE PLATFORM_WINDOWS)
