@@ -1,6 +1,6 @@
 #include "GPS_Plugin.h"
 #include "DataPacket/IDataPacketHandler.h"
-#include "Plugin/PluginContextImpl.h"
+#include "Plugin/PluginRuntimeContext.h"
 
 #include <iostream>
 
@@ -20,11 +20,9 @@ struct GPSDataHandler final : IDataPacketHandler
 	}
 };
 
-
-
 void GPSPlugin::onPluginLoad(IPluginContext& context)
 {
-	setLogger(context.getLogger(), "GPSPlugin");
+	setLogger(context.getLoggerShared(), "GPSPlugin");
 	context.registerDataPacketHandler(typeid(GPSData), std::make_shared<GPSDataHandler>());
 	log(LogLevel::Info, "loaded");
 }
@@ -32,6 +30,7 @@ void GPSPlugin::onPluginLoad(IPluginContext& context)
 void GPSPlugin::onPluginUnload()
 {
 	log(LogLevel::Info, "unloading");
+	unsetLogger();
 }
 
 std::type_index GPSPlugin::getType() const

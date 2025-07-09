@@ -12,8 +12,8 @@ else()
 endif()
 
 set_target_properties(GPS_Plugin PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins_bin
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins_bin # for DLLs
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins # for DLLs
 )
 
 target_link_libraries(GPS_Plugin PRIVATE logger)

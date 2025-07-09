@@ -5,7 +5,7 @@
 
 #include "imgui.h"
 #include "../include/Engine.h"
-#include "Plugin/LoadedPlugin.h"
+#include "Plugin/PluginInstance.h"
 
 //static std::string demangle(const char* name) {
 //	int status = 0;
@@ -48,11 +48,19 @@ void EngineUIBridge::drawMenuBar()
 			ImGui::EndMenu();
 		}
 
-		if (ImGui::BeginMenu("Plugins")) {
-			for (const auto& info : m_pluginManager->getDiscoveredPlugins()) {
-				if (ImGui::MenuItem(info.name.c_str(), nullptr, info.loaded)) {
-					if (!info.loaded) {
-						m_pluginManager->loadPlugin(info.path);
+		if (ImGui::BeginMenu("Plugins"))
+		{
+			for (const auto& [name, pluginInfo] : m_pluginManager->getDiscoveredPlugins())
+			{
+				if (ImGui::MenuItem(name.c_str(), nullptr, pluginInfo.loaded))
+				{
+					if (!pluginInfo.loaded)
+					{
+						m_pluginManager->loadPlugin(pluginInfo.path);
+					}
+					else
+					{
+						m_pluginManager->unloadPlugin(name);
 					}
 				}
 			}

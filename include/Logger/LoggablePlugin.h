@@ -7,6 +7,7 @@
 #include <cassert>
 #include <iostream>
 
+
 class LoggablePlugin
 {
 public:
@@ -14,6 +15,7 @@ public:
 	virtual ~LoggablePlugin() = default;
 
 	void setLogger(std::shared_ptr<ILogger> logger, std::string name = "Unknown");
+	void unsetLogger();
 
 protected:
 	void log(LogLevel level, const std::string& msg) const;

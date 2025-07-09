@@ -2,47 +2,44 @@
 #include <memory>
 #include <ranges>
 
-#include "Plugin/LoadedPlugin.h"
-#include "Plugin/PluginContextImpl.h"
+#include "Plugin/PluginInstance.h"
+#include "Plugin/PluginRuntimeContext.h"
 #include "Plugin/PluginManager.h"
 
 #include <assert.h>
 
-PluginManager::PluginManager(std::shared_ptr<ILogger>& logger) : engineLogger(logger)
+PluginManager::PluginManager(std::shared_ptr<ILogger>& logger) : m_engineLogger(logger)
 {
 	assert(logger && "logger was nullptr");
 }
 
-PluginInfo& PluginManager::getOrAddPluginInfo(const std::filesystem::path& path)
+PluginInfo& PluginManager::getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& pluginPath)
 {
-	const std::string name = path.stem().string();
+	std::string name = pluginPath.stem().string();
 
-	// Look for existing entry
-	for (auto& plugin : discoveredPlugins)
+	if(!pluginName.empty())
 	{
-		if (plugin.name == name)
-		{
-			return plugin;
-		}
+		name = pluginName;
 	}
 
-	// Otherwise create a new one
-	discoveredPlugins.push_back(PluginInfo{
-		.path = path,
+	// Insert if not exists; get reference either way
+	auto [iter, inserted] = m_discoveredPlugins.try_emplace(name, PluginInfo{
 		.name = name,
+		.path = pluginPath,
 		.loaded = false,
 		.errorMessage = ""
 		});
-	return discoveredPlugins.back();
+
+	return iter->second;
 }
 
 void PluginManager::scanPluginsFolder()
 {
-	const std::filesystem::path pluginPath = "plugins_bin";
+	const std::filesystem::path pluginPath = "plugins";
 
 	if(!std::filesystem::exists(pluginPath))
 	{
-		engineLogger->log(LogLevel::Info, std::format("Could not find plugin at '{}'", pluginPath.string()));
+		m_engineLogger->log(LogLevel::Info, std::format("Could not find plugin at '{}'", pluginPath.string()));
 		return;
 	}
 
@@ -52,101 +49,123 @@ void PluginManager::scanPluginsFolder()
 		if (entry.path().extension() != PLUGIN_EXT) continue;
 
 		//Add this plugin to the list
-		discoveredPlugins.push_back({
-			.path = entry.path(),
-			.name = entry.path().stem().string(),
-			.loaded = false,
-			.errorMessage = ""
-		});
+		m_discoveredPlugins.emplace(entry.path().stem().string(),
+			PluginInfo
+			{
+				.name = entry.path().stem().string(),
+				.path = entry.path(),
+				.loaded = false,
+				.errorMessage = ""
+			}
+		);
 	}
 }
 
-std::span<const PluginInfo> PluginManager::getDiscoveredPlugins() const
+const std::unordered_map<std::string, PluginInfo>& PluginManager::getDiscoveredPlugins() const
 {
-	return discoveredPlugins;
-}
-
-std::unordered_map<std::string, std::unique_ptr<LoadedPlugin>>& PluginManager::getLoadedPlugins()
-{
-	return loadedPlugins;
+	return m_discoveredPlugins;
 }
 
 bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::string& name)
 {
-	if(!std::filesystem::exists(path))
+	if (!std::filesystem::exists(path))
 	{
-		logMessage(LogLevel::Error, std::format("Could not find plugin at '{}'", path.string()));
+		logMessage(LogLevel::Error, std::format("Plugin path '{}' does not exist.", path.string()));
 		return false;
 	}
 
-	std::string pluginName = name;
-	if(pluginName.empty())
-	{
-		pluginName = path.stem().string();
-	}
+	std::string pluginName = name.empty() ? path.stem().string() : name;
 
-	auto& info = getOrAddPluginInfo(path);
-	if(info.loaded)
+	// Already loaded
+	if (m_loadedPlugins.contains(pluginName))
 	{
-		//Already loaded;
+		logMessage(LogLevel::Warning, std::format("Plugin '{}' is already loaded.", pluginName));
 		return true;
 	}
+
+	// Get or create plugin metadata
+	PluginInfo& info = getOrAddPluginInfo(pluginName, path);
 
 	try
 	{
-		const LibraryHandle handle = LoadSharedLibrary(path.string().c_str());
-		if (!handle) {
-			logMessage(LogLevel::Error, std::format("Failed to load plugin '{}' - ({})\n", pluginName, getError()));
+		// Load shared library
+		LibraryHandle handle = LoadSharedLibrary(path.string().c_str());
+		if (!handle)
+		{
+			info.errorMessage = getError();
+			logMessage(LogLevel::Error, std::format("Failed to load plugin '{}': {}", pluginName, info.errorMessage));
 			return false;
 		}
 
-		const auto create = reinterpret_cast<IPlugin * (*)()> (GetSymbol(handle, "initPlugin"));
-		if (!create) {
+		// Load init symbol
+		auto pluginEntryFunction = reinterpret_cast<IPlugin*(*)()>(GetSymbol(handle, "initPlugin"));
+		if (!pluginEntryFunction)
+		{
+			info.errorMessage = getError();
 			UnloadLibrary(handle);
-			logMessage(LogLevel::Info, std::format("Could not find 'initPlugin' entry point in plugin '{}' - ({})\n", pluginName, getError()));
+			logMessage(LogLevel::Error, std::format("Missing 'initPlugin' in '{}': {}", pluginName, info.errorMessage));
 			return false;
 		}
 
-		std::unique_ptr<IPlugin>           plugin(create());
-		auto context = std::make_unique<PluginContextImpl>(engineLogger, pluginName);
-		plugin->onPluginLoad(*context);
+		// Construct plugin and context(currently just one type of Context)
+		auto assignedPluginContext = std::make_unique<PluginRuntimeContext>(m_engineLogger, pluginName);
 
-		// Load the plugin
-		auto newPlugin = std::make_unique<LoadedPlugin>(handle, std::move(plugin), std::move(context), path.stem().string());
+		std::unique_ptr<IPlugin> plugin(pluginEntryFunction());
+		plugin->onPluginLoad(*assignedPluginContext);
 
-		logMessage(LogLevel::Info, std::format("[PluginManager] - Loaded plugin '{}'\n", pluginName));
+		// Package plugin instance
+		auto pluginInstance = std::make_unique<PluginInstance>(
+			handle,
+			std::move(plugin),
+			std::move(assignedPluginContext),
+			pluginName
+		);
 
 		info.loaded = true;
 		info.errorMessage.clear();
-		loadedPlugins.emplace(pluginName, std::move(newPlugin));
 
+		m_loadedPlugins.emplace(pluginName, std::move(pluginInstance));
+
+		logMessage(LogLevel::Info, std::format("Successfully loaded plugin '{}'", pluginName));
 		return true;
 	}
-	catch(const std::exception& ex)
+	catch (const std::exception& ex)
 	{
 		info.errorMessage = ex.what();
+		logMessage(LogLevel::Error, std::format("Exception while loading plugin '{}': {}", pluginName, ex.what()));
 		return false;
 	}
 }
 
 bool PluginManager::unloadPlugin(const std::string& name)
 {
-	const auto plugin = loadedPlugins.find(name);
-	if(plugin != loadedPlugins.end())
+	const auto it = m_loadedPlugins.find(name);
+	if(it != m_loadedPlugins.end())
 	{
-		return plugin->second->unload();
+		// Unload and remove from collection of loaded plugins
+		const auto bSuccess = it->second->unload();
+		m_loadedPlugins.erase(it);
+
+		// Update the collection of all known plugins
+		auto discovered = m_discoveredPlugins.find(name);
+		if(discovered != m_discoveredPlugins.end())
+		{
+			discovered->second.loaded = false;
+		}
+
+		return bSuccess;
 	}
 
-	logMessage(LogLevel::Error, std::format("[PluginManager] - Error unloading plugin '{}'\n", name));
+	logMessage(LogLevel::Error, std::format("Plugin '{}' is not loaded; cannot unload.", name));
 	return false;
 }
 
 std::vector<std::string> PluginManager::getNamesOfAllLoadedPlugins() const
 {
 	std::vector<std::string> keys;
-	keys.reserve(loadedPlugins.size());
+	keys.reserve(m_loadedPlugins.size());
 
-	for(const auto& key : loadedPlugins | std::views::keys )
+	for(const auto& key : m_loadedPlugins | std::views::keys )
 	{
 		keys.push_back(key);
 	}
@@ -154,10 +173,15 @@ std::vector<std::string> PluginManager::getNamesOfAllLoadedPlugins() const
 	return keys;
 }
 
+const std::unordered_map<std::string, std::unique_ptr<PluginInstance>>& PluginManager::getLoadedPlugins() const
+{
+	return m_loadedPlugins;
+}
+
 void PluginManager::logMessage(const LogLevel logLvl, const std::string& msg) const
 {
-	if(engineLogger)
+	if(m_engineLogger)
 	{
-		engineLogger->log(logLvl, msg);
+		m_engineLogger->log(logLvl, std::format("[{}] - {}", "PluginManager", msg));
 	}
 }

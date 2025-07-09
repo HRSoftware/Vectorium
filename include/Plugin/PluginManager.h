@@ -7,15 +7,15 @@
 #include <unordered_map>
 #include <vector>
 
-#include "LoadedPlugin.h"
+#include "PluginInstance.h"
 
 enum class LogLevel;
 class ILogger;
 
 struct PluginInfo
 {
-	std::filesystem::path path;
 	std::string name;
+	std::filesystem::path path;
 	bool loaded = false;
 	std::string errorMessage; // If failed to load
 };
@@ -28,22 +28,23 @@ class PluginManager
 public:
 	explicit PluginManager(std::shared_ptr<ILogger>& logger);
 
-	PluginInfo&                               getOrAddPluginInfo(const std::filesystem::path& path);
+	PluginInfo&                               getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& path = "");
 	void                                      scanPluginsFolder();
-	[[nodiscard]] std::span<const PluginInfo> getDiscoveredPlugins() const;
+	const std::unordered_map<std::string, PluginInfo>& getDiscoveredPlugins() const;
 
-	std::unordered_map<std::string, std::unique_ptr<LoadedPlugin>>& getLoadedPlugins();
+	
 
 	bool                        loadPlugin(const std::filesystem::path& path, const std::string& = "");
 	bool                        unloadPlugin(const std::string& name);
 
 	[[nodiscard]] std::vector<std::string> getNamesOfAllLoadedPlugins() const;
+	[[nodiscard]] const std::unordered_map<std::string, std::unique_ptr<PluginInstance>>& getLoadedPlugins() const;
 
 	//void reloadPlugin(const std::string name);
 
 private:
-	std::vector<PluginInfo> discoveredPlugins;
-	std::unordered_map<std::string, std::unique_ptr<LoadedPlugin>> loadedPlugins;
-	std::shared_ptr<ILogger> engineLogger;
+	std::unordered_map<std::string, PluginInfo> m_discoveredPlugins;
+	std::unordered_map<std::string, std::unique_ptr<PluginInstance>> m_loadedPlugins;
+	std::shared_ptr<ILogger> m_engineLogger;
 	void logMessage(LogLevel logLvl, const std::string& msg) const;
 };

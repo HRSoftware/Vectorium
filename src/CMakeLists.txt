@@ -2,13 +2,15 @@
 cmake_minimum_required(VERSION 3.16)
 
 add_subdirectory(Logger)
+add_subdirectory(Mocking)
 
 add_library(engine 
-"LoadedPlugin.cpp" 
-"PluginContextImpl.cpp" 
+"PluginInstance.cpp" 
+"PluginRuntimeContext.cpp" 
 "PluginManager.cpp" 
 "DataPacketRegistry.cpp" 
-"Engine.cpp" "Logger/ComponentLogger.cpp")
+"Engine.cpp" 
+"Logger/ComponentLogger.cpp")
 
 target_include_directories(engine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}

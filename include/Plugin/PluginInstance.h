@@ -8,13 +8,15 @@
 #include "../DataPacket/IDataPacketHandler.h"
 #include <filesystem>
 
+#include "Logger/ILogger.h"
+
 struct IPlugin;
-class PluginContextImpl;
+class PluginRuntimeContext;
 
 
 #ifdef _WIN32
 	#include <windows.h>
-class PluginContextImpl;
+class PluginRuntimeContext;
 	using LibraryHandle = HMODULE;
 	#define LoadSharedLibrary(path) LoadLibraryA(path)
 	#define GetSymbol(handle, name) GetProcAddress(handle, name)
@@ -33,30 +35,33 @@ class PluginContextImpl;
 
 
 /// <summary>
-/// LoadPlugin is used to own a IPlugin, and controls it's lifecycle
+/// PluginInstance is used to own a IPlugin, and controls it's lifecycle
 /// </summary>
 
-class LoadedPlugin
+class PluginInstance
 {
 public:
-	LoadedPlugin(LibraryHandle h, std::unique_ptr<IPlugin> p, std::unique_ptr<PluginContextImpl> ctx, std::string name = "");
-	~LoadedPlugin();
+	PluginInstance(LibraryHandle h, std::unique_ptr<IPlugin> p, std::unique_ptr<PluginRuntimeContext> ctx, std::string name = "");
+	~PluginInstance();
 
-	LoadedPlugin(const LoadedPlugin&) = delete;
-	LoadedPlugin& operator=(const LoadedPlugin&) = delete;
+	PluginInstance(const PluginInstance&) = delete;
+	PluginInstance& operator=(const PluginInstance&) = delete;
 
-	LoadedPlugin(LoadedPlugin&&) noexcept;
-	LoadedPlugin& operator=(LoadedPlugin&& other) noexcept;
+	PluginInstance(PluginInstance&&) noexcept;
+	PluginInstance& operator=(PluginInstance&& other) noexcept;
 
 	[[nodiscard]] IPlugin*                                    get() const;
 	[[nodiscard]] std::expected<std::type_index, std::string> getType() const;
-	[[nodiscard]] PluginContextImpl*                          getContext() const;
+	[[nodiscard]] PluginRuntimeContext*                          getContext() const;
 
 	bool unload();
 
 private:
-	LibraryHandle handle = nullptr;
-	std::unique_ptr<IPlugin> plugin;
-	std::unique_ptr<PluginContextImpl> context;
-	std::string pluginName;
+
+	void log(LogLevel level, const std::string& msg);
+	LibraryHandle m_handle = nullptr;
+	std::unique_ptr<IPlugin> m_plugin;
+	std::unique_ptr<PluginRuntimeContext> m_context;
+	std::string m_pluginName;
+	std::shared_ptr<ILogger> m_logger;
 };

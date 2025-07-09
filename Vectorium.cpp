@@ -3,7 +3,7 @@
 
 #include "include/DataPacket/DataPacketRegistry.h"
 #include "include/Plugin/IPlugin.h"
-#include "include/Plugin/LoadedPlugin.h"
+#include "include/Plugin/PluginInstance.h"
 #include "include/Plugin/PluginManager.h"
 #include "ui/UI.h"
 #include "include/Engine.h"
