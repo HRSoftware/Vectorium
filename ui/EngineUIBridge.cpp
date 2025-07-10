@@ -51,6 +51,7 @@ void EngineUIBridge::drawConfigUI()
 	if (ImGui::Button("Save Config"))
 	{
 		m_pluginManager->saveConfig();
+		m_pluginManager->reloadPluginConfig();
 	}
 
 	ImGui::End();

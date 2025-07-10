@@ -28,38 +28,41 @@ struct PluginInfo
 class PluginManager
 {
 public:
-	explicit PluginManager(std::shared_ptr<ILogger>& logger);
+		bool loadPluginConfig(const std::filesystem::path& configPath);
+		bool savePluginConfig(const std::filesystem::path& configPath) const;
+		explicit                                        PluginManager(std::shared_ptr<ILogger>& logger);
 
-	PluginInfo&                                               getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& path = "");
-	void                                                      removeKnownPlugin(const std::string& name);
-	void                                                      scanPluginsFolder(const std::string& pluginDirectory);
-	[[nodiscard]] std::unordered_map<std::string, PluginInfo> getDiscoveredPlugins() const;
+		PluginInfo&                                               getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& path = "");
+		void                                                      removeKnownPlugin(const std::string& name);
+		void                                                      scanPluginsFolder(const std::string& pluginDirectory);
+		[[nodiscard]] std::unordered_map<std::string, PluginInfo> getDiscoveredPlugins() const;
 
-	bool                        loadPlugin(const std::filesystem::path& path, const std::string& = "");
-	bool                        unloadPlugin(const std::string& name);
+		bool                        loadPlugin(const std::filesystem::path& path, const std::string& = "");
+		bool                        unloadPlugin(const std::string& name);
 
-	[[nodiscard]] std::vector<std::string>                                                getNamesOfAllLoadedPlugins() const;
-	[[nodiscard]] const std::unordered_map<std::string, std::unique_ptr<PluginInstance>>& getLoadedPlugins() const;
-	void init();
+		[[nodiscard]] std::vector<std::string>                                                getNamesOfAllLoadedPlugins() const;
+		[[nodiscard]] const std::unordered_map<std::string, std::unique_ptr<PluginInstance>>& getLoadedPlugins() const;
+		void init();
 
-	bool isPluginFolderWatcherEnabled() const;
+		bool isPluginFolderWatcherEnabled() const;
 
-	void startPluginAutoScan();
-	void stopPluginAutoScan();
+		void startPluginAutoScan();
+		void stopPluginAutoScan();
 
 
-	// Config related -- Rdundant?
-	PluginManagerConfig& getConfig();
-	void setScanInterval(std::chrono::seconds scanInterval);
-	std::chrono::seconds getScanInterval() const;
+		// Config related -- Rdundant?
+		PluginManagerConfig& getConfig();
+		void setScanInterval(std::chrono::seconds scanInterval);
+		std::chrono::seconds getScanInterval() const;
 
-	void setPluginFolderDir(const std::string& dirPath);
-	std::filesystem::path getPluginFolderDir() const;
+		void setPluginFolderDir(const std::string& dirPath);
+		std::filesystem::path getPluginFolderDir() const;
 
-	void setAutoScan(bool bShouldScan);
-	bool getAutoScanEnabled() const;
+		void     setAutoScan(bool bShouldScan);
+		bool     getAutoScanEnabled() const;
+		void reloadPluginConfig();
 
-	[[maybe_unused]] bool saveConfig() const;
+		[[maybe_unused]] bool saveConfig() const;
 
 	//void reloadPlugin(const std::string name);
 

@@ -14,48 +14,47 @@
 
 static constexpr std::string_view configurationLocation = "config/plugins_config.json";
 
-namespace
+bool PluginManager::loadPluginConfig(const std::filesystem::path& configPath)
 {
-	std::expected<PluginManagerConfig, std::string> loadPluginConfig(const std::filesystem::path& configPath)
+	std::ifstream file(configPath);
+	if(!file)
 	{
-		PluginManagerConfig config;
-		std::ifstream file(configPath);
-		if(!file)
-		{
-			return std::unexpected(std::format("Could not file PluginManger config file at '{}'", configPath.string()));
-		}
-
-		nlohmann::json j;
-		file >> j;
-
-		if (j.contains("autoScan")) config.autoScan = j["autoScan"].get<bool>();
-		if (j.contains("pluginDirectory")) config.pluginDirectory = j["pluginDirectory"].get<std::string>();
-		if (j.contains("pluginScanInterval_seconds")) config.pluginScanInterval = std::chrono::seconds(j["pluginScanInterval_seconds"].get<int>());
-		if (j.contains("enabledPlugins")) config.enabledPluginsOnStartup = j["enabledPlugins"].get<std::vector<std::string>>();
-
-		return config;
+		logMessage(LogLevel::Error, std::format("Could not read plugin config '{}'", configPath.stem().string()));
+		return false;
 	}
 
-	std::expected<bool, std::string> savePluginConfig(const std::filesystem::path& configPath, const PluginManagerConfig& config)
-	{
-		std::ofstream file(configPath);
-		if(!file)
-		{
-			return std::unexpected(std::format("Could not file PluginManger config file at '{}'", configPath.string()));
-		}
+	nlohmann::json j;
+	file >> j;
 
-		nlohmann::json json =
-		{
-			{"autoScan", config.autoScan},
-			{"pluginDirectory", config.pluginDirectory},
-			{"pluginScanInterval_seconds", config.pluginScanInterval.count()}
-			// add enabled plugins
-		};
+	if (j.contains("autoScan")) m_config.autoScan = j["autoScan"].get<bool>();
+	if (j.contains("pluginDirectory")) m_config.pluginDirectory = j["pluginDirectory"].get<std::string>();
+	if (j.contains("pluginScanInterval_seconds")) m_config.pluginScanInterval = std::chrono::seconds(j["pluginScanInterval_seconds"].get<int>());
+	if (j.contains("enabledPlugins")) m_config.enabledPluginsOnStartup = j["enabledPlugins"].get<std::vector<std::string>>();
 
-		file << std::setw(4) << json << "\n";
-		return true;
-	}
+	return true;
 }
+
+bool PluginManager::savePluginConfig(const std::filesystem::path& configPath) const
+{
+	std::ofstream file(configPath);
+	if(!file)
+	{
+		logMessage(LogLevel::Error, std::format("Could not file PluginManger config file at '{}'", configPath.string()));
+		return false;
+	}
+
+	nlohmann::json json =
+	{
+		{"autoScan", m_config.autoScan},
+		{"pluginDirectory", m_config.pluginDirectory},
+		{"pluginScanInterval_seconds", m_config.pluginScanInterval.count()}
+		// add enabled plugins
+	};
+
+	file << std::setw(4) << json << "\n";
+	return true;
+}
+
 
 PluginManager::PluginManager(std::shared_ptr<ILogger>& logger) : m_engineLogger(logger)
 {
@@ -67,7 +66,6 @@ void PluginManager::init()
 	const auto loadConfigResult = loadPluginConfig(configurationLocation);
 	if(loadConfigResult)
 	{
-		m_config = loadConfigResult.value();
 		scanPluginsFolder(m_config.pluginDirectory);
 
 		logMessage(LogLevel::Info, std::format("Loading previously enabled Plugin [{}]", join_range(m_config.enabledPluginsOnStartup)));
@@ -90,7 +88,7 @@ void PluginManager::init()
 		return;
 	}
 
-	logMessage(LogLevel::Error, std::format("Could not find PluginManager configuration file '{}' - ", configurationLocation, loadConfigResult.error()));
+	logMessage(LogLevel::Error, std::format("Could not find PluginManager configuration file '{}'", configurationLocation));
 }
 
 bool PluginManager::isPluginFolderWatcherEnabled() const
@@ -203,7 +201,7 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 		{
 			info.errorMessage = getError();
 			UnloadLibrary(handle);
-			logMessage(LogLevel::Error, std::format("Missing 'initPlugin' in '{}': {}", pluginName, info.errorMessage));
+			logMessage(LogLevel::Error, std::format("Missing 'initPlugin' in '{}':{}", pluginName, info.errorMessage));
 			return false;
 		}
 
@@ -349,15 +347,20 @@ bool PluginManager::getAutoScanEnabled() const
 	return m_config.autoScan;
 }
 
+void PluginManager::reloadPluginConfig()
+{
+	loadPluginConfig(configurationLocation);
+}
+
 bool PluginManager::saveConfig() const
 {
-	auto result = savePluginConfig(configurationLocation, m_config);
+	auto result = savePluginConfig(configurationLocation);
 	if(result)
 	{
-		logMessage(LogLevel::Info, std::format("Saving PluginManagerConfig{}", result.value() ? "" : "-Failed"));
-		return result.value();
+		logMessage(LogLevel::Info, "Saving PluginManagerConfig");
+		return true;
 	}
 
-	logMessage(LogLevel::Error, std::format("Failed to save config to {} - {}", configurationLocation, result.error()));
+	logMessage(LogLevel::Error, std::format("Failed to save config to {}", configurationLocation));
 	return false;
 }
