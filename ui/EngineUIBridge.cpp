@@ -26,6 +26,36 @@ EngineUIBridge::EngineUIBridge(
 {
 }
 
+void EngineUIBridge::drawConfigUI()
+{
+	if (!showConfigWindow) return;
+	ImGui::Begin("Plugin Config", &showConfigWindow);
+
+	auto& config = m_pluginManager->getConfig();
+	bool autoScan = config.autoScan;
+	int interval = static_cast<int>(config.pluginScanInterval.count());
+
+	if(ImGui::Checkbox("Auto-scan", &autoScan))
+	{
+		m_pluginManager->setAutoScan(autoScan);
+	}
+
+	if (ImGui::InputInt("Scan Interval (sec)", &interval))
+	{
+		if (interval > 0)
+		{
+			m_pluginManager->setScanInterval(std::chrono::seconds(interval));
+		}
+	}
+
+	if (ImGui::Button("Save Config"))
+	{
+		m_pluginManager->saveConfig();
+	}
+
+	ImGui::End();
+}
+
 void EngineUIBridge::drawPluginUI()
 {
 }
@@ -44,6 +74,9 @@ void EngineUIBridge::drawMenuBar()
 			{
 				m_pluginManager->isPluginFolderWatcherEnabled() ? m_pluginManager->stopPluginAutoScan() : m_pluginManager->startPluginAutoScan();
 			}
+
+			ImGui::MenuItem("Plugin Config", nullptr, &showConfigWindow);
+
 			if (ImGui::MenuItem("Quit"))
 			{
 				m_logger->log(LogLevel::Info, "Quit requested");
@@ -51,6 +84,8 @@ void EngineUIBridge::drawMenuBar()
 			}
 			ImGui::EndMenu();
 		}
+
+
 
 		if (ImGui::BeginMenu("Plugins"))
 		{
@@ -101,6 +136,8 @@ void EngineUIBridge::draw()
 	drawSideBar();
 	drawMainPanels();
 	drawStatusBar();
+
+	drawConfigUI();
 }
 
 bool EngineUIBridge::shouldQuit() const

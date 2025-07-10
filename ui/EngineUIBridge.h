@@ -18,6 +18,7 @@ public:
 	void drawSideBar() const;
 	void drawMainPanels();
 	void drawStatusBar();
+	void drawConfigUI();
 	void draw();
 
 
@@ -27,6 +28,9 @@ private:
 	std::shared_ptr<PluginManager> m_pluginManager;
 	std::shared_ptr<DataPacketRegistry> m_dataPacketRegistry;
 	std::shared_ptr<ILogger> m_logger;
+
+
+	bool showConfigWindow = false;
 
 	bool quitRequested = false;
 };

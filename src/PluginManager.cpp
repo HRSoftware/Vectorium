@@ -30,10 +30,30 @@ namespace
 
 		if (j.contains("autoScan")) config.autoScan = j["autoScan"].get<bool>();
 		if (j.contains("pluginDirectory")) config.pluginDirectory = j["pluginDirectory"].get<std::string>();
-		if (j.contains("pluginScanInterval_Seconds")) config.pluginScanInterval = std::chrono::seconds(j["pluginScanInterval"].get<int>());
+		if (j.contains("pluginScanInterval_seconds")) config.pluginScanInterval = std::chrono::seconds(j["pluginScanInterval_seconds"].get<int>());
 		if (j.contains("enabledPlugins")) config.enabledPluginsOnStartup = j["enabledPlugins"].get<std::vector<std::string>>();
 
 		return config;
+	}
+
+	std::expected<bool, std::string> savePluginConfig(const std::filesystem::path& configPath, const PluginManagerConfig& config)
+	{
+		std::ofstream file(configPath);
+		if(!file)
+		{
+			return std::unexpected(std::format("Could not file PluginManger config file at '{}'", configPath.string()));
+		}
+
+		nlohmann::json json =
+		{
+			{"autoScan", config.autoScan},
+			{"pluginDirectory", config.pluginDirectory},
+			{"pluginScanInterval_seconds", config.pluginScanInterval.count()}
+			// add enabled plugins
+		};
+
+		file << std::setw(4) << json << "\n";
+		return true;
 	}
 }
 
@@ -44,12 +64,15 @@ PluginManager::PluginManager(std::shared_ptr<ILogger>& logger) : m_engineLogger(
 
 void PluginManager::init()
 {
-	if(const auto config = loadPluginConfig(configurationLocation))
+	const auto loadConfigResult = loadPluginConfig(configurationLocation);
+	if(loadConfigResult)
 	{
-		scanPluginsFolder(config.value().pluginDirectory);
+		m_config = loadConfigResult.value();
+		scanPluginsFolder(m_config.pluginDirectory);
 
-		logMessage(LogLevel::Info, std::format("Loading previously enabled Plugin [{}]", join_range(config.value().enabledPluginsOnStartup)));
-		for(const std::string& pluginName : config.value().enabledPluginsOnStartup)
+		logMessage(LogLevel::Info, std::format("Loading previously enabled Plugin [{}]", join_range(m_config.enabledPluginsOnStartup)));
+
+		for(const std::string& pluginName : m_config.enabledPluginsOnStartup)
 		{
 			auto knownPlugin = m_discoveredPlugins.find(pluginName);
 			if(knownPlugin != m_discoveredPlugins.end())
@@ -58,10 +81,16 @@ void PluginManager::init()
 			}
 		}
 
+		if(m_config.autoScan)
+		{
+			startPluginAutoScan();
+		}
+
+
 		return;
 	}
 
-	logMessage(LogLevel::Error, std::format("Could not find PluginManager configuration file",configurationLocation));
+	logMessage(LogLevel::Error, std::format("Could not find PluginManager configuration file '{}' - ", configurationLocation, loadConfigResult.error()));
 }
 
 bool PluginManager::isPluginFolderWatcherEnabled() const
@@ -129,7 +158,7 @@ void PluginManager::scanPluginsFolder(const std::string& pluginDirectory)
 	}
 }
 
-const std::unordered_map<std::string, PluginInfo> PluginManager::getDiscoveredPlugins() const
+std::unordered_map<std::string, PluginInfo> PluginManager::getDiscoveredPlugins() const
 {
 	return m_discoveredPlugins;
 }
@@ -267,8 +296,11 @@ void PluginManager::startPluginAutoScan()
 		return;
 	}
 
-	m_scanningThread = std::jthread([this](std::stop_token stop_token) {
-		while (!stop_token.stop_requested()) {
+	// Start a thread that will periodically call scanPluginFolder
+	m_scanningThread = std::jthread([this](const std::stop_token& stop_token)
+	{
+		while (!stop_token.stop_requested())
+		{
 			scanPluginsFolder(m_config.pluginDirectory);
 
 			std::this_thread::sleep_for(m_config.pluginScanInterval);
@@ -280,4 +312,52 @@ void PluginManager::stopPluginAutoScan()
 {
 	logMessage(LogLevel::Info, "Stopping plugin folder watcher.");
 	m_scanningThread.request_stop();
+}
+
+PluginManagerConfig& PluginManager::getConfig()
+{
+	return m_config;
+}
+
+void PluginManager::setScanInterval(std::chrono::seconds scanInterval)
+{
+	m_config.pluginScanInterval = scanInterval;
+}
+
+std::chrono::seconds PluginManager::getScanInterval() const
+{
+	return m_config.pluginScanInterval;
+}
+
+void PluginManager::setPluginFolderDir(const std::string& dirPath)
+{
+	m_config.pluginDirectory = dirPath;
+}
+
+std::filesystem::path PluginManager::getPluginFolderDir() const
+{
+	return m_config.pluginDirectory;
+}
+
+void PluginManager::setAutoScan(bool bShouldScan)
+{
+	m_config.autoScan = bShouldScan;
+}
+
+bool PluginManager::getAutoScanEnabled() const
+{
+	return m_config.autoScan;
+}
+
+bool PluginManager::saveConfig() const
+{
+	auto result = savePluginConfig(configurationLocation, m_config);
+	if(result)
+	{
+		logMessage(LogLevel::Info, std::format("Saving PluginManagerConfig{}", result.value() ? "" : "-Failed"));
+		return result.value();
+	}
+
+	logMessage(LogLevel::Error, std::format("Failed to save config to {} - {}", configurationLocation, result.error()));
+	return false;
 }

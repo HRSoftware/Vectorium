@@ -9,17 +9,10 @@
 #include <vector>
 
 #include "PluginInstance.h"
+#include "PluginManagerConfig.h"
 
 enum class LogLevel;
 class ILogger;
-
-struct PluginManagerConfig
-{
-	bool autoScan = true;
-	std::string pluginDirectory = "plugins";
-	std::chrono::seconds pluginScanInterval = std::chrono::seconds(5);
-	std::vector<std::string> enabledPluginsOnStartup;
-};
 
 struct PluginInfo
 {
@@ -37,10 +30,10 @@ class PluginManager
 public:
 	explicit PluginManager(std::shared_ptr<ILogger>& logger);
 
-	PluginInfo&                                                      getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& path = "");
-	void removeKnownPlugin(const std::string& name);
-	void                                                             scanPluginsFolder(const std::string& pluginDirectory);
-	[[nodiscard]] const std::unordered_map<std::string, PluginInfo> getDiscoveredPlugins() const;
+	PluginInfo&                                               getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& path = "");
+	void                                                      removeKnownPlugin(const std::string& name);
+	void                                                      scanPluginsFolder(const std::string& pluginDirectory);
+	[[nodiscard]] std::unordered_map<std::string, PluginInfo> getDiscoveredPlugins() const;
 
 	bool                        loadPlugin(const std::filesystem::path& path, const std::string& = "");
 	bool                        unloadPlugin(const std::string& name);
@@ -53,6 +46,20 @@ public:
 
 	void startPluginAutoScan();
 	void stopPluginAutoScan();
+
+
+	// Config related -- Rdundant?
+	PluginManagerConfig& getConfig();
+	void setScanInterval(std::chrono::seconds scanInterval);
+	std::chrono::seconds getScanInterval() const;
+
+	void setPluginFolderDir(const std::string& dirPath);
+	std::filesystem::path getPluginFolderDir() const;
+
+	void setAutoScan(bool bShouldScan);
+	bool getAutoScanEnabled() const;
+
+	[[maybe_unused]] bool saveConfig() const;
 
 	//void reloadPlugin(const std::string name);
 
