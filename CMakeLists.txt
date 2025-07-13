@@ -56,7 +56,7 @@ FetchContent_MakeAvailable(json)
 
 
 # Add source to this project's executable.
-add_executable (Vectorium "Vectorium.cpp" "include/Utils/range_utils.h" "include/Task/TaskQueue.h" "include/Plugin/PluginManagerConfig.h")
+add_executable (Vectorium "Vectorium.cpp" "include/Utils/range_utils.h" "include/Task/TaskQueue.h" "include/Plugin/PluginManagerConfig.h" "plugins/NumberLogger/NumberLogger_Plugin.h")
 
 set_target_properties(Vectorium PROPERTIES CXX_STANDARD 23)
 
@@ -65,6 +65,7 @@ target_link_libraries(Vectorium PRIVATE engine ui)
 
 add_subdirectory(plugins/GPS)
 add_subdirectory(plugins/NumberGenerator)
+add_subdirectory(plugins/NumberLogger)
 add_subdirectory(ui)
 add_subdirectory(src)
 

@@ -1,51 +1,85 @@
 #include "DataPacket/DataPacketRegistry.h"
+
+#include <cassert>
+#include <format>
+#include <ranges>
 #include <string>
 #include <utility>
 #include "DataPacket/DataPacket.h"
 #include "DataPacket/IDataPacketHandler.h"
-
+#include "Logger/LogLevel.h"
 
 DataPacketRegistry::DataPacketRegistry(std::shared_ptr<ILogger> log) : logger(std::move(log))
 {
 
 }
 
-bool DataPacketRegistry::registerDataPacketHandler(std::type_index packetType, std::shared_ptr<IDataPacketHandler> handler)
+bool DataPacketRegistry::registerDataPacketHandler(std::type_index packetType, std::shared_ptr<IDataPacketHandler> handler, const std::string& pluginName)
 {
-	
-	m_handlers[packetType].push_back(std::move(handler));
+	m_handlers[packetType].emplace_back(std::move(handler), pluginName);
 	return true;
 }
 
-const std::vector<std::type_index> &DataPacketRegistry::getDataPacketTypes() const
+std::vector<std::type_index> DataPacketRegistry::getDataPacketTypes() const
 {
-	return {};
-	//return dataPacketTypes;
+	std::vector<std::type_index> types;
+	types.reserve(m_handlers.size());
+
+	for(const auto& key : m_handlers | std::views::keys)
+	{
+		types.push_back(key);
+	}
+
+	return types;
 }
 
-bool DataPacketRegistry::registerWildcardHandler(std::shared_ptr<IDataPacketHandler> handler)
+bool DataPacketRegistry::registerWildcardHandler(std::shared_ptr<IDataPacketHandler> handler, const std::string& pluginName)
 {
-	m_wildcardHandlers.push_back(std::move(handler));
+	m_wildcardHandlers.emplace_back(std::move(handler), pluginName);
     return true;
+}
+
+void DataPacketRegistry::unregisterDataPacketHandlerForPlugin(const std::string& pluginName)
+{
+	for (auto it = m_handlers.begin(); it != m_handlers.end(); )
+	{
+		auto& handlerList = it->second;
+
+		// Remove all handlers matching pluginName
+		std::erase_if(handlerList,
+		              [&](const auto& pair)
+		              {
+			              return pair.second == pluginName;
+		              });
+
+		// Clean up empty type entries
+		if (handlerList.empty()) {
+			it = m_handlers.erase(it);
+		} else {
+			++it;
+		}
+	}
 }
 
 void DataPacketRegistry::dispatch(const DataPacket &packet)
 {
-	auto it = m_handlers.find(packet.payloadType);
+	assert(packet.payloadType != std::type_index(typeid(void)) && "Invalid payloadType!");
+
+	const auto& it = m_handlers.find(packet.payloadType);
 	if(it != m_handlers.end())
 	{
-		for(const auto& handler : it->second)
+		for(const auto& key : it->second | std::views::keys)
 		{
-			if(!handler) continue;
-			
-			handler->handle(packet);
+			if(!key) continue;
+
+			key->handle(packet);
 		}
 	}
 
-	for(const auto& handler : m_wildcardHandlers)
+	for(const auto& key : m_wildcardHandlers | std::views::keys)
 	{
-		if(!handler) continue;
-		
-		handler->handle(packet);
+		if(!key) continue;
+
+		key->handle(packet);
 	}
 }

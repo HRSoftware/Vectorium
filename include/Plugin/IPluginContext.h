@@ -16,7 +16,13 @@ class IDataPacketHandler;
 
 struct IPluginContext
 {
-	virtual void registerDataPacketHandler(std::type_index type, std::shared_ptr<IDataPacketHandler>) = 0;
+	template<typename T>
+	void registerTypedHandler(const std::shared_ptr<ITypedDataPacketHandler<T>>& handler)
+	{
+		auto adapter = std::make_shared<TypedDataPacketHandlerAdapter<T>>(handler);
+		registerDataPacketHandler(typeid(T), adapter);
+	}
+
 	virtual void log(LogLevel level, const std::string& message) const = 0;
 
 	template <typename... Args>
@@ -27,7 +33,12 @@ struct IPluginContext
 
 	//virtual void unregisterDataPacketHandler(std::type_index type) = 0;
 
-	virtual std::string getPluginName() const = 0;
+	virtual std::string              getPluginName() const = 0;
 	virtual std::shared_ptr<ILogger> getLoggerShared() = 0;
-	virtual      ~IPluginContext() = default;
+	virtual                          ~IPluginContext() = default;
+	virtual void dispatch(const DataPacket& packet) = 0;
+
+	protected:
+	virtual bool registerDataPacketHandler(std::type_index type, std::shared_ptr<IDataPacketHandler> handler) = 0;
 };
+

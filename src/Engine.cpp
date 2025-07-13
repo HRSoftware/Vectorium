@@ -6,8 +6,8 @@
 Engine::Engine()
 {
 	m_logger = std::make_shared<SpdLogger>();
-	m_pluginManager = std::make_unique<PluginManager>(m_logger);
 	m_dataPacketRegistry = std::make_unique<DataPacketRegistry>(m_logger);
+	m_pluginManager = std::make_unique<PluginManager>(m_logger, m_dataPacketRegistry);
 }
 
 Engine::~Engine() = default;
@@ -21,9 +21,9 @@ void Engine::init() const
 	m_logger->log(LogLevel::Info, "[Engine::init] - complete");
 }
 
-void Engine::tick()
+void Engine::tick() const
 {
-
+	m_pluginManager->tick();
 }
 
 void Engine::shutdown() const

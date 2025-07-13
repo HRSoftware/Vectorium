@@ -4,29 +4,28 @@
 
 #include <iostream>
 
-bool GPSDataHandler::handle(const DataPacket& packet)
-{
-	auto gps = packet.get<GPSDataPacket>();
-	if(gps.has_value())
-	{
-		std::cout << "[GPS] lat:" << gps.value()->lat << ", long:" << gps.value()->lng << ", alt: " << gps.value()->alt << "\n";
-		return true;
-	}
 
-	std::cout << "[ERROR]: " << gps.error() << "\n";
+
+bool GPSDataHandler::handleType(const std::shared_ptr<GPSDataPacket>& packet)
+{
+	log(LogLevel::Info, std::format("lat:{}, long:{}, alt:{}", packet->lat, packet->lng, packet->alt));
 	return false;
 }
 
 void GPSPlugin::onPluginLoad(IPluginContext& context)
 {
 	setLogger(context.getLoggerShared(), "GPSPlugin");
-	context.registerDataPacketHandler(typeid(GPSDataPacket), std::make_shared<GPSDataHandler>());
+
+	// Registering our interest in GPSDataPackets
+	context.registerTypedHandler<GPSDataPacket>(std::make_shared<GPSDataHandler>());
+
 	log(LogLevel::Info, "loaded");
 }
 
 void GPSPlugin::onPluginUnload()
 {
 	log(LogLevel::Info, "unloading");
+	
 	unsetLogger();
 }
 

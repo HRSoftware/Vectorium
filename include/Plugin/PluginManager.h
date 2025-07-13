@@ -30,7 +30,7 @@ class PluginManager
 public:
 		bool loadPluginConfig(const std::filesystem::path& configPath);
 		bool savePluginConfig(const std::filesystem::path& configPath) const;
-		explicit                                        PluginManager(std::shared_ptr<ILogger>& logger);
+		explicit PluginManager(std::shared_ptr<ILogger>& logger, std::shared_ptr<DataPacketRegistry> ptrDataPacketReg);
 
 		PluginInfo&                                               getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& path = "");
 		void                                                      removeKnownPlugin(const std::string& name);
@@ -50,7 +50,7 @@ public:
 		void stopPluginAutoScan();
 
 
-		// Config related -- Rdundant?
+		// Config related -- Redundant?
 		PluginManagerConfig& getConfig();
 		void setScanInterval(std::chrono::seconds scanInterval);
 		std::chrono::seconds getScanInterval() const;
@@ -64,11 +64,14 @@ public:
 
 		[[maybe_unused]] bool saveConfig() const;
 
+		void tick();
+
 	//void reloadPlugin(const std::string name);
 
 private:
 	std::unordered_map<std::string, PluginInfo> m_discoveredPlugins;
 	std::unordered_map<std::string, std::unique_ptr<PluginInstance>> m_loadedPlugins;
+	std::shared_ptr<DataPacketRegistry> m_dataPacketRegistry;
 	std::shared_ptr<ILogger> m_engineLogger;
 	void logMessage(LogLevel logLvl, const std::string& msg) const;
 

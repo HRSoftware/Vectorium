@@ -11,7 +11,7 @@ public:
 	~Engine();
 
 	void init() const;
-	void tick();
+	void tick() const;
 	void shutdown() const;
 
 	[[nodiscard]] std::shared_ptr<DataPacketRegistry> getDataPacketRegistry() const;

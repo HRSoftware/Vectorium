@@ -11,9 +11,10 @@ public:
 	std::shared_ptr<ILogger> getLoggerShared() override;
 
 
-	void registerDataPacketHandler(std::type_index packetType, std::shared_ptr<IDataPacketHandler> packetHandler) override
-		{
+	bool registerDataPacketHandler(std::type_index packetType, std::shared_ptr<IDataPacketHandler> packetHandler) override
+	{
 		m_handlers[packetType].push_back(packetHandler);
+		return true;
 	}
 
 		// Add unregister?

@@ -53,13 +53,21 @@ PluginRuntimeContext* PluginInstance::getContext() const
 	return m_context.get();
 }
 
+void PluginInstance::tick() const
+{
+	if(m_plugin)
+	{
+		m_plugin->onPluginTick();
+	}
+}
+
 bool PluginInstance::unload()
 {
 	if(m_plugin)
 	{
 		if(m_context)
 		{
-			m_context->unregisterDataPacketHandler(m_plugin->getType());
+			m_context->unregisterDataPacketHandler();
 		}
 
 		m_plugin.reset();

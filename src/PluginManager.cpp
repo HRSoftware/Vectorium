@@ -56,9 +56,10 @@ bool PluginManager::savePluginConfig(const std::filesystem::path& configPath) co
 }
 
 
-PluginManager::PluginManager(std::shared_ptr<ILogger>& logger) : m_engineLogger(logger)
+PluginManager::PluginManager(std::shared_ptr<ILogger>& logger, std::shared_ptr<DataPacketRegistry> ptrDataPacketReg) : m_dataPacketRegistry(std::move(ptrDataPacketReg)), m_engineLogger(logger)
 {
 	assert(logger && "logger was nullptr");
+	assert(m_dataPacketRegistry && "dataPacketReg was nullptr");
 }
 
 void PluginManager::init()
@@ -206,9 +207,10 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 		}
 
 		// Construct plugin and context(currently just one type of Context)
-		auto assignedPluginContext = std::make_unique<PluginRuntimeContext>(m_engineLogger, pluginName);
+		auto assignedPluginContext = std::make_unique<PluginRuntimeContext>(m_engineLogger, m_dataPacketRegistry, pluginName);
 
 		std::unique_ptr<IPlugin> plugin(pluginEntryFunction());
+
 		plugin->onPluginLoad(*assignedPluginContext);
 
 		// Package plugin instance
@@ -237,12 +239,13 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 
 bool PluginManager::unloadPlugin(const std::string& name)
 {
-	const auto it = m_loadedPlugins.find(name);
-	if(it != m_loadedPlugins.end())
+	const auto pluginItr = m_loadedPlugins.find(name);
+	if(pluginItr != m_loadedPlugins.end())
 	{
+		
 		// Unload and remove from collection of loaded plugins
-		const auto bSuccess = it->second->unload();
-		m_loadedPlugins.erase(it);
+		const auto bSuccess = pluginItr->second->unload();
+		m_loadedPlugins.erase(pluginItr);
 
 		// Update the collection of all known plugins
 		auto discovered = m_discoveredPlugins.find(name);
@@ -354,8 +357,7 @@ void PluginManager::reloadPluginConfig()
 
 bool PluginManager::saveConfig() const
 {
-	auto result = savePluginConfig(configurationLocation);
-	if(result)
+	if(savePluginConfig(configurationLocation))
 	{
 		logMessage(LogLevel::Info, "Saving PluginManagerConfig");
 		return true;
@@ -363,4 +365,12 @@ bool PluginManager::saveConfig() const
 
 	logMessage(LogLevel::Error, std::format("Failed to save config to {}", configurationLocation));
 	return false;
+}
+
+void PluginManager::tick()
+{
+	for(const auto& plugin : m_loadedPlugins | std::views::values)
+	{
+		plugin->tick();
+	}
 }

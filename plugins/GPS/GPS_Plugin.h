@@ -1,10 +1,6 @@
 #pragma once
 
-#ifdef _WIN32
-#define EXPORT extern "C" __declspec(dllexport)
-#else
-#define EXPORT extern "C"
-#endif
+
 #include "Plugin/IPlugin.h"
 #include "Logger/LoggablePlugin.h"
 
@@ -15,9 +11,9 @@ struct GPSDataPacket
 	float alt;
 };
 
-struct GPSDataHandler final : IDataPacketHandler
+struct GPSDataHandler final : ITypedDataPacketHandler<GPSDataPacket>, public LoggablePlugin
 {
-	bool handle(const DataPacket& packet) override;
+	bool handleType(const std::shared_ptr<GPSDataPacket>& packet) override;
 };
 
 struct GPSPlugin final : public IPlugin, public LoggablePlugin

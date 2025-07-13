@@ -15,6 +15,21 @@ struct DataPacket
 	std::type_index payloadType;
 
 	template<typename T>
+	static DataPacket create(std::shared_ptr<T> data)
+	{
+		return DataPacket{
+			.payload = std::move(data),
+			.payloadType = typeid(T)
+		};
+	}
+
+	template<typename T>
+	static DataPacket create(const T& value)
+	{
+		return create(std::make_shared<T>(value));
+	}
+
+	template<typename T>
 	[[nodiscard]] std::expected<std::shared_ptr<T>, std::string> get() const noexcept
 	{
 		if(payloadType != typeid(T))

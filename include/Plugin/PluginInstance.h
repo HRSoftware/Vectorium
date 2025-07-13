@@ -54,6 +54,7 @@ public:
 	[[nodiscard]] std::expected<std::type_index, std::string> getType() const;
 	[[nodiscard]] PluginRuntimeContext*                          getContext() const;
 
+	void tick() const;
 	bool unload();
 
 private:
