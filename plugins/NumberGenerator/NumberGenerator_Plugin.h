@@ -5,22 +5,22 @@
 #else
 #define EXPORT extern "C"
 #endif
+
+#include "DataPacket/DataPacket.h"
 #include "Plugin/IPlugin.h"
 #include "Logger/LoggablePlugin.h"
 
-struct GPSDataPacket
+struct NumberDataPacket
 {
-	float lat;
-	float lng;
-	float alt;
+	int number;
 };
 
-struct GPSDataHandler final : IDataPacketHandler
+struct NumberHandler final : IDataPacketHandler
 {
 	bool handle(const DataPacket& packet) override;
 };
 
-struct GPSPlugin final : public IPlugin, public LoggablePlugin
+struct NumberGeneratorPlugin final : public IPlugin, public LoggablePlugin
 {
 	void onPluginLoad(IPluginContext& context) override;
 	void onPluginUnload()override;

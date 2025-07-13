@@ -4,26 +4,23 @@
 
 #include <iostream>
 
-struct GPSDataHandler final : IDataPacketHandler
+bool GPSDataHandler::handle(const DataPacket& packet)
 {
-	void handle(const DataPacket& packet) override
+	auto gps = packet.get<GPSDataPacket>();
+	if(gps.has_value())
 	{
-		auto gps = packet.get<GPSData>();
-		if(gps.has_value())
-		{
-			std::cout << "[GPS] lat:" << gps.value()->lat << ", long:" << gps.value()->lng << ", alt: " << gps.value()->alt << "\n";
-		}
-		else
-		{
-			std::cout << "[ERROR]: " << gps.error() << "\n";
-		}
+		std::cout << "[GPS] lat:" << gps.value()->lat << ", long:" << gps.value()->lng << ", alt: " << gps.value()->alt << "\n";
+		return true;
 	}
-};
+
+	std::cout << "[ERROR]: " << gps.error() << "\n";
+	return false;
+}
 
 void GPSPlugin::onPluginLoad(IPluginContext& context)
 {
 	setLogger(context.getLoggerShared(), "GPSPlugin");
-	context.registerDataPacketHandler(typeid(GPSData), std::make_shared<GPSDataHandler>());
+	context.registerDataPacketHandler(typeid(GPSDataPacket), std::make_shared<GPSDataHandler>());
 	log(LogLevel::Info, "loaded");
 }
 
@@ -35,7 +32,7 @@ void GPSPlugin::onPluginUnload()
 
 std::type_index GPSPlugin::getType() const
 {
-	return typeid(GPSData);
+	return typeid(GPSDataPacket);
 }
 
 EXPORT IPlugin* initPlugin()

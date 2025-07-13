@@ -64,6 +64,7 @@ target_link_libraries(Vectorium PRIVATE engine ui)
 
 
 add_subdirectory(plugins/GPS)
+add_subdirectory(plugins/NumberGenerator)
 add_subdirectory(ui)
 add_subdirectory(src)
 

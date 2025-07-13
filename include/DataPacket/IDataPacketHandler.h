@@ -7,6 +7,6 @@
 class IDataPacketHandler
 {
 public:
-	virtual void handle(const DataPacket& packet) = 0;
+	virtual bool handle(const DataPacket& packet) = 0;
 	virtual ~IDataPacketHandler() = default;
 };
