@@ -12,14 +12,17 @@
 #include "Utils/range_utils.h"
 
 
-static constexpr std::string_view configurationLocation = "config/plugins_config.json";
-
-bool PluginManager::loadPluginConfig(const std::filesystem::path& configPath)
+bool PluginManager::loadConfig()
 {
-	std::ifstream file(configPath);
+	std::ifstream file(m_configurationLocation);
 	if(!file)
 	{
-		logMessage(LogLevel::Error, std::format("Could not read plugin config '{}'", configPath.stem().string()));
+		logMessage(LogLevel::Error, std::format("Could not read plugin config '{}' ", m_configurationLocation));
+		if(saveConfig())
+		{
+			reloadPluginConfig();
+			return true;
+		}
 		return false;
 	}
 
@@ -34,12 +37,17 @@ bool PluginManager::loadPluginConfig(const std::filesystem::path& configPath)
 	return true;
 }
 
-bool PluginManager::savePluginConfig(const std::filesystem::path& configPath) const
+bool PluginManager::saveConfig() const
 {
-	std::ofstream file(configPath);
+	if(!std::filesystem::exists(m_configurationLocation))
+	{
+		logMessage(LogLevel::Warning, std::format("Creating default plugin_config file at '{}'", m_configurationLocation));
+	}
+
+	std::ofstream file(m_configurationLocation);
 	if(!file)
 	{
-		logMessage(LogLevel::Error, std::format("Could not file PluginManger config file at '{}'", configPath.string()));
+		logMessage(LogLevel::Error, std::format("Could not file PluginManger config file at '{}'", m_configurationLocation));
 		return false;
 	}
 
@@ -64,8 +72,7 @@ PluginManager::PluginManager(std::shared_ptr<ILogger>& logger, std::shared_ptr<D
 
 void PluginManager::init()
 {
-	const auto loadConfigResult = loadPluginConfig(configurationLocation);
-	if(loadConfigResult)
+	if(loadConfig())
 	{
 		scanPluginsFolder(m_config.pluginDirectory);
 
@@ -89,7 +96,7 @@ void PluginManager::init()
 		return;
 	}
 
-	logMessage(LogLevel::Error, std::format("Could not find PluginManager configuration file '{}'", configurationLocation));
+	logMessage(LogLevel::Error, std::format("Could not find PluginManager configuration file '{}'", m_configurationLocation));
 }
 
 bool PluginManager::isPluginFolderWatcherEnabled() const
@@ -242,7 +249,6 @@ bool PluginManager::unloadPlugin(const std::string& name)
 	const auto pluginItr = m_loadedPlugins.find(name);
 	if(pluginItr != m_loadedPlugins.end())
 	{
-		
 		// Unload and remove from collection of loaded plugins
 		const auto bSuccess = pluginItr->second->unload();
 		m_loadedPlugins.erase(pluginItr);
@@ -352,19 +358,7 @@ bool PluginManager::getAutoScanEnabled() const
 
 void PluginManager::reloadPluginConfig()
 {
-	loadPluginConfig(configurationLocation);
-}
-
-bool PluginManager::saveConfig() const
-{
-	if(savePluginConfig(configurationLocation))
-	{
-		logMessage(LogLevel::Info, "Saving PluginManagerConfig");
-		return true;
-	}
-
-	logMessage(LogLevel::Error, std::format("Failed to save config to {}", configurationLocation));
-	return false;
+	loadConfig();
 }
 
 void PluginManager::tick()

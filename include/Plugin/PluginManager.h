@@ -28,8 +28,8 @@ struct PluginInfo
 class PluginManager
 {
 public:
-		bool loadPluginConfig(const std::filesystem::path& configPath);
-		bool savePluginConfig(const std::filesystem::path& configPath) const;
+		bool loadConfig();
+		bool saveConfig() const;
 		explicit PluginManager(std::shared_ptr<ILogger>& logger, std::shared_ptr<DataPacketRegistry> ptrDataPacketReg);
 
 		PluginInfo&                                               getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& path = "");
@@ -51,18 +51,16 @@ public:
 
 
 		// Config related -- Redundant?
-		PluginManagerConfig& getConfig();
-		void setScanInterval(std::chrono::seconds scanInterval);
-		std::chrono::seconds getScanInterval() const;
+		PluginManagerConfig&               getConfig();
+		void                               setScanInterval(std::chrono::seconds scanInterval);
+		[[nodiscard]] std::chrono::seconds getScanInterval() const;
 
-		void setPluginFolderDir(const std::string& dirPath);
-		std::filesystem::path getPluginFolderDir() const;
+		void                                setPluginFolderDir(const std::string& dirPath);
+		[[nodiscard]] std::filesystem::path getPluginFolderDir() const;
 
-		void     setAutoScan(bool bShouldScan);
-		bool     getAutoScanEnabled() const;
-		void reloadPluginConfig();
-
-		[[maybe_unused]] bool saveConfig() const;
+		void               setAutoScan(bool bShouldScan);
+		[[nodiscard]] bool getAutoScanEnabled() const;
+		void               reloadPluginConfig();
 
 		void tick();
 
@@ -74,6 +72,8 @@ private:
 	std::shared_ptr<DataPacketRegistry> m_dataPacketRegistry;
 	std::shared_ptr<ILogger> m_engineLogger;
 	void logMessage(LogLevel logLvl, const std::string& msg) const;
+
+	std::string m_configurationLocation = "config/plugins_config.json";
 
 	PluginManagerConfig m_config;
 

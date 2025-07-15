@@ -31,7 +31,7 @@ void EngineUIBridge::drawConfigUI()
 	if (!showConfigWindow) return;
 	ImGui::Begin("Plugin Config", &showConfigWindow);
 
-	auto& config = m_pluginManager->getConfig();
+	const auto& config = m_pluginManager->getConfig();
 	bool autoScan = config.autoScan;
 	int interval = static_cast<int>(config.pluginScanInterval.count());
 
@@ -50,8 +50,14 @@ void EngineUIBridge::drawConfigUI()
 
 	if (ImGui::Button("Save Config"))
 	{
-		m_pluginManager->saveConfig();
-		m_pluginManager->reloadPluginConfig();
+		if(m_pluginManager->saveConfig())
+		{
+			m_pluginManager->reloadPluginConfig();
+		}
+		else
+		{
+			m_logger->log(LogLevel::Error, "Failed to save config");
+		}
 	}
 
 	ImGui::End();
