@@ -84,6 +84,24 @@ bool PluginInstance::unload()
 	return true;
 }
 
+void PluginInstance::enableDebugLogging()
+{
+	if (!m_logger) return;
+	m_logger->enabledDebugLogging();
+}
+
+void PluginInstance::disableDebugLogging()
+{
+	if (!m_logger) return;
+	m_logger->disableDebugLogging();
+}
+
+bool PluginInstance::isDebugLoggingEnabled() const
+{
+	if (!m_logger) return false;
+	return m_logger->isDebugLoggingEnabled();
+}
+
 void PluginInstance::log(LogLevel level, const std::string& msg) const
 {
 	if(m_logger)

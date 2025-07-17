@@ -2,7 +2,7 @@
 
 bool NumberLoggerHandler::handleType(const std::shared_ptr<int>& data)
 {
-	log(LogLevel::Info, std::format("Detected number: {}", *data));
+	log(LogLevel::Debug, std::format("Detected number: {}", *data));
 	return false;
 }
 
@@ -20,7 +20,6 @@ void NumberLoggerPlugin::onPluginLoad(IPluginContext& context)
 
 void NumberLoggerPlugin::onPluginUnload()
 {
-	
 }
 
 std::type_index NumberLoggerPlugin::getType() const

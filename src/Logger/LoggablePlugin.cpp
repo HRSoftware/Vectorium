@@ -16,6 +16,7 @@ void LoggablePlugin::enableDebugLogging()
 	if(m_logger)
 	{
 		m_logger->enabledDebugLogging();
+		m_logger->log(LogLevel::Debug, "Debug logging enabled");
 	}
 }
 
@@ -23,6 +24,7 @@ void LoggablePlugin::disableDebugLogging()
 {
 	if(m_logger)
 	{
+		m_logger->log(LogLevel::Debug, "Debug logging disabled");
 		m_logger->disableDebugLogging();
 	}
 }

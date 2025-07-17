@@ -57,6 +57,10 @@ public:
 	void tick() const;
 	bool unload();
 
+	void enableDebugLogging();
+	void disableDebugLogging();
+	bool isDebugLoggingEnabled() const ;
+
 private:
 
 	void log(LogLevel level, const std::string& msg) const;

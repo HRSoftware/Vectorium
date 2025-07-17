@@ -104,6 +104,10 @@ void EngineUIBridge::drawMenuBar()
 				}
 			}
 
+			ImGui::Separator();
+
+			ImGui::MenuItem("Plugin Debug Logging options", nullptr, &showLoggingSettingsWindow);
+
 			ImGui::EndMenu();
 		}
 
@@ -140,7 +144,16 @@ void EngineUIBridge::drawLoggingSettingUI()
 	if (!showLoggingSettingsWindow) return;
 	ImGui::Begin("Plugin Config", &showLoggingSettingsWindow);
 
-	
+	bool isDebugEnabled;
+	for(const auto& [name, plugin] : m_pluginManager->getLoadedPlugins())
+	{
+		isDebugEnabled = plugin->isDebugLoggingEnabled();
+		if(ImGui::Checkbox(name.c_str(), &isDebugEnabled))
+		{
+			isDebugEnabled ? plugin->enableDebugLogging() : plugin->disableDebugLogging();
+		}
+	}
+
 	ImGui::End();
 }
 
@@ -154,6 +167,7 @@ void EngineUIBridge::draw()
 	drawStatusBar();
 
 	drawConfigUI();
+	drawLoggingSettingUI();
 }
 
 bool EngineUIBridge::shouldQuit() const
