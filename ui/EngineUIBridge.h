@@ -18,6 +18,7 @@ public:
 	void drawSideBar() const;
 	void drawMainPanels();
 	void drawStatusBar();
+	void drawLoggingSettingUI();
 	void drawConfigUI();
 	void draw();
 
@@ -31,6 +32,8 @@ private:
 
 
 	bool showConfigWindow = false;
+	bool showLoggingSettingsWindow = false;
+	bool showLogPanel = false;
 
 	bool quitRequested = false;
 };

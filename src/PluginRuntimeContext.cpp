@@ -48,8 +48,6 @@ void PluginRuntimeContext::unregisterDataPacketHandler()
 		m_registry->unregisterDataPacketHandlerForPlugin(m_pluginName);
 
 		log(LogLevel::Info, std::format("Unregistered handles for {}", m_pluginName));
-
-		return;
 	}
 }
 

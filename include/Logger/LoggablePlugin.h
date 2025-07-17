@@ -17,6 +17,10 @@ public:
 	void setLogger(std::shared_ptr<ILogger> logger, std::string name = "Unknown");
 	void unsetLogger();
 
+	void enableDebugLogging();
+	void disableDebugLogging();
+	bool isDebugLoggingEnabled() const;
+
 protected:
 	void log(LogLevel level, const std::string& msg) const;
 

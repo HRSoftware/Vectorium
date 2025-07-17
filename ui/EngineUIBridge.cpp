@@ -135,6 +135,15 @@ void EngineUIBridge::drawStatusBar()
 	ImGui::End();
 }
 
+void EngineUIBridge::drawLoggingSettingUI()
+{
+	if (!showLoggingSettingsWindow) return;
+	ImGui::Begin("Plugin Config", &showLoggingSettingsWindow);
+
+	
+	ImGui::End();
+}
+
 void EngineUIBridge::draw()
 {
 	drawMenuBar();

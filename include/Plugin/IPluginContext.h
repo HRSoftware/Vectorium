@@ -26,12 +26,30 @@ struct IPluginContext
 	virtual void log(LogLevel level, const std::string& message) const = 0;
 
 	template <typename... Args>
-	void logf(LogLevel level, std::string_view fmt, Args&&... args) const
+	void logf(LogLevel level, std::string_view fmt, Args&&... args)
 	{
+		if (getLoggerShared() && !getLoggerShared()->isDebugLoggingEnabled()) return;
 		log(level, std::vformat(fmt, std::make_format_args(args...)));
 	}
 
 	//virtual void unregisterDataPacketHandler(std::type_index type) = 0;
+	void enableDebugLogging()
+	{
+		if (!getLoggerShared()) return;
+		return getLoggerShared()->enabledDebugLogging();
+	}
+
+	void disableDebugLogging()
+	{
+		if (!getLoggerShared()) return;
+		return getLoggerShared()->disableDebugLogging();
+	}
+
+	bool isDebugLoggingEnabled()
+	{
+		if (!getLoggerShared()) return false;
+		return getLoggerShared()->isDebugLoggingEnabled();
+	}
 
 	virtual std::string              getPluginName() const = 0;
 	virtual std::shared_ptr<ILogger> getLoggerShared() = 0;
@@ -39,6 +57,6 @@ struct IPluginContext
 	virtual void dispatch(const DataPacket& packet) = 0;
 
 	protected:
-	virtual bool registerDataPacketHandler(std::type_index type, std::shared_ptr<IDataPacketHandler> handler) = 0;
+		virtual bool registerDataPacketHandler(std::type_index type, std::shared_ptr<IDataPacketHandler> handler) = 0;
 };
 

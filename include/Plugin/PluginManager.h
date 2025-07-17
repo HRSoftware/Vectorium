@@ -62,6 +62,11 @@ public:
 		[[nodiscard]] bool getAutoScanEnabled() const;
 		void               reloadPluginConfig();
 
+		void enableDebugLogging();
+		void disableDebugLogging();
+
+		bool isDebugLoggingEnabled();
+
 		void tick();
 
 	//void reloadPlugin(const std::string name);

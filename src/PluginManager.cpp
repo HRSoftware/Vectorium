@@ -132,7 +132,7 @@ void PluginManager::removeKnownPlugin(const std::string& name)
 
 void PluginManager::scanPluginsFolder(const std::string& pluginDirectory)
 {
-	logMessage(LogLevel::Info, "Scanning plugin folder");
+	logMessage(LogLevel::Debug, "Scanning plugin folder");
 	if(!std::filesystem::exists(pluginDirectory))
 	{
 		m_engineLogger->log(LogLevel::Info, std::format("Could not find plugin at '{}'", pluginDirectory));
@@ -359,6 +359,28 @@ bool PluginManager::getAutoScanEnabled() const
 void PluginManager::reloadPluginConfig()
 {
 	loadConfig();
+}
+
+void PluginManager::enableDebugLogging()
+{
+	if(m_engineLogger)
+	{
+		m_engineLogger->enabledDebugLogging();
+	}
+}
+
+void PluginManager::disableDebugLogging()
+{
+	if(m_engineLogger)
+	{
+		m_engineLogger->disableDebugLogging();
+	}
+}
+
+bool PluginManager::isDebugLoggingEnabled()
+{
+	if (!m_engineLogger) return false;
+	return m_engineLogger->isDebugLoggingEnabled();
 }
 
 void PluginManager::tick()
