@@ -21,8 +21,7 @@ target_link_libraries(imgui_backend PUBLIC glfw OpenGL::GL)
 add_library(ui
     UI.cpp
     EngineUIBridge.cpp
-	"UILogSink.cpp" 
-	"Widgets/CandleChartWidget.h")
+	"UILogSink.cpp")
 
 target_include_directories(ui
     PUBLIC
@@ -39,5 +38,5 @@ target_link_libraries(ui
         glfw
 		imgui_backend
         OpenGL::GL
-		spdlog::spdlog
+		logger
 )

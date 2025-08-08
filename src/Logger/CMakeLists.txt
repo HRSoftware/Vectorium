@@ -10,4 +10,4 @@ target_include_directories(logger PUBLIC ${PROJECT_SOURCE_DIR}/include)
 
 set_target_properties(logger PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
-target_link_libraries(logger PUBLIC spdlog::spdlog)
+target_link_libraries(logger PUBLIC spdlog::spdlog_header_only)

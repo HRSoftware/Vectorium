@@ -5,7 +5,7 @@
 
 #include "imgui.h"
 #include "UILogSink.h"
-#include "../include/Engine.h"
+#include "Engine.h"
 #include "Plugin/PluginInstance.h"
 
 //static std::string demangle(const char* name) {
@@ -28,11 +28,11 @@ namespace
 			case spdlog::level::err:      return ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
 			case spdlog::level::critical: return ImVec4(1.0f, 0.0f, 1.0f, 1.0f);
 			case spdlog::level::off:
-				break;
 			case spdlog::level::n_levels:
-				break;
 			default:                      return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 		}
+
+		return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
 	}
 }
 

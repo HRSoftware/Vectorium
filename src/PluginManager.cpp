@@ -47,7 +47,7 @@ bool PluginManager::saveConfig() const
 	std::ofstream file(m_configurationLocation);
 	if(!file)
 	{
-		logMessage(LogLevel::Error, std::format("Could not file PluginManger config file at '{}'", m_configurationLocation));
+		logMessage(LogLevel::Error, std::format("Could not create new PluginManger config file at '{}'", m_configurationLocation));
 		return false;
 	}
 
