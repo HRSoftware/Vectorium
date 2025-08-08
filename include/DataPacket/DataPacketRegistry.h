@@ -24,7 +24,7 @@ public:
 
 		bool registerDataPacketHandler(std::type_index packetType, std::shared_ptr<IDataPacketHandler> handler, const std::string& pluginName);
 		bool registerWildcardHandler(std::shared_ptr<IDataPacketHandler> handler, const std::string& pluginName);
-		void unregisterDataPacketHandlerForPlugin(const std::string& pluginName);
+		void unregisterDataPacketHandlerForPlugin(std::string_view pluginName);
 		void dispatch(const DataPacket& packet);
 
 		[[nodiscard]] std::vector<std::type_index> getDataPacketTypes() const;

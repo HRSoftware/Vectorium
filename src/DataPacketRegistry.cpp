@@ -39,7 +39,7 @@ bool DataPacketRegistry::registerWildcardHandler(std::shared_ptr<IDataPacketHand
     return true;
 }
 
-void DataPacketRegistry::unregisterDataPacketHandlerForPlugin(const std::string& pluginName)
+void DataPacketRegistry::unregisterDataPacketHandlerForPlugin(std::string_view pluginName)
 {
 	for (auto it = m_handlers.begin(); it != m_handlers.end(); )
 	{
@@ -53,9 +53,12 @@ void DataPacketRegistry::unregisterDataPacketHandlerForPlugin(const std::string&
 		              });
 
 		// Clean up empty type entries
-		if (handlerList.empty()) {
+		if (handlerList.empty())
+		{
 			it = m_handlers.erase(it);
-		} else {
+		}
+		else
+		{
 			++it;
 		}
 	}

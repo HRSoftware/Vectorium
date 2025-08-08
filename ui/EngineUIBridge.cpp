@@ -4,6 +4,7 @@
 #include <utility>
 
 #include "imgui.h"
+#include "UILogSink.h"
 #include "../include/Engine.h"
 #include "Plugin/PluginInstance.h"
 
@@ -14,15 +15,36 @@
 //	return (status == 0) ? result.get() : name;
 //}
 
-
+namespace
+{
+	ImVec4 getColorForLevel(spdlog::level::level_enum level)
+	{
+		switch (level)
+		{
+			case spdlog::level::trace:    return ImVec4(0.5f, 0.5f, 0.5f, 1.0f);
+			case spdlog::level::debug:    return ImVec4(0.0f, 1.0f, 1.0f, 1.0f);
+			case spdlog::level::info:     return ImVec4(0.0f, 1.0f, 0.0f, 1.0f);
+			case spdlog::level::warn:     return ImVec4(1.0f, 1.0f, 0.0f, 1.0f);
+			case spdlog::level::err:      return ImVec4(1.0f, 0.0f, 0.0f, 1.0f);
+			case spdlog::level::critical: return ImVec4(1.0f, 0.0f, 1.0f, 1.0f);
+			case spdlog::level::off:
+				break;
+			case spdlog::level::n_levels:
+				break;
+			default:                      return ImVec4(1.0f, 1.0f, 1.0f, 1.0f);
+		}
+	}
+}
 
 EngineUIBridge::EngineUIBridge(
 	std::shared_ptr<PluginManager> pluginMgr,
 	std::shared_ptr<DataPacketRegistry> registry,
-	std::shared_ptr<ILogger> logger)
+	std::shared_ptr<ILogger> logger,
+	std::shared_ptr<UILogSink> logSink)
 : m_pluginManager(std::move(pluginMgr))
 , m_dataPacketRegistry(std::move(registry))
 , m_logger(std::move(logger))
+, m_LogSink(std::move(logSink))
 {
 }
 
@@ -83,6 +105,8 @@ void EngineUIBridge::drawMenuBar()
 			}
 
 			ImGui::MenuItem("Plugin Config", nullptr, &showConfigWindow);
+
+			ImGui::MenuItem("Log Panel", nullptr, &showLogPanel);
 
 			if (ImGui::MenuItem("Quit"))
 			{
@@ -157,6 +181,30 @@ void EngineUIBridge::drawLoggingSettingUI()
 	ImGui::End();
 }
 
+void EngineUIBridge::drawLogPanel(std::shared_ptr<UILogSink> uiSink)
+{
+	if (!showLogPanel || !uiSink) return;
+
+	if(ImGui::Begin("Log Console"))
+	{
+		ImGui::BeginChild("ScrollingRegion", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
+		if(ImGui::Button("Clear"))
+		{
+			uiSink->logBuffer.clear();
+		}
+
+		for(const auto& line : uiSink->logBuffer)
+		{
+			ImGui::PushStyleColor(ImGuiCol_Text, getColorForLevel(line.level));
+			ImGui::TextUnformatted(line.message.c_str());
+			ImGui::PopStyleColor();
+		}
+		ImGui::EndChild();
+	}
+
+	ImGui::End();
+}
+
 void EngineUIBridge::draw()
 {
 	drawMenuBar();
@@ -168,6 +216,7 @@ void EngineUIBridge::draw()
 
 	drawConfigUI();
 	drawLoggingSettingUI();
+	drawLogPanel(m_LogSink);
 }
 
 bool EngineUIBridge::shouldQuit() const

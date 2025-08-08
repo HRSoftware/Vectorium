@@ -43,12 +43,13 @@ bool UI::init()
 	// Init ImGui
 	IMGUI_CHECKVERSION();
 	ImGui::CreateContext();
+
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
 	ImGui::StyleColorsDark();
 
 
-	uiBridge = std::make_unique<EngineUIBridge>(engine.getPluginManager(), engine.getDataPacketRegistry(), engine.getLogger());
+	uiBridge = std::make_unique<EngineUIBridge>(engine.getPluginManager(), engine.getDataPacketRegistry(), engine.getLogger(), engine.getLogSink());
 
 	m_logger->log(LogLevel::Info, "Init complete");
 	return true;
