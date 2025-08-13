@@ -1,15 +1,37 @@
-#include <format>
-#include <memory>
-#include <ranges>
-
-#include "Plugin/PluginInstance.h"
-#include "Plugin/PluginRuntimeContext.h"
 #include "Plugin/PluginManager.h"
 
 #include <cassert>
+#include <format>
 #include <fstream>
-#include <nlohmann/json.hpp>
+#include <memory>
+#include <ranges>
+
 #include "Utils/range_utils.h"
+#include <nlohmann/json.hpp>
+
+#include "DataPacket/DataPacketRegistry.h"
+#include "Plugin/PluginInstance.h"
+#include "Plugin/PluginRuntimeContext.h"
+#include "RestClient/RestClient_HttpLib.h"
+#include "Services/Logging/ILogger.h"
+#include "Services/Logging/LogLevel.h"
+
+std::expected<std::string, std::string> formatPluginDescriptor(PluginDescriptor* pluginDescriptor)
+{
+	if(!pluginDescriptor)
+	{
+		return std::unexpected("Error: Service Descriptor was nullptr");
+	}
+
+	std::string stringOfServices = std::format("'{}(v{})' requires:\n", pluginDescriptor->name, pluginDescriptor->version);
+
+	for(auto& service : pluginDescriptor->services)
+	{
+		stringOfServices += std::format("{}({}) - optional: {}\n", service.name, service.minVersion, service.required ? "false" : "true"); // negate as we are showing optional rather than required
+	}
+
+	return stringOfServices;
+}
 
 
 bool PluginManager::loadConfig()
@@ -63,8 +85,13 @@ bool PluginManager::saveConfig() const
 	return true;
 }
 
+PluginManager::PluginManager(std::shared_ptr<ILogger> logger) : m_engineLogger(std::move(logger))
+{
+}
 
-PluginManager::PluginManager(std::shared_ptr<ILogger>& logger, std::shared_ptr<DataPacketRegistry> ptrDataPacketReg) : m_dataPacketRegistry(std::move(ptrDataPacketReg)), m_engineLogger(logger)
+PluginManager::PluginManager(std::shared_ptr<ILogger> logger, std::shared_ptr<DataPacketRegistry> ptrDataPacketReg)
+: m_dataPacketRegistry(std::move(ptrDataPacketReg))
+,m_engineLogger(std::move(logger))
 {
 	assert(logger && "logger was nullptr");
 	assert(m_dataPacketRegistry && "dataPacketReg was nullptr");
@@ -203,8 +230,31 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 			return false;
 		}
 
+		//Add descriptor check
+		auto pluginDescriptorFunc = reinterpret_cast<PluginDescriptor*(*)()>(GetSymbol(handle, "getPluginDescriptor"));
+
+		if(!pluginDescriptorFunc)
+		{
+			info.errorMessage = getError();
+			UnloadLibrary(handle);
+			logMessage(LogLevel::Error, std::format("Missing 'getPluginDescriptor' in '{}':{}", pluginName, info.errorMessage));
+			return false;
+		}
+
+		std::unique_ptr<PluginDescriptor> pluginDescriptor(pluginDescriptorFunc());
+		auto formattedDescriptor = formatPluginDescriptor(pluginDescriptor.get());
+		if(formattedDescriptor.has_value())
+		{
+			logMessage(LogLevel::Info, formattedDescriptor.value());
+		}
+		else
+		{
+			logMessage(LogLevel::Error, formattedDescriptor.error());
+		}
+
+
 		// Load init symbol
-		auto pluginEntryFunction = reinterpret_cast<IPlugin*(*)()>(GetSymbol(handle, "initPlugin"));
+		auto pluginEntryFunction = reinterpret_cast<IPlugin*(*)()>(GetSymbol(handle, "loadPlugin"));
 		if (!pluginEntryFunction)
 		{
 			info.errorMessage = getError();
@@ -215,6 +265,7 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 
 		// Construct plugin and context(currently just one type of Context)
 		auto assignedPluginContext = std::make_unique<PluginRuntimeContext>(m_engineLogger, m_dataPacketRegistry, pluginName);
+		assignedPluginContext->registerService<IRestClient>(std::make_shared<RESTClient_HttpLib>("test"));
 
 		std::unique_ptr<IPlugin> plugin(pluginEntryFunction());
 
@@ -365,7 +416,7 @@ void PluginManager::enableDebugLogging()
 {
 	if(m_engineLogger)
 	{
-		m_engineLogger->enabledDebugLogging();
+		m_engineLogger->enableDebugLogging();
 	}
 }
 

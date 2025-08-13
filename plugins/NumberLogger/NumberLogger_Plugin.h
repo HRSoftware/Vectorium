@@ -1,16 +1,20 @@
 #pragma once
 
 #include "Plugin/IPlugin.h"
-#include "Logger/LoggablePlugin.h"
 #include "DataPacket/IDataPacketHandler.h"
+#include "Services/IService.h"
 
-class NumberLoggerHandler : public ITypedDataPacketHandler<int>, public LoggablePlugin
+class NumberLoggerHandler : public ITypedDataPacketHandler<int>
 {
 public:
+	NumberLoggerHandler(ServiceProxy<ILogger> logger);
 	bool handleType(const std::shared_ptr<int>& data) override;
+
+	private:
+		ServiceProxy<ILogger> m_logger{ nullptr };
 };
 
-class NumberLoggerPlugin : public IPlugin, public LoggablePlugin
+class NumberLoggerPlugin : public IPlugin
 {
 	public:
 		void            onPluginLoad(IPluginContext& context) override;
@@ -19,4 +23,5 @@ class NumberLoggerPlugin : public IPlugin, public LoggablePlugin
 
 	private:
 		std::shared_ptr<NumberLoggerHandler> m_handler;
+		ServiceProxy<ILogger> m_logger {nullptr};
 };

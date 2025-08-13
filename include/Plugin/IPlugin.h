@@ -3,6 +3,7 @@
 #include <functional>
 #include <typeindex>
 #include "IPluginContext.h"
+#include <Services/IService.h>
 
 #ifdef _WIN32
 #define EXPORT extern "C" __declspec(dllexport)
@@ -10,9 +11,14 @@
 #define EXPORT extern "C"
 #endif
 
-/// <summary>
-/// 
-/// </summary>
+// Used to indicate that services the plugin needs ie REST, logging, etc
+struct PluginDescriptor
+{
+	const char* name;
+	const char* version;
+	std::vector<ServiceId> services; // required + optional
+};
+
 struct IPlugin
 {
 	virtual void onPluginLoad(IPluginContext& context) = 0;
@@ -20,7 +26,15 @@ struct IPlugin
 
 	virtual void onPluginTick() {};
 	virtual std::type_index getType() const = 0;
+	virtual void onRender() {}; // optional UI overload
 	virtual ~IPlugin() = default;
 
-	std::string m_pluginName;
+	PluginDescriptor getPluginDescriptor()
+	{
+		return m_plugin_descriptor;
+	}
+
+
+	PluginDescriptor m_plugin_descriptor;
 };
+

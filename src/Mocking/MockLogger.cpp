@@ -1,10 +1,20 @@
-#include "Mocking/MockLogger.h"
+#include "Services/Mocking/MockLogger.h"
 
 #include <iostream>
 
-#include "Logger/LogLevel.h"
+#include "Services/Logging/LogLevel.h"
+//
+//inline void MockLogger::log(LogLevel level, const std::string& message)
+//{
+//	std::cout << "[MockLogger][" << static_cast<int>(level) << "] " << message << "\n";
+//}
+//
+//void MockLogger::enableDebugLogging()
+//{
+//}
+//
+//void MockLogger::disableDebugLogging()
+//{
+//}
+//
 
-inline void MockLogger::log(LogLevel level, const std::string& message)
-{
-	std::cout << "[MockLogger][" << static_cast<int>(level) << "] " << message << "\n";
-}

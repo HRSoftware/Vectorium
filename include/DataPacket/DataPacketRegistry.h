@@ -1,14 +1,14 @@
 #pragma once
 #include <memory>
-#include <typeindex>
-#include <vector>
 #include <set>
+#include <string>
+#include <typeindex>
 #include <unordered_map>
+#include <vector>
 
-#include "IDataPacketHandler.h"
+#include "DataPacket/IDataPacketHandler.h"
 
-class IDataPacketHandler;
-
+// forward declare
 class ILogger;
 struct DataPacket;
 

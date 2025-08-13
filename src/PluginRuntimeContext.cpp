@@ -1,20 +1,17 @@
 
 #include <cassert>
 #include <format>
-#include <iostream>
 #include <utility>
-
-#include "Logger/ComponentLogger.h"
 #include "Plugin/PluginRuntimeContext.h"
-
 #include "DataPacket/DataPacketRegistry.h"
+#include "Services/Logging/SpdLogger.h"
 
 PluginRuntimeContext::PluginRuntimeContext(std::shared_ptr<ILogger> centralLogger, std::shared_ptr<DataPacketRegistry> registry, std::string pluginName)
 : m_registry(std::move(registry))
-, m_pluginName(pluginName)
+, m_pluginName(std::move(pluginName))
 {
 	assert(centralLogger && "centralLogger is nullptr");
-	scopedLogger = std::make_shared<ComponentLogger>(std::move(centralLogger), std::move(pluginName));
+	scopedLogger = std::make_shared<SpdLogger>();
 
 	assert(scopedLogger && "scopedLogger was nullptr");
 }
@@ -38,6 +35,27 @@ void PluginRuntimeContext::dispatch(const DataPacket& packet)
 
 	m_registry->dispatch(packet);
 }
+
+std::expected<std::shared_ptr<void>, std::string> PluginRuntimeContext::getServiceByTypeIndex(std::type_index tIdx)
+{
+	std::shared_lock lock(m_mutex);
+
+	if (const auto it = m_services.find(tIdx); it != m_services.end() && it->second)
+	{
+		return it->second;
+	}
+
+	return std::unexpected("Service not found or unavailable");
+}
+
+bool PluginRuntimeContext::hasServiceByTypeIndex(std::type_index tIdx) const
+{
+	std::shared_lock lock(m_mutex);
+	const auto it = m_services.find(tIdx);
+	return it != m_services.end() && it->second != nullptr;
+}
+
+
 
 //Needed? Move to base class?
 void PluginRuntimeContext::unregisterDataPacketHandler()

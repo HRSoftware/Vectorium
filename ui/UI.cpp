@@ -6,16 +6,17 @@
 #include <imgui_impl_opengl3.h>
 
 #include <GLFW/glfw3.h>
-#include <iostream>
 
 #include "../include/Engine.h"
-#include "Logger/ComponentLogger.h"
+#include "Services/Logging/ILogger.h"
+#include "Services/Logging/LogLevel.h"
 
 const std::string appName = "Vectorium";
 
 UI::UI(Engine& engine) : engine(engine)
 {
-	m_logger = std::make_shared<ComponentLogger>(engine.getLogger(), "UI");
+	m_logger = engine.getLogger();
+	m_logger->setPluginName("UI");
 }
 
 bool UI::init()
@@ -47,6 +48,10 @@ bool UI::init()
 	ImGui_ImplGlfw_InitForOpenGL(window, true);
 	ImGui_ImplOpenGL3_Init("#version 330");
 	ImGui::StyleColorsDark();
+
+	//Enable docking
+	/*ImGuiIO& io = ImGui::GetIO();
+	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;*/
 
 
 	uiBridge = std::make_unique<EngineUIBridge>(engine.getPluginManager(), engine.getDataPacketRegistry(), engine.getLogger(), engine.getLogSink());

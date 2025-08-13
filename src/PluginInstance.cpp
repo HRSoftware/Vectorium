@@ -1,11 +1,10 @@
-#include "format"
-#include "../include/Plugin/PluginInstance.h"
-#include "../include/Plugin/IPlugin.h"
-#include "../include/Plugin/PluginRuntimeContext.h"
+#include "Plugin/PluginInstance.h"
 #include <utility>
-#include <format>
+#include "Plugin/IPlugin.h"
+#include "Plugin/PluginRuntimeContext.h"
 
-
+#include "Services/Logging/ILogger.h"
+#include "Services/Logging/LogLevel.h"
 
 PluginInstance::PluginInstance(LibraryHandle h, std::unique_ptr<IPlugin> p, std::unique_ptr<PluginRuntimeContext> ctx, std::string name)
 : m_handle(h)
@@ -87,7 +86,7 @@ bool PluginInstance::unload()
 void PluginInstance::enableDebugLogging()
 {
 	if (!m_logger) return;
-	m_logger->enabledDebugLogging();
+	m_logger->enableDebugLogging();
 }
 
 void PluginInstance::disableDebugLogging()

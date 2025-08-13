@@ -1,9 +1,13 @@
 cmake_minimum_required(VERSION 3.16)
 
+
+
 add_library(mocking
     MockLogger.cpp
     MockPluginContext.cpp
 )
+
+set_target_properties(mocking PROPERTIES CXX_STANDARD 23)
 
 target_include_directories(mocking
     PUBLIC

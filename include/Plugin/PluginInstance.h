@@ -1,14 +1,12 @@
 #pragma once
-#include <functional>
-#include <iostream>
+#include <expected>
 #include <memory>
 #include <typeindex>
-#include <unordered_map>
-
-#include "../DataPacket/IDataPacketHandler.h"
 #include <filesystem>
 
-#include "Logger/ILogger.h"
+enum class LogLevel;
+struct ILogger;
+class IDataPacketHandler;
 
 struct IPlugin;
 class PluginRuntimeContext;
@@ -52,7 +50,7 @@ public:
 
 	[[nodiscard]] IPlugin*                                    get() const;
 	[[nodiscard]] std::expected<std::type_index, std::string> getType() const;
-	[[nodiscard]] PluginRuntimeContext*                          getContext() const;
+	[[nodiscard]] PluginRuntimeContext*                       getContext() const;
 
 	void tick() const;
 	bool unload();

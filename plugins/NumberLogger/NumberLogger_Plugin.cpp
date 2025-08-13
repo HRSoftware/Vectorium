@@ -1,22 +1,30 @@
 #include "NumberLogger_Plugin.h"
+#include "Services/IServiceSpecialisations.h"
+
+NumberLoggerHandler::NumberLoggerHandler(ServiceProxy<ILogger> logger): m_logger(std::move(logger))
+{
+
+}
 
 bool NumberLoggerHandler::handleType(const std::shared_ptr<int>& data)
 {
-	log(LogLevel::Debug, std::format("Detected number: {}", *data));
+	m_logger->log(LogLevel::Debug, std::format("Detected number: {}", *data));
 	return false;
 }
 
+
 void NumberLoggerPlugin::onPluginLoad(IPluginContext& context)
 {
-	setLogger(context.getLoggerShared(), "NumberLogger");
+	m_logger = context.getService<ILogger>();
 
-	m_handler = std::make_shared<NumberLoggerHandler>();
-	m_handler->setLogger(context.getLoggerShared(), "NumberLoggerHandler");
+	//m_handler = std::make_shared<NumberLoggerHandler>(m_logger);
 
 	context.registerTypedHandler<int>(m_handler);
 
-	log(LogLevel::Info, "NumberLoggerPlugin registered for int packets");
+	m_logger->log (LogLevel::Info, "NumberLoggerPlugin registered for int packets");
 }
+
+
 
 void NumberLoggerPlugin::onPluginUnload()
 {
@@ -27,7 +35,7 @@ std::type_index NumberLoggerPlugin::getType() const
 	return typeid(int);
 }
 
-EXPORT IPlugin* initPlugin()
+EXPORT IPlugin* loadPlugin()
 {
 	return new NumberLoggerPlugin();
 }

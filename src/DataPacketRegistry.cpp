@@ -7,7 +7,7 @@
 #include <utility>
 #include "DataPacket/DataPacket.h"
 #include "DataPacket/IDataPacketHandler.h"
-#include "Logger/LogLevel.h"
+#include "Services/Logging/LogLevel.h"
 
 DataPacketRegistry::DataPacketRegistry(std::shared_ptr<ILogger> log) : logger(std::move(log))
 {

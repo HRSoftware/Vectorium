@@ -1,6 +1,8 @@
 #include "NumberGenerator_Plugin.h"
 
-#include "Plugin/PluginRuntimeContext.h"
+#include <iostream>
+
+#include "Services/IServiceSpecialisations.h"
 
 bool NumberHandler::handle(const DataPacket& packet)
 {
@@ -15,24 +17,21 @@ bool NumberHandler::handle(const DataPacket& packet)
 	return false;
 }
 
-NumberGeneratorPlugin::NumberGeneratorPlugin()
-{
-	m_pluginName = "NumberGenerator";
-}
+NumberGeneratorPlugin::NumberGeneratorPlugin() = default;
 
 void NumberGeneratorPlugin::onPluginLoad(IPluginContext& context)
 {
-	setLogger(context.getLoggerShared(), "NumberGeneratorPlugin");
+	m_logger = context.getService<ILogger>();
+	m_logger->setPluginName(context.getPluginName());
 	m_context = &context;
 	// No need to register a handler as we don't want to do anything
 
-	log(LogLevel::Info, "loaded");
+	m_logger->log(LogLevel::Info, "loaded");
 }
 
 void NumberGeneratorPlugin::onPluginUnload()
 {
-	log(LogLevel::Info, "unloading");
-	unsetLogger();
+	m_logger->log(LogLevel::Info, "unloading");
 }
 
 std::type_index NumberGeneratorPlugin::getType() const
@@ -52,7 +51,7 @@ void NumberGeneratorPlugin::onPluginTick()
 	}
 }
 
-EXPORT IPlugin* initPlugin()
+EXPORT IPlugin* loadPlugin()
 {
 	return new NumberGeneratorPlugin();
 }

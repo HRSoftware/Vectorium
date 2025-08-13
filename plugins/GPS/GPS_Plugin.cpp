@@ -1,32 +1,27 @@
 #include "GPS_Plugin.h"
-#include "DataPacket/IDataPacketHandler.h"
-#include "Plugin/PluginRuntimeContext.h"
-
-#include <iostream>
-#include <format>
-
+#include "Services/IServiceSpecialisations.h"
 
 bool GPSDataHandler::handleType(const std::shared_ptr<GPSDataPacket>& packet)
 {
-	log(LogLevel::Info, std::format("lat:{}, long:{}, alt:{}", packet->lat, packet->lng, packet->alt));
+	//log(LogLevel::Info, std::format("lat:{}, long:{}, alt:{}", packet->lat, packet->lng, packet->alt));
 	return false;
 }
 
 void GPSPlugin::onPluginLoad(IPluginContext& context)
 {
-	setLogger(context.getLoggerShared(), "GPSPlugin");
+	m_Logger = context.getService<ILogger>();
 
 	// Registering our interest in GPSDataPackets
 	context.registerTypedHandler<GPSDataPacket>(std::make_shared<GPSDataHandler>());
-
-	log(LogLevel::Info, "loaded");
+	m_Logger->log(LogLevel::Info, "Loaded");
 }
 
 void GPSPlugin::onPluginUnload()
 {
-	log(LogLevel::Info, "unloading");
+
+	//log(LogLevel::Info, "unloading");
 	
-	unsetLogger();
+	//unsetLogger();
 }
 
 std::type_index GPSPlugin::getType() const
@@ -34,7 +29,26 @@ std::type_index GPSPlugin::getType() const
 	return typeid(GPSDataPacket);
 }
 
-EXPORT IPlugin* initPlugin()
+/////////////////////////////////////////////////////////////////////////////////////////////////////
+
+EXPORT PluginDescriptor* getPluginDescriptor()
+{
+	return
+	new PluginDescriptor{
+		.name = "GPS",
+		.version = "1.0.0",
+		.services = {
+				{
+					.type = typeid(ILogger),
+					.name = "logger",
+					.minVersion = ">=1.0.0",
+					.required = false
+				}
+		}
+	};
+}
+
+EXPORT IPlugin* loadPlugin()
 {
 	return new GPSPlugin();
 }

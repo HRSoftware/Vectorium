@@ -15,14 +15,17 @@ public:
 		std::shared_ptr<UILogSink> logSink);
 
 	void drawPluginUI();
-	void drawDataPacketUI();
 	void drawMenuBar();
 	void drawSideBar() const;
+	void drawConfigUI();
 	void drawMainPanels();
 	void drawStatusBar();
+
+	void drawDataPacketUI();
 	void drawLoggingSettingUI();
+
 	void drawLogPanel(std::shared_ptr<UILogSink> uiSink);
-	void drawConfigUI();
+	
 	void draw();
 
 

@@ -10,7 +10,7 @@
 
 #include "DataPacket/DataPacket.h"
 #include "Plugin/IPlugin.h"
-#include "Logger/LoggablePlugin.h"
+#include "Services/IService.h"
 
 struct NumberDataPacket
 {
@@ -22,7 +22,7 @@ struct NumberHandler final : IDataPacketHandler
 	bool handle(const DataPacket& packet) override;
 };
 
-struct NumberGeneratorPlugin final : public IPlugin, public LoggablePlugin
+struct NumberGeneratorPlugin final : public IPlugin
 {
 	NumberGeneratorPlugin();
 	void onPluginLoad(IPluginContext& context) override;
@@ -33,6 +33,8 @@ struct NumberGeneratorPlugin final : public IPlugin, public LoggablePlugin
 
 	private:
 		IPluginContext* m_context;
+		ServiceProxy<ILogger> m_logger{nullptr};
 		std::mt19937 m_rng{std::random_device{}()};
 		std::uniform_int_distribution<int> m_dist{0, 100};
+		std::string m_pluginName = "NumberGenerator";
 };

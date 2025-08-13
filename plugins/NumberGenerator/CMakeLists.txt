@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 
 add_library(NumberGenerator_Plugin SHARED NumberGenerator_Plugin.cpp)
 
@@ -16,6 +16,6 @@ set_target_properties(NumberGenerator_Plugin PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins # for DLLs
 )
 
-target_link_libraries(NumberGenerator_Plugin PRIVATE logger)
+target_link_libraries(NumberGenerator_Plugin PRIVATE logger REST_Client)
 
 target_include_directories (NumberGenerator_Plugin PRIVATE ${CMAKE_SOURCE_DIR}/include)

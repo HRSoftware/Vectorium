@@ -2,7 +2,9 @@
 
 
 #include "Plugin/IPlugin.h"
-#include "Logger/LoggablePlugin.h"
+#include "Services/IService.h"
+
+class ILogger;
 
 struct GPSDataPacket
 {
@@ -11,15 +13,17 @@ struct GPSDataPacket
 	float alt;
 };
 
-struct GPSDataHandler final : ITypedDataPacketHandler<GPSDataPacket>, public LoggablePlugin
+struct GPSDataHandler final : ITypedDataPacketHandler<GPSDataPacket>
 {
 	bool handleType(const std::shared_ptr<GPSDataPacket>& packet) override;
 };
 
-struct GPSPlugin final : public IPlugin, public LoggablePlugin
+struct GPSPlugin final : public IPlugin
 {
 	void onPluginLoad(IPluginContext& context) override;
 	void onPluginUnload()override;
+
+	ServiceProxy<ILogger> m_Logger{nullptr};
 
 	[[nodiscard]] std::type_index getType() const override;
 };

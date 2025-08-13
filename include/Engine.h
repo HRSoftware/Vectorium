@@ -3,10 +3,11 @@
 
 #include "spdlog/logger.h"
 
+class ILogger;
 class UILogSink;
 class PluginManager;
 class DataPacketRegistry;
-class ILogger;
+
 
 class Engine
 {
@@ -22,7 +23,7 @@ public:
 	[[nodiscard]] std::shared_ptr<DataPacketRegistry> getDataPacketRegistry() const;
 	[[nodiscard]] std::shared_ptr<PluginManager>      getPluginManager() const;
 	std::shared_ptr<ILogger>                          getLogger();
-	std::shared_ptr<UILogSink> getLogSink();
+	std::shared_ptr<UILogSink>                        getLogSink();
 
 private:
 	std::shared_ptr<PluginManager>      m_pluginManager;
@@ -31,5 +32,5 @@ private:
 	std::shared_ptr<UILogSink>          m_logSink;
 
 
-	std::shared_ptr<spdlog::logger>     m_combinedLogger;
+	std::shared_ptr<spdlog::logger>     m_combinedLogger; // TODO - remove coupling with SPDLog
 };

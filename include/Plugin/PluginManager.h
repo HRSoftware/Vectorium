@@ -1,18 +1,19 @@
 #pragma once
-#include <expected>
 #include <filesystem>
 #include <memory>
-#include <span>
 #include <string>
 #include <thread>
 #include <unordered_map>
 #include <vector>
 
-#include "PluginInstance.h"
 #include "PluginManagerConfig.h"
+#include "Plugin/PluginInstance.h"
+
 
 enum class LogLevel;
-class ILogger;
+class PluginInstance;
+//class ILogger;
+class DataPacketRegistry;
 
 struct PluginInfo
 {
@@ -30,7 +31,8 @@ class PluginManager
 public:
 		bool loadConfig();
 		bool saveConfig() const;
-		explicit PluginManager(std::shared_ptr<ILogger>& logger, std::shared_ptr<DataPacketRegistry> ptrDataPacketReg);
+		PluginManager(std::shared_ptr<ILogger> logger);
+		PluginManager(std::shared_ptr<ILogger> logger, std::shared_ptr<DataPacketRegistry> ptrDataPacketReg);
 
 		PluginInfo&                                               getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& path = "");
 		void                                                      removeKnownPlugin(const std::string& name);

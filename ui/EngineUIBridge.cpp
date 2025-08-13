@@ -3,10 +3,13 @@
 #include <memory>
 #include <utility>
 
+#include "Engine.h"
 #include "imgui.h"
 #include "UILogSink.h"
-#include "Engine.h"
+#include "Services/Logging/ILogger.h"
+#include "Services/Logging/LogLevel.h"
 #include "Plugin/PluginInstance.h"
+#include "Plugin/PluginManager.h"
 
 //static std::string demangle(const char* name) {
 //	int status = 0;
