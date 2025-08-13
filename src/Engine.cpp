@@ -12,8 +12,8 @@ Engine::Engine()
 	m_logger = std::make_shared<SpdLogger>();
 	m_dataPacketRegistry = std::make_shared<DataPacketRegistry>(m_logger);
 
-	PluginManager test(m_logger);
-	//m_pluginManager = std::make_shared<PluginManager>(m_logger, m_dataPacketRegistry);
+	//PluginManager test(m_logger);
+	m_pluginManager = std::make_shared<PluginManager>(m_logger, m_dataPacketRegistry);
 
 	m_logSink  = std::make_shared<UILogSink>();
 	auto consoleSink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();

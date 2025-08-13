@@ -85,18 +85,6 @@ bool PluginManager::saveConfig() const
 	return true;
 }
 
-PluginManager::PluginManager(std::shared_ptr<ILogger> logger) : m_engineLogger(std::move(logger))
-{
-}
-
-PluginManager::PluginManager(std::shared_ptr<ILogger> logger, std::shared_ptr<DataPacketRegistry> ptrDataPacketReg)
-: m_dataPacketRegistry(std::move(ptrDataPacketReg))
-,m_engineLogger(std::move(logger))
-{
-	assert(logger && "logger was nullptr");
-	assert(m_dataPacketRegistry && "dataPacketReg was nullptr");
-}
-
 void PluginManager::init()
 {
 	if(loadConfig())

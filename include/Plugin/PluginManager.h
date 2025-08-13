@@ -1,4 +1,5 @@
 #pragma once
+#include <cassert>
 #include <filesystem>
 #include <memory>
 #include <string>
@@ -31,8 +32,15 @@ class PluginManager
 public:
 		bool loadConfig();
 		bool saveConfig() const;
-		PluginManager(std::shared_ptr<ILogger> logger);
-		PluginManager(std::shared_ptr<ILogger> logger, std::shared_ptr<DataPacketRegistry> ptrDataPacketReg);
+        PluginManager(std::shared_ptr<ILogger> logger) : m_engineLogger(std::move(logger))
+        {}
+		PluginManager(std::shared_ptr<ILogger> logger, std::shared_ptr<DataPacketRegistry> ptrDataPacketReg)
+			: m_dataPacketRegistry(std::move(ptrDataPacketReg))
+			, m_engineLogger(std::move(logger))
+		{
+			assert(logger && "logger was nullptr");
+			assert(m_dataPacketRegistry && "dataPacketReg was nullptr");
+		}
 
 		PluginInfo&                                               getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& path = "");
 		void                                                      removeKnownPlugin(const std::string& name);
@@ -84,5 +92,5 @@ private:
 
 	PluginManagerConfig m_config;
 
-	std::jthread m_scanningThread;
+    std::jthread m_scanningThread;
 };

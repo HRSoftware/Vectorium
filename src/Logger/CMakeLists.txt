@@ -4,7 +4,7 @@ add_library(logger)
 
 set_target_properties(logger PROPERTIES CXX_STANDARD 23)
 
-target_sources(logger PRIVATE SpdLogger.cpp)
+target_sources(logger PRIVATE "SpdLogger.cpp" "ILogger.cpp")
 
 target_include_directories(logger PUBLIC ${PROJECT_SOURCE_DIR}/include)
 

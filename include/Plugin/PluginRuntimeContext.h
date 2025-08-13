@@ -2,6 +2,7 @@
 
 #include <set>
 #include <shared_mutex>
+#include <mutex>
 
 #include "IPlugin.h"
 

@@ -12,20 +12,10 @@ class ILogger
 	virtual void enableDebugLogging() = 0;
 	virtual void disableDebugLogging() = 0;
 
-	bool isDebugLoggingEnabled() const;
-	void setPluginName(const std::string& name);
+	virtual bool isDebugLoggingEnabled() const = 0;
+	virtual void setPluginName(const std::string& name) = 0;
 
 	protected:
 		bool m_isDebugLogEnabled = false;
 		std::string m_pluginName;
 };
-
-inline bool ILogger::isDebugLoggingEnabled() const
-{
-	return m_isDebugLogEnabled;
-}
-
-inline void ILogger::setPluginName(const std::string& name)
-{
-	m_pluginName = name;
-}

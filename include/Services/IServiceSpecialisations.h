@@ -17,6 +17,8 @@ struct NullObjectImpl<ILogger> : ILogger
 	void log(LogLevel level, const std::string& message) override {}
 	void enableDebugLogging() override {}
 	void disableDebugLogging() override {}
+	bool isDebugLoggingEnabled() const override { return false; };
+	void setPluginName(const std::string& name) override {};
 };
 
 template<>
@@ -26,6 +28,8 @@ struct NullObjectImpl<SpdLogger> : ILogger
 	void log(LogLevel level, const std::string& message) override {}
 	void enableDebugLogging() override {}
 	void disableDebugLogging() override {}
+	bool isDebugLoggingEnabled() const override { return false; };
+	void setPluginName(const std::string& name) override {};
 };
 
 template<>
@@ -35,9 +39,12 @@ struct NullObjectImpl<IRestClient> : IRestClient
 	void set_default_headers(HeaderMap headers) override {}
 	void set_timeout(std::chrono::milliseconds ms) override {}
 	void set_bearer_token(std::string_view token) override {}
-	std::expected<RESTResponse, RESTError> GET(std::string_view path, const HeaderMap& headers) override {
+
+	std::expected<RESTResponse, RESTError> GET(std::string_view path, const HeaderMap& headers) override
+	{
 		return std::unexpected(RESTError{"Service not available"});
 	}
+
 	std::expected<RESTResponse, RESTError> POST(std::string_view path,
 		std::string_view body,
 		const HeaderMap& headers,

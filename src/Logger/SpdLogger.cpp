@@ -34,3 +34,13 @@ void SpdLogger::disableDebugLogging()
 	m_isDebugLogEnabled = false;
 	spdlog::set_level(spdlog::level::info);
 }
+
+bool SpdLogger::isDebugLoggingEnabled() const
+{
+	return m_isDebugLogEnabled;
+}
+
+void SpdLogger::setPluginName(const std::string& name)
+{
+	m_pluginName = name;
+}
