@@ -42,13 +42,6 @@ public:
 
 
 	virtual std::shared_ptr<ILogger> getLoggerShared() = 0;
-	//Redundant?
-	void enableDebugLogging();
-	//Redundant?
-	void disableDebugLogging();
-
-	//Redundant?
-	bool isDebugLoggingEnabled() const;
 
 	// Plugin metadata
 	virtual std::string getPluginName() const = 0;

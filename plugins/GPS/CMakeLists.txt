@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.8)
 
-add_library(GPS_Plugin SHARED GPS_Plugin.cpp)
+add_library(GPS_Plugin SHARED "GPS_Plugin.cpp")
 
 
 set_property(TARGET GPS_Plugin PROPERTY CXX_STANDARD 23)

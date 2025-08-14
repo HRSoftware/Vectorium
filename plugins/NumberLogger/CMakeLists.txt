@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-add_library(NumberLogger_Plugin SHARED NumberLogger_Plugin.cpp)
+add_library(NumberLogger_Plugin SHARED "NumberLogger_Plugin.cpp")
 
 
 set_property(TARGET NumberLogger_Plugin PROPERTY CXX_STANDARD 23)

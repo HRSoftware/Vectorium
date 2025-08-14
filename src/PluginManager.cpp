@@ -8,13 +8,16 @@
 
 #include "Utils/range_utils.h"
 #include <nlohmann/json.hpp>
-
+#include "Plugin/PluginRuntimeContext.h"
+#include "Services/Logging/ILogger.h"
+#include "Services/Logging/SpdLogger.h"
 #include "DataPacket/DataPacketRegistry.h"
 #include "Plugin/PluginInstance.h"
-#include "Plugin/PluginRuntimeContext.h"
+
 #include "RestClient/RestClient_HttpLib.h"
-#include "Services/Logging/ILogger.h"
+
 #include "Services/Logging/LogLevel.h"
+#include "Services/ServiceId.h"
 
 std::expected<std::string, std::string> formatPluginDescriptor(PluginDescriptor* pluginDescriptor)
 {
@@ -117,6 +120,13 @@ void PluginManager::init()
 bool PluginManager::isPluginFolderWatcherEnabled() const
 {
 	return m_scanningThread.joinable();
+}
+
+PluginManager::PluginManager(std::shared_ptr<ILogger> logger, std::shared_ptr<DataPacketRegistry> ptrDataPacketReg): m_dataPacketRegistry(std::move(ptrDataPacketReg))
+	, m_engineLogger(std::move(logger))
+{
+	assert(m_engineLogger && "logger was nullptr");
+	assert(m_dataPacketRegistry && "dataPacketReg was nullptr");
 }
 
 PluginInfo& PluginManager::getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& pluginPath)
@@ -429,3 +439,9 @@ void PluginManager::tick()
 		plugin->tick();
 	}
 }
+
+
+template class std::shared_ptr<ILogger>;
+template class std::shared_ptr<DataPacketRegistry>;
+
+//template std::unique_ptr<PluginRuntimeContext> std::make_unique<PluginRuntimeContext, std::shared_ptr<ILogger>&, std::shared_ptr<DataPacketRegistry>&, std::string&>(std::shared_ptr<ILogger>&, std::shared_ptr<DataPacketRegistry>&, std::string&);

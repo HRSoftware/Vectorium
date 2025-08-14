@@ -1,10 +1,8 @@
 cmake_minimum_required(VERSION 3.16)
 
-add_library(logger)
+add_library(logger "SpdLogger.cpp" )
 
 set_target_properties(logger PROPERTIES CXX_STANDARD 23)
-
-target_sources(logger PRIVATE "SpdLogger.cpp" "ILogger.cpp")
 
 target_include_directories(logger PUBLIC ${PROJECT_SOURCE_DIR}/include)
 

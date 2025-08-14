@@ -1,6 +1,7 @@
 #pragma once
 #include <variant>
 #include "IService.h"
+#include "ServiceId.h"
 
 class ServiceRegistry
 {

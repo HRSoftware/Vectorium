@@ -3,7 +3,7 @@
 #include <functional>
 #include <typeindex>
 #include "IPluginContext.h"
-#include <Services/IService.h>
+#include <Services/ServiceId.h>
 
 #ifdef _WIN32
 #define EXPORT extern "C" __declspec(dllexport)

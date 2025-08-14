@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-add_library(NumberGenerator_Plugin SHARED NumberGenerator_Plugin.cpp)
+add_library(NumberGenerator_Plugin SHARED "NumberGenerator_Plugin.cpp")
 
 
 set_property(TARGET NumberGenerator_Plugin PROPERTY CXX_STANDARD 23)

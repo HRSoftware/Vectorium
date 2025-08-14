@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-add_library(PolygonIO SHARED PolygonIO.cpp)
+add_library(PolygonIO SHARED "PolygonIO.cpp")
 
 set_property(TARGET PolygonIO PROPERTY CXX_STANDARD 23)
 
@@ -16,6 +16,6 @@ set_target_properties(PolygonIO PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins # for DLLs
 )
 
-target_link_libraries(PolygonIO PRIVATE logger)
+target_link_libraries(PolygonIO PRIVATE logger REST_Client)
 
 target_include_directories (PolygonIO PRIVATE ${CMAKE_SOURCE_DIR}/include)

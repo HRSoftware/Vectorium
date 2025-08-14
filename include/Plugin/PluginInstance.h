@@ -5,7 +5,7 @@
 #include <filesystem>
 
 enum class LogLevel;
-struct ILogger;
+class ILogger;
 class IDataPacketHandler;
 
 struct IPlugin;
@@ -64,7 +64,7 @@ private:
 	void log(LogLevel level, const std::string& msg) const;
 	LibraryHandle m_handle = nullptr;
 	std::unique_ptr<IPlugin> m_plugin;
-	std::unique_ptr<PluginRuntimeContext> m_context;
+	std::shared_ptr<PluginRuntimeContext> m_context;
 	std::string m_pluginName;
 	std::shared_ptr<ILogger> m_logger;
 };

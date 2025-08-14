@@ -16,6 +16,8 @@ include(FetchContent)
 
 find_package(OpenGL REQUIRED)
 
+
+
 ###			 GLFW
 FetchContent_Declare(
   glfw
@@ -56,7 +58,7 @@ FetchContent_MakeAvailable(json)
 
 
 # Add source to this project's executable.
-add_executable (Vectorium "Vectorium.cpp")
+add_executable (Vectorium "Vectorium.cpp" "include/Services/ServiceId.h")
 
 set_target_properties(Vectorium PROPERTIES CXX_STANDARD 23)
 
