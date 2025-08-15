@@ -26,7 +26,10 @@ std::shared_ptr<ILogger> PluginRuntimeContext::getLoggerShared()
 
 bool PluginRuntimeContext::registerDataPacketHandler(const std::type_index type, std::shared_ptr<IDataPacketHandler> handler)
 {
-	if (!m_registry) return false;
+	if (!m_registry)
+	{
+		return false;
+	}
 
 	log(LogLevel::Info, std::format("Registered handle for {}", type.name()));
 	return m_registry->registerDataPacketHandler(type, std::move(handler), m_pluginName);

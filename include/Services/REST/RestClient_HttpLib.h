@@ -7,7 +7,7 @@
 class RESTClient_HttpLib : public IRestClient
 {
 	public:
-		explicit RESTClient_HttpLib(std::string baseUrl, bool bUseHttps = true);
+		explicit RESTClient_HttpLib(std::string baseUrl = "", bool bUseHttps = true);
 
 		// Inherited via IRestClient
 		void set_default_headers(HeaderMap headers) override;
@@ -22,6 +22,7 @@ class RESTClient_HttpLib : public IRestClient
 													std::string_view body,
 													const HeaderMap& headers,
 													std::string_view content_type) override;
+		void setBaseUrl(std::string url) override;
 
 	private:
 		std::string m_baseUrl;

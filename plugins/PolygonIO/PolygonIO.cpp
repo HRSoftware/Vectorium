@@ -9,7 +9,7 @@ void PolygonIO_Plugin::onPluginLoad(IPluginContext& context)
 	}
 	else
 	{
-		m_logger = context.getService<ILogger>();
+		m_logger = ServiceProxy(context.getService<ILogger>());
 		m_logger->setPluginName(m_pluginName);
 	}
 
@@ -19,7 +19,7 @@ void PolygonIO_Plugin::onPluginLoad(IPluginContext& context)
 	}
 	else
 	{
-		m_RESTClient = context.getService<IRestClient>();
+		m_RESTClient = ServiceProxy(context.getService<IRestClient>());
 	}
 
 	m_running = true;
@@ -57,6 +57,31 @@ const std::vector<PolygonIO_Candle>& PolygonIO_Plugin::getCandles() const
 
 void PolygonIO_Plugin::queryLatestCandles()
 {
+}
+
+EXPORT PluginDescriptor* getPluginDescriptor()
+{
+	static PluginDescriptor descriptor
+	{
+		.name = "PolygonIO",
+		.version = "1.0.0",
+		.services = {
+			{
+				.type = typeid(ILogger),
+				.name = "logger",
+				.minVersion = ">=1.0.0",
+				.required = false
+			},
+			{
+				.type = typeid(IRestClient),
+				.name = "RESTClient",
+				.minVersion = ">=1.0.0",
+				.required = true
+			}
+	}
+	};
+
+	return &descriptor;
 }
 
 EXPORT IPlugin* loadPlugin()

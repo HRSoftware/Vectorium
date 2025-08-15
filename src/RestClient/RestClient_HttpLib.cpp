@@ -1,8 +1,12 @@
-#include "RestClient_HttpLib.h"
+#include "Services/REST/RestClient_HttpLib.h"
 
 #include <string>
 #include <utility>
 #include <httplib.h>
+
+
+RESTClient_HttpLib::RESTClient_HttpLib(std::string baseUrl, bool bUseHttps) : m_baseUrl(std::move(baseUrl)), m_useHttps(bUseHttps)
+{}
 
 static void apply_headers(httplib::Headers& dst, const HeaderMap& src)
 {
@@ -13,8 +17,6 @@ static void apply_headers(httplib::Headers& dst, const HeaderMap& src)
 	};
 }
 
-RESTClient_HttpLib::RESTClient_HttpLib(std::string baseUrl, bool bUseHttps) : m_baseUrl(std::move(baseUrl)), m_useHttps(bUseHttps)
-{}
 
 
 void RESTClient_HttpLib::set_default_headers(HeaderMap headers)
@@ -92,4 +94,9 @@ std::expected<RESTResponse, RESTError> RESTClient_HttpLib::POST(std::string_view
 	for (auto& hkv : res->headers) out.headers.emplace(hkv.first, hkv.second);
 	out.body.assign(res->body.begin(), res->body.end());
 	return out;
+}
+
+void RESTClient_HttpLib::setBaseUrl(const std::string url)
+{
+	m_baseUrl = url;
 }

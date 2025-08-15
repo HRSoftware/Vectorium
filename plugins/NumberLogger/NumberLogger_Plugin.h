@@ -9,8 +9,9 @@ class NumberLoggerHandler : public ITypedDataPacketHandler<int>
 public:
 	NumberLoggerHandler(ServiceProxy<ILogger> logger);
 	bool handleType(const std::shared_ptr<int>& data) override;
+	~NumberLoggerHandler() override = default;
 
-	private:
+private:
 		ServiceProxy<ILogger> m_logger{ nullptr };
 };
 

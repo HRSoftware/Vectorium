@@ -2,7 +2,7 @@
 #include "DataPacket.h"
 
 /// <summary>
-///		IDataPacketHandler is how the DataPacket is processes
+///		IDataPacketHandler is how the DataPacket is processes. So each DataPacket type has a corresponding handler
 /// </summary>
 class IDataPacketHandler
 {
@@ -31,7 +31,12 @@ class TypedDataPacketHandlerAdapter : public IDataPacketHandler
 			auto result = packet.get<T>();
 			if (!result.has_value()) return false;
 
-			return m_typedHandler->handleType(result.value());
+			if(m_typedHandler)
+			{
+				return m_typedHandler->handleType(result.value());
+			}
+
+			return false;
 		}
 
 	private:

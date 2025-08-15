@@ -1,5 +1,6 @@
 #pragma once
 
+#include <chrono>
 #include <expected>
 #include <memory>
 #include <string>
@@ -13,6 +14,8 @@ struct DataPacket
 {
 	std::shared_ptr<void> payload;
 	std::type_index payloadType;
+	std::chrono::system_clock::time_point timestamp = std::chrono::system_clock::now();
+	//some form of ID?
 
 	template<typename T>
 	static DataPacket create(std::shared_ptr<T> data)

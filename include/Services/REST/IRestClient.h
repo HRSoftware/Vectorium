@@ -31,6 +31,7 @@ public:
 	virtual void set_default_headers(HeaderMap headers) = 0;
 	virtual void set_timeout(std::chrono::milliseconds ms) = 0;
 	virtual void set_bearer_token(std::string_view token) = 0;  // convenience
+	virtual void setBaseUrl(std::string url) = 0;
 
 	virtual std::expected<RESTResponse, RESTError>
 		GET(std::string_view path, const HeaderMap& headers = {}) = 0;

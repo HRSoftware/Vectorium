@@ -5,8 +5,6 @@
 #include <type_traits>
 
 
-
-// Forward declare for the trait
 template<typename T>
 struct NullObjectImpl;
 
@@ -90,7 +88,9 @@ class ServiceProxy
 	std::unique_ptr<IServiceWrapper<T>> wrapper_;
 
 public:
-	ServiceProxy(std::unique_ptr<IServiceWrapper<T>> wrapper)
+	ServiceProxy() : wrapper_(std::make_unique < NullService<T>>()){}
+
+	explicit ServiceProxy(std::unique_ptr<IServiceWrapper<T>> wrapper)
 		: wrapper_(std::move(wrapper)) {}
 
 	// Forward all calls to the wrapper

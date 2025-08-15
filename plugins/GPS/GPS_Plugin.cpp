@@ -9,7 +9,7 @@ bool GPSDataHandler::handleType(const std::shared_ptr<GPSDataPacket>& packet)
 
 void GPSPlugin::onPluginLoad(IPluginContext& context)
 {
-	m_Logger = context.getService<ILogger>();
+	m_Logger = ServiceProxy(context.getService<ILogger>());
 
 	// Registering our interest in GPSDataPackets
 	context.registerTypedHandler<GPSDataPacket>(std::make_shared<GPSDataHandler>());
@@ -33,19 +33,21 @@ std::type_index GPSPlugin::getType() const
 
 EXPORT PluginDescriptor* getPluginDescriptor()
 {
-	return
-	new PluginDescriptor{
+	static PluginDescriptor descriptor
+	{
 		.name = "GPS",
 		.version = "1.0.0",
 		.services = {
-				{
-					.type = typeid(ILogger),
-					.name = "logger",
-					.minVersion = ">=1.0.0",
-					.required = false
-				}
+			{
+				.type = typeid(ILogger),
+				.name = "logger",
+				.minVersion = ">=1.0.0",
+				.required = false
+			}
 		}
 	};
+
+	return &descriptor;
 }
 
 EXPORT IPlugin* loadPlugin()

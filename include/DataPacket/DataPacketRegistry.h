@@ -1,6 +1,5 @@
 #pragma once
 #include <memory>
-#include <set>
 #include <string>
 #include <typeindex>
 #include <unordered_map>
@@ -29,18 +28,20 @@ public:
 
 		[[nodiscard]] std::vector<std::type_index> getDataPacketTypes() const;
 
-private:
-		std::unordered_map<std::type_index, std::vector<pluginNameAndHandlerPointer>> m_handlers;
-		std::vector<pluginNameAndHandlerPointer> m_wildcardHandlers;
-
-		std::shared_ptr<ILogger> logger;
-
 		template<typename T>
 		void registerTypedHandler(std::shared_ptr<ITypedDataPacketHandler<T>> typedHandler)
 		{
 			auto adapter = std::make_shared<TypedDataPacketHandlerAdapter<T>>(std::move(typedHandler));
 			registerDataPacketHandler(adapter);
 		}
+
+private:
+		std::unordered_map<std::type_index, std::vector<pluginNameAndHandlerPointer>> m_handlers;
+		std::vector<pluginNameAndHandlerPointer> m_wildcardHandlers;
+
+		std::shared_ptr<ILogger> logger;
+
+
 };
 
 

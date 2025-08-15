@@ -21,7 +21,7 @@ NumberGeneratorPlugin::NumberGeneratorPlugin() = default;
 
 void NumberGeneratorPlugin::onPluginLoad(IPluginContext& context)
 {
-	m_logger = context.getService<ILogger>();
+	m_logger = ServiceProxy(context.getService<ILogger>());
 	m_logger->setPluginName(context.getPluginName());
 	m_context = &context;
 	// No need to register a handler as we don't want to do anything
@@ -49,6 +49,25 @@ void NumberGeneratorPlugin::onPluginTick()
 	{
 		m_context->dispatch(packet);
 	}
+}
+
+EXPORT PluginDescriptor* getPluginDescriptor()
+{
+	static PluginDescriptor descriptor
+	{
+		.name = "NumberGenerator",
+		.version = "1.0.0",
+		.services = {
+			{
+				.type = typeid(ILogger),
+				.name = "logger",
+				.minVersion = ">=1.0.0",
+				.required = false
+			}
+	}
+	};
+
+	return &descriptor;
 }
 
 EXPORT IPlugin* loadPlugin()

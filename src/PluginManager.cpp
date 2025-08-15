@@ -9,33 +9,33 @@
 #include "Utils/range_utils.h"
 #include <nlohmann/json.hpp>
 #include "Plugin/PluginRuntimeContext.h"
+
 #include "Services/Logging/ILogger.h"
-#include "Services/Logging/SpdLogger.h"
 #include "DataPacket/DataPacketRegistry.h"
 #include "Plugin/PluginInstance.h"
 
-#include "RestClient/RestClient_HttpLib.h"
+#include "Services/REST/RestClient_HttpLib.h"
 
 #include "Services/Logging/LogLevel.h"
 #include "Services/ServiceId.h"
 
-std::expected<std::string, std::string> formatPluginDescriptor(PluginDescriptor* pluginDescriptor)
+namespace
 {
-	if(!pluginDescriptor)
+	std::expected<std::string, std::string> formatPluginDescriptor(PluginDescriptor* pPluginDescriptor)
 	{
-		return std::unexpected("Error: Service Descriptor was nullptr");
+		if (!pPluginDescriptor) {
+			return std::unexpected("Error: Service Descriptor was nullptr");
+		}
+
+		std::string stringOfServices = std::format("'{}(v{})' requires:\n", pPluginDescriptor->name, pPluginDescriptor->version);
+
+		for (auto& service : pPluginDescriptor->services) {
+			stringOfServices += std::format("{}({}) - optional: {}\n", service.name, service.minVersion, service.required ? "false" : "true"); // negate as we are showing optional rather than required
+		}
+
+		return stringOfServices;
 	}
-
-	std::string stringOfServices = std::format("'{}(v{})' requires:\n", pluginDescriptor->name, pluginDescriptor->version);
-
-	for(auto& service : pluginDescriptor->services)
-	{
-		stringOfServices += std::format("{}({}) - optional: {}\n", service.name, service.minVersion, service.required ? "false" : "true"); // negate as we are showing optional rather than required
-	}
-
-	return stringOfServices;
 }
-
 
 bool PluginManager::loadConfig()
 {
@@ -160,7 +160,7 @@ void PluginManager::scanPluginsFolder(const std::string& pluginDirectory)
 	logMessage(LogLevel::Debug, "Scanning plugin folder");
 	if(!std::filesystem::exists(pluginDirectory))
 	{
-		m_engineLogger->log(LogLevel::Info, std::format("Could not find plugin at '{}'", pluginDirectory));
+		m_engineLogger->log(LogLevel::Info, std::format("Could not find 'plugins' folder at '{}'", pluginDirectory));
 		return;
 	}
 
@@ -175,7 +175,7 @@ void PluginManager::scanPluginsFolder(const std::string& pluginDirectory)
 		const auto it = m_discoveredPlugins.find(discoveredPluginName);
 		if(it == m_discoveredPlugins.end())
 		{
-			logMessage(LogLevel::Info, std::format("Found new Plugin '{}'", discoveredPluginName));
+			logMessage(LogLevel::Info, std::format("Found plugin '{}'", discoveredPluginName));
 			m_discoveredPlugins.emplace(entry.path().stem().string(),
 				PluginInfo
 				{
@@ -196,14 +196,14 @@ std::unordered_map<std::string, PluginInfo> PluginManager::getDiscoveredPlugins(
 
 bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::string& name)
 {
+	std::string pluginName = name.empty() ? path.stem().string() : name;
+
 	if (!std::filesystem::exists(path))
 	{
-		logMessage(LogLevel::Error, std::format("Plugin path '{}' does not exist.", path.string()));
-		removeKnownPlugin(name.empty() ? path.stem().string() : name);
+		logMessage(LogLevel::Error, std::format("Could not find plugin '{}' at {}.", pluginName, path.string()));
+		removeKnownPlugin(pluginName);
 		return false;
 	}
-
-	std::string pluginName = name.empty() ? path.stem().string() : name;
 
 	// Already loaded
 	if (m_loadedPlugins.contains(pluginName))
@@ -235,12 +235,11 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 		{
 			info.errorMessage = getError();
 			UnloadLibrary(handle);
-			logMessage(LogLevel::Error, std::format("Missing 'getPluginDescriptor' in '{}':{}", pluginName, info.errorMessage));
+			logMessage(LogLevel::Error, std::format("Missing 'getPluginDescriptor' for '{}':{}", pluginName, info.errorMessage));
 			return false;
 		}
 
-		std::unique_ptr<PluginDescriptor> pluginDescriptor(pluginDescriptorFunc());
-		auto formattedDescriptor = formatPluginDescriptor(pluginDescriptor.get());
+		auto formattedDescriptor = formatPluginDescriptor(pluginDescriptorFunc());
 		if(formattedDescriptor.has_value())
 		{
 			logMessage(LogLevel::Info, formattedDescriptor.value());
@@ -440,8 +439,3 @@ void PluginManager::tick()
 	}
 }
 
-
-template class std::shared_ptr<ILogger>;
-template class std::shared_ptr<DataPacketRegistry>;
-
-//template std::unique_ptr<PluginRuntimeContext> std::make_unique<PluginRuntimeContext, std::shared_ptr<ILogger>&, std::shared_ptr<DataPacketRegistry>&, std::string&>(std::shared_ptr<ILogger>&, std::shared_ptr<DataPacketRegistry>&, std::string&);
