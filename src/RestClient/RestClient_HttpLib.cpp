@@ -14,7 +14,7 @@ static void apply_headers(httplib::Headers& dst, const HeaderMap& src)
 	for (auto& [k,v] : src)
 	{
 		dst.emplace(k, v);
-	};
+	}
 }
 
 

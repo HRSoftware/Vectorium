@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
-add_library(logger "SpdLogger.cpp" )
+add_library(logger STATIC "SpdLogger.cpp" )
 
 set_target_properties(logger PROPERTIES CXX_STANDARD 23)
 

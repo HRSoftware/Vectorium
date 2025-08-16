@@ -9,7 +9,9 @@ namespace spdlog
 	class logger;
 }
 
-
+/// <summary>
+/// Implements a logger using spdlog, providing methods for logging messages, managing debug logging, and setting a plugin name.
+/// </summary>
 class SpdLogger : public ILogger
 {
 public:

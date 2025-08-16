@@ -27,7 +27,11 @@ public:
 
 
 
-// This enabled services to safely be missing, and not require constant nullptr checks
+/// <summary>
+/// A wrapper class that provides access to a service object via a shared pointer, implementing IServiceWrapper<T>.
+/// </summary>
+/// <remarks>This enabled services to safely be missing, and not require constant nullptr checks</remarks>
+/// <typeparam name="T">The type of the service object.</typeparam>
 template<typename T>
 class RefService : public IServiceWrapper<T>
 {
@@ -82,6 +86,10 @@ private:
 	}
 };
 
+/// <summary>
+/// A proxy class that manages access to a service implementation via an IServiceWrapper. Provides pointer-like semantics and availability checking.
+/// </summary>
+/// <typeparam name="T">The type of the service interface being proxied.</typeparam>
 template<typename T>
 class ServiceProxy
 {

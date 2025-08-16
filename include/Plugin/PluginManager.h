@@ -9,10 +9,11 @@
 #include "PluginManagerConfig.h"
 #include "Plugin/PluginInstance.h"
 
-
+class IRestClient;
+struct PluginDescriptor;
+class IPluginContext;
 enum class LogLevel;
 class PluginInstance;
-//class ILogger;
 class DataPacketRegistry;
 
 struct PluginInfo
@@ -24,59 +25,100 @@ struct PluginInfo
 };
 
 /// <summary>
-/// PluginManager is used to track and handle the lifetime of all loaded plugins
+/// Manages the lifecycle, configuration, and discovery of plugins within the application.
 /// </summary>
 class PluginManager
 {
 public:
-		bool loadConfig();
-		bool saveConfig() const;
-		PluginManager(std::shared_ptr<ILogger> logger, std::shared_ptr<DataPacketRegistry> ptrDataPacketReg);
-
-		PluginInfo&                                               getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& path = "");
-		void                                                      removeKnownPlugin(const std::string& name);
-		void                                                      scanPluginsFolder(const std::string& pluginDirectory);
-		[[nodiscard]] std::unordered_map<std::string, PluginInfo> getDiscoveredPlugins() const;
-
-		bool                        loadPlugin(const std::filesystem::path& path, const std::string& = "");
-		bool                        unloadPlugin(const std::string& name);
-
-		[[nodiscard]] std::vector<std::string>                                                getNamesOfAllLoadedPlugins() const;
-		[[nodiscard]] const std::unordered_map<std::string, std::unique_ptr<PluginInstance>>& getLoadedPlugins() const;
-		void init();
-
-		bool isPluginFolderWatcherEnabled() const;
-
-		void startPluginAutoScan();
-		void stopPluginAutoScan();
+	bool loadConfig();
+	bool saveConfig() const;
+	PluginManager(std::shared_ptr<ILogger> logger, std::shared_ptr<DataPacketRegistry> ptrDataPacketReg);
+	std::unique_ptr<IPluginContext> createContextForPlugin(const PluginDescriptor* desc, const std::string& pluginName);
 
 
-		// Config related -- Redundant?
-		PluginManagerConfig&               getConfig();
-		void                               setScanInterval(std::chrono::seconds scanInterval);
-		[[nodiscard]] std::chrono::seconds getScanInterval() const;
+	/// <summary>
+	/// Retrieves the PluginInfo for a plugin by name, or adds a new entry if it does not exist.
+	/// </summary>
+	/// <param name="pluginName">The name of the plugin. If empty, the name is derived from the pluginPath.</param>
+	/// <param name="pluginPath">The filesystem path to the plugin.</param>
+	/// <returns>A reference to the PluginInfo associated with the specified plugin name.</returns>
+	PluginInfo&                                               getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& path = "");
+	void                                                      removeKnownPlugin(const std::string& name);
+	void                                                      scanPluginsFolder(const std::string& pluginDirectory);
 
-		void                                setPluginFolderDir(const std::string& dirPath);
-		[[nodiscard]] std::filesystem::path getPluginFolderDir() const;
+	/// <summary>
+	/// Returns a map of discovered plugins.
+	/// </summary>
+	/// <returns>An unordered map where each key is a plugin name (string) and each value is a PluginInfo object representing the discovered plugin.</returns>
+	[[nodiscard]] std::unordered_map<std::string, PluginInfo> getDiscoveredPlugins() const;
 
-		void               setAutoScan(bool bShouldScan);
-		[[nodiscard]] bool getAutoScanEnabled() const;
-		void               reloadPluginConfig();
 
-		void enableDebugLogging();
-		void disableDebugLogging();
+	bool loadPlugin(const std::filesystem::path& path, const std::string& = "");
+	bool unloadPlugin(const std::string& name);
 
-		bool isDebugLoggingEnabled();
+	/// <summary>
+	/// Retrieves the names of all currently loaded plugins.
+	/// </summary>
+	/// <returns>A vector<string> containing the names of all loaded plugins.</returns>
+	[[nodiscard]] std::vector<std::string> getNamesOfAllLoadedPlugins() const;
 
-		void tick();
+	/// <summary>
+	/// Returns a reference to the collection of loaded plugins.
+	/// </summary>
+	/// <returns>A constant reference to an unordered map associating plugin names (as strings) with unique pointers to PluginInstance objects.</returns>
+	[[nodiscard]] const std::unordered_map<std::string, std::unique_ptr<PluginInstance>>& getLoadedPlugins() const;
+	void init();
+
+	bool isPluginFolderWatcherEnabled() const;
+
+	void startPluginAutoScan();
+	void stopPluginAutoScan();
+
+
+	// Config related -- Redundant?
+	PluginManagerConfig&               getConfig();
+	void                               setScanInterval(std::chrono::seconds scanInterval);
+	[[nodiscard]] std::chrono::seconds getScanInterval() const;
+
+	void                                setPluginFolderDir(const std::string& dirPath);
+	[[nodiscard]] std::filesystem::path getPluginFolderDir() const;
+
+	void               setAutoScan(bool bShouldScan);
+	[[nodiscard]] bool getAutoScanEnabled() const;
+
+	/// <summary>
+	/// Reloads the plugin configuration by loading the configuration data again.
+	/// </summary>
+	void               reloadPluginConfig();
+
+	void enableDebugLogging();
+	void disableDebugLogging();
+
+	bool isDebugLoggingEnabled() const;
+
+	void tick();
 
 	//void reloadPlugin(const std::string name);
 
-private:
+	private:
+	/// <summary>
+	/// Registers appropriate services for a plugin based on its descriptor and runtime context.
+	/// </summary>
+	/// <param name="context">The runtime context for the plugin, used to register services.</param>
+	/// <param name="desc">The descriptor containing metadata about the plugin, such as its name.</param>
+	void registerServicesForPlugin(PluginRuntimeContext* context, const PluginDescriptor* desc) const;
+
+	private:
 	std::unordered_map<std::string, PluginInfo> m_discoveredPlugins;
 	std::unordered_map<std::string, std::unique_ptr<PluginInstance>> m_loadedPlugins;
+
 	std::shared_ptr<DataPacketRegistry> m_dataPacketRegistry;
-	std::shared_ptr<ILogger> m_engineLogger;
+	std::shared_ptr<ILogger> m_Logger;
+	std::shared_ptr<IRestClient> m_restClient;
+	//std::shared_ptr<IFileSystem> m_fileSystem;
+
+
+
 	void logMessage(LogLevel logLvl, const std::string& msg) const;
 
 	std::string m_configurationLocation = "config/plugins_config.json";

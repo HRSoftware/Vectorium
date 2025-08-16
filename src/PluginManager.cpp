@@ -29,11 +29,28 @@ namespace
 
 		std::string stringOfServices = std::format("'{}(v{})' requires:\n", pPluginDescriptor->name, pPluginDescriptor->version);
 
-		for (auto& service : pPluginDescriptor->services) {
+		for (auto& service : pPluginDescriptor->services)
+		{
 			stringOfServices += std::format("{}({}) - optional: {}\n", service.name, service.minVersion, service.required ? "false" : "true"); // negate as we are showing optional rather than required
 		}
 
 		return stringOfServices;
+	}
+
+	bool needsNetworkAccess(const PluginDescriptor* desc)
+	{
+		// Check if plugin requests IRestClient in its services list
+		return std::ranges::any_of(desc->services,
+			[](const auto& service)
+			{
+				return service.type == typeid(IRestClient);
+			});
+	}
+
+	bool isTrustedPlugin(const std::string& name)
+	{
+		static const std::set<std::string> trusted = {"GPS", "WeatherService"};
+		return trusted.contains(name);
 	}
 }
 
@@ -88,6 +105,9 @@ bool PluginManager::saveConfig() const
 	return true;
 }
 
+/// <summary>
+/// Initializes the PluginManager by loading configuration, scanning for plugins, loading enabled plugins, and starting auto-scan if configured.
+/// </summary>
 void PluginManager::init()
 {
 	if(loadConfig())
@@ -123,11 +143,12 @@ bool PluginManager::isPluginFolderWatcherEnabled() const
 }
 
 PluginManager::PluginManager(std::shared_ptr<ILogger> logger, std::shared_ptr<DataPacketRegistry> ptrDataPacketReg): m_dataPacketRegistry(std::move(ptrDataPacketReg))
-	, m_engineLogger(std::move(logger))
+	, m_Logger(std::move(logger))
 {
-	assert(m_engineLogger && "logger was nullptr");
+	assert(m_Logger && "logger was nullptr");
 	assert(m_dataPacketRegistry && "dataPacketReg was nullptr");
 }
+
 
 PluginInfo& PluginManager::getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& pluginPath)
 {
@@ -139,11 +160,12 @@ PluginInfo& PluginManager::getOrAddPluginInfo(const std::string& pluginName, con
 	}
 
 	// Insert if not exists; get reference either way
-	auto [iter, inserted] = m_discoveredPlugins.try_emplace(name, PluginInfo{
-		.name = name,
-		.path = pluginPath,
-		.loaded = false,
-		.errorMessage = ""
+	auto [iter, inserted] = m_discoveredPlugins.try_emplace(name, PluginInfo
+		{
+			.name = name,
+			.path = pluginPath,
+			.loaded = false,
+			.errorMessage = ""
 		});
 
 	return iter->second;
@@ -160,7 +182,7 @@ void PluginManager::scanPluginsFolder(const std::string& pluginDirectory)
 	logMessage(LogLevel::Debug, "Scanning plugin folder");
 	if(!std::filesystem::exists(pluginDirectory))
 	{
-		m_engineLogger->log(LogLevel::Info, std::format("Could not find 'plugins' folder at '{}'", pluginDirectory));
+		m_Logger->log(LogLevel::Info, std::format("Could not find 'plugins' folder at '{}'", pluginDirectory));
 		return;
 	}
 
@@ -188,6 +210,7 @@ void PluginManager::scanPluginsFolder(const std::string& pluginDirectory)
 		}
 	}
 }
+
 
 std::unordered_map<std::string, PluginInfo> PluginManager::getDiscoveredPlugins() const
 {
@@ -235,7 +258,8 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 		{
 			info.errorMessage = getError();
 			UnloadLibrary(handle);
-			logMessage(LogLevel::Error, std::format("Missing 'getPluginDescriptor' for '{}':{}", pluginName, info.errorMessage));
+			logMessage(LogLevel::Error, std::format("Missing 'getPluginDescriptor' function for '{}':{} - Did you add it the dll EXPORT section?", pluginName, info.errorMessage));
+			removeKnownPlugin(pluginName);
 			return false;
 		}
 
@@ -250,6 +274,11 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 		}
 
 
+		//Check that the context provides the REQUIRED services; otherwise stop trying to load the plugin.
+		// We will however, still load plugins if OPTIONAL services are not available
+
+		
+
 		// Load init symbol
 		auto pluginEntryFunction = reinterpret_cast<IPlugin*(*)()>(GetSymbol(handle, "loadPlugin"));
 		if (!pluginEntryFunction)
@@ -261,7 +290,7 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 		}
 
 		// Construct plugin and context(currently just one type of Context)
-		auto assignedPluginContext = std::make_unique<PluginRuntimeContext>(m_engineLogger, m_dataPacketRegistry, pluginName);
+		auto assignedPluginContext = std::make_unique<PluginRuntimeContext>(m_Logger, m_dataPacketRegistry, pluginName);
 		assignedPluginContext->registerService<IRestClient>(std::make_shared<RESTClient_HttpLib>("test"));
 
 		std::unique_ptr<IPlugin> plugin(pluginEntryFunction());
@@ -315,6 +344,7 @@ bool PluginManager::unloadPlugin(const std::string& name)
 	return false;
 }
 
+
 std::vector<std::string> PluginManager::getNamesOfAllLoadedPlugins() const
 {
 	std::vector<std::string> keys;
@@ -328,6 +358,7 @@ std::vector<std::string> PluginManager::getNamesOfAllLoadedPlugins() const
 	return keys;
 }
 
+
 const std::unordered_map<std::string, std::unique_ptr<PluginInstance>>& PluginManager::getLoadedPlugins() const
 {
 	return m_loadedPlugins;
@@ -337,9 +368,9 @@ const std::unordered_map<std::string, std::unique_ptr<PluginInstance>>& PluginMa
 
 void PluginManager::logMessage(const LogLevel logLvl, const std::string& msg) const
 {
-	if(m_engineLogger)
+	if(m_Logger)
 	{
-		m_engineLogger->log(logLvl, std::format("[{}] - {}", "PluginManager", msg));
+		m_Logger->log(logLvl, std::format("[{}] - {}", "PluginManager", msg));
 	}
 }
 
@@ -404,31 +435,34 @@ bool PluginManager::getAutoScanEnabled() const
 	return m_config.autoScan;
 }
 
+
 void PluginManager::reloadPluginConfig()
 {
 	loadConfig();
 }
 
+
+
 void PluginManager::enableDebugLogging()
 {
-	if(m_engineLogger)
+	if(m_Logger)
 	{
-		m_engineLogger->enableDebugLogging();
+		m_Logger->enableDebugLogging();
 	}
 }
 
 void PluginManager::disableDebugLogging()
 {
-	if(m_engineLogger)
+	if(m_Logger)
 	{
-		m_engineLogger->disableDebugLogging();
+		m_Logger->disableDebugLogging();
 	}
 }
 
-bool PluginManager::isDebugLoggingEnabled()
+bool PluginManager::isDebugLoggingEnabled() const
 {
-	if (!m_engineLogger) return false;
-	return m_engineLogger->isDebugLoggingEnabled();
+	if (!m_Logger) return false;
+	return m_Logger->isDebugLoggingEnabled();
 }
 
 void PluginManager::tick()
@@ -436,6 +470,32 @@ void PluginManager::tick()
 	for(const auto& plugin : m_loadedPlugins | std::views::values)
 	{
 		plugin->tick();
+	}
+}
+
+
+
+void PluginManager::registerServicesForPlugin(PluginRuntimeContext* context, const PluginDescriptor* desc) const
+{
+	// Always register logger
+	context->registerService<ILogger>(m_Logger);
+
+	// Simple policy logic inline
+	if (isTrustedPlugin(desc->name))
+	{
+		context->registerService<IRestClient>(m_restClient);
+		//context->registerService<IFileSystem>(m_fileSystem);
+	}
+
+	if (desc->name.starts_with("Debug_"))
+	{
+		//context->registerService<IDebugger>(m_debugger);
+	}
+
+	// Network plugins get REST client
+	if (needsNetworkAccess(desc))
+	{
+		context->registerService<IRestClient>(m_restClient);
 	}
 }
 

@@ -58,7 +58,7 @@ FetchContent_MakeAvailable(json)
 
 
 # Add source to this project's executable.
-add_executable (Vectorium "Vectorium.cpp" "include/Services/ServiceId.h")
+add_executable (Vectorium "Vectorium.cpp" "include/Services/ServiceId.h" "include/Plugin/PluginContextPolicy.h")
 
 set_target_properties(Vectorium PROPERTIES CXX_STANDARD 23)
 

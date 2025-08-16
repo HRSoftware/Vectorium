@@ -22,7 +22,9 @@ namespace
 	using HeaderMap = std::map<std::string, std::string>;
 }
 
-
+/// <summary>
+/// Defines an interface for a REST client, providing methods to configure the client and perform HTTP requests.
+/// </summary>
 class IRestClient
 {
 public:

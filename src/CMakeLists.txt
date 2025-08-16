@@ -9,8 +9,8 @@ add_library(engine "Engine.cpp"
 "PluginInstance.cpp" 
 "PluginManager.cpp"
 "DataPacketRegistry.cpp"
-"PluginContexts/PluginRuntimeContext.cpp"  
-"PluginContexts/IPluginContext.cpp")
+"Plugin/PluginRuntimeContext.cpp"  
+"Plugin/IPluginContext.cpp" )
 
 target_include_directories(engine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}

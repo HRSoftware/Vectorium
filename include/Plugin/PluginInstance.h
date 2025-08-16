@@ -33,9 +33,8 @@ class PluginRuntimeContext;
 
 
 /// <summary>
-/// PluginInstance is used to own a IPlugin, and controls it's lifecycle
+/// Manages the lifecycle and context of a dynamically loaded plugin instance.
 /// </summary>
-
 class PluginInstance
 {
 public:
@@ -66,5 +65,5 @@ private:
 	std::unique_ptr<IPlugin> m_plugin;
 	std::shared_ptr<PluginRuntimeContext> m_context;
 	std::string m_pluginName;
-	std::shared_ptr<ILogger> m_logger;
+	std::shared_ptr<ILogger> m_logger; // Remove?
 };

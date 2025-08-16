@@ -1,10 +1,7 @@
 #pragma once
-
-
 #include "Services/IService.h"
 
 // Then include all the service interfaces
-
 #include "Services/Logging/ILogger.h"
 #include "Services/Logging/SpdLogger.h"
 #include "Services/REST/IRestClient.h"

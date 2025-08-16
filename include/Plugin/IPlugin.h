@@ -14,9 +14,18 @@
 // Used to indicate that services the plugin needs ie REST, logging, etc
 struct PluginDescriptor
 {
-	const char* name;
-	const char* version;
+	enum class SecurityLevel
+	{
+		Protected,
+		Standard,
+		Extra,
+		Admin
+	};
+
+	std::string name;
+	std::string version;
 	std::vector<ServiceId> services; // required + optional
+	SecurityLevel requestedSecurityLevel = SecurityLevel::Standard;
 };
 
 struct IPlugin

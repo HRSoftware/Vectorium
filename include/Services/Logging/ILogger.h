@@ -3,6 +3,9 @@
 #include <string>
 #include "LogLevel.h"
 
+/// <summary>
+/// Defines an interface for logging messages with support for debug logging and plugin identification.
+/// </summary>
 class ILogger
 {
 	public:

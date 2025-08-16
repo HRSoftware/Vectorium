@@ -14,10 +14,8 @@ class IRestClient;
 class IDataPacketHandler;
 
 /// <summary>
-///		IPluginContext acts as a contract between the engine and a given plugin - what it can do, what other services it can access (ie handlers, loggers, ui etc.)
-///		It is used to give limited access to resources, or other plugins
+/// Defines the interface for a plugin context, providing access to services, data packet handling, logging, and plugin metadata.
 /// </summary>
-
 class IPluginContext
 {
 public:
@@ -69,7 +67,11 @@ private:
 };
 
 
-
+/// <summary>
+/// Retrieves a service wrapper for the specified type from the plugin context.
+/// </summary>
+/// <typeparam name="T">The type of the service to retrieve.</typeparam>
+/// <returns>A unique pointer to an IServiceWrapper for the requested service type. If the service is available, returns a RefService wrapping the service instance. If the service is unavailable but a NullObjectImpl specialization exists, returns a NullService. Otherwise, returns a RefService with a nullptr.</returns>
 template <typename T>
 std::unique_ptr<IServiceWrapper<T>> IPluginContext::getService()
 {
@@ -94,6 +96,11 @@ std::unique_ptr<IServiceWrapper<T>> IPluginContext::getService()
 	}
 }
 
+/// <summary>
+/// Checks if a service of the specified type is available in the plugin context.
+/// </summary>
+/// <typeparam name="T">The type of the service to check for.</typeparam>
+/// <returns>True if a service of the specified type exists; otherwise, false.</returns>
 template <typename T>
 bool IPluginContext::hasService() const
 {
@@ -101,6 +108,11 @@ bool IPluginContext::hasService() const
 	return hasServiceByTypeIndex(std::type_index(typeid(CleanType)));
 }
 
+/// <summary>
+/// Registers a typed data packet handler for a specific data type in the plugin context.
+/// </summary>
+/// <typeparam name="T">The type of data packets that the handler processes.</typeparam>
+/// <param name="handler">A shared pointer to the typed data packet handler to be registered.</param>
 template <typename T>
 void IPluginContext::registerTypedHandler(const std::shared_ptr<ITypedDataPacketHandler<T>>& handler)
 {
