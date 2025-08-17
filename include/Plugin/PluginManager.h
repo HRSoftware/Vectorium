@@ -71,8 +71,10 @@ public:
 
 	bool isPluginFolderWatcherEnabled() const;
 
-	void startPluginAutoScan();
-	void stopPluginAutoScan();
+    
+
+    void startPluginAutoScan();
+    void stopPluginAutoScan();
 
 
 	// Config related -- Redundant?
@@ -108,6 +110,10 @@ public:
 	void registerServicesForPlugin(PluginRuntimeContext* context, const PluginDescriptor* desc) const;
 	void logMessage(LogLevel logLvl, const std::string& msg) const;
 	std::shared_ptr<ILogger> createPluginLogger(const std::string& pluginName) const;
+
+	private:
+	std::string getExecutableDir() const;
+	std::string getPortableConfigPath() const;
 
 private:
 	std::unordered_map<std::string, PluginInfo> m_discoveredPlugins;

@@ -1,4 +1,4 @@
-#include "Services\Logging\PluginLogger.h"
+#include "Services/Logging/PluginLogger.h"
 
 #include "Services/Logging/SpdLogger.h"
 #include "Services/Logging/UILogSink.h"

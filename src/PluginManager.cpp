@@ -5,6 +5,7 @@
 #include <fstream>
 #include <memory>
 #include <ranges>
+#include <expected>
 
 #include "Utils/range_utils.h"
 #include <nlohmann/json.hpp>
@@ -19,6 +20,13 @@
 #include "Services/Logging/LogLevel.h"
 #include "Services/ServiceId.h"
 #include "Services/Logging/PluginLogger.h"
+
+#ifdef _WIN32
+#include <windows.h>
+#else
+#include <unistd.h>
+#include <linux/limits.h>
+#endif
 
 namespace
 {
@@ -57,10 +65,12 @@ namespace
 
 bool PluginManager::loadConfig()
 {
-	std::ifstream file(m_configurationLocation);
+	const auto configPath = getPortableConfigPath();
+	logMessage(LogLevel::Info, std::format("Load Config path: - {}", configPath));
+	std::ifstream file(configPath);
 	if(!file)
 	{
-		logMessage(LogLevel::Error, std::format("Could not read plugin config '{}' ", m_configurationLocation));
+		logMessage(LogLevel::Error, std::format("Could not read plugin config '{}'", configPath));
 		if(saveConfig())
 		{
 			reloadPluginConfig();
@@ -82,15 +92,17 @@ bool PluginManager::loadConfig()
 
 bool PluginManager::saveConfig() const
 {
-	if(!std::filesystem::exists(m_configurationLocation))
+	const auto configPath = getPortableConfigPath();
+	logMessage(LogLevel::Info, std::format("Save Config path: - {}", configPath));
+	if(!std::filesystem::exists(configPath))
 	{
-		logMessage(LogLevel::Warning, std::format("Creating default plugin_config file at '{}'", m_configurationLocation));
+		logMessage(LogLevel::Warning, std::format("Creating default plugin_config file at '{}'", configPath));
 	}
 
-	std::ofstream file(m_configurationLocation);
+	std::ofstream file(configPath);
 	if(!file)
 	{
-		logMessage(LogLevel::Error, std::format("Could not create new PluginManger config file at '{}'", m_configurationLocation));
+		logMessage(LogLevel::Error, std::format("Could not create new PluginManger config file at '{}'", configPath));
 		return false;
 	}
 
@@ -362,13 +374,10 @@ std::vector<std::string> PluginManager::getNamesOfAllLoadedPlugins() const
 	return keys;
 }
 
-
 const std::unordered_map<std::string, std::unique_ptr<PluginInstance>>& PluginManager::getLoadedPlugins() const
 {
 	return m_loadedPlugins;
 }
-
-
 
 void PluginManager::logMessage(const LogLevel logLvl, const std::string& msg) const
 {
@@ -382,6 +391,27 @@ std::shared_ptr<ILogger> PluginManager::createPluginLogger(const std::string& pl
 		std::shared_ptr<ILogger>(&m_baseLogger, [](ILogger*){}),  // Non-owning shared_ptr
 		pluginName
 	);
+}
+
+std::string PluginManager::getExecutableDir() const 
+{
+#ifdef _WIN32
+        char path[MAX_PATH];
+        GetModuleFileNameA(NULL, path, MAX_PATH);
+        return std::filesystem::path(path).parent_path().string();
+#else
+        char path[PATH_MAX];
+        ssize_t count = readlink("/proc/self/exe", path, PATH_MAX);
+        if (count == -1) return ".";
+        std::string exePath(path, count);
+        return std::filesystem::path(exePath).parent_path().string();
+#endif
+    }
+
+std::string PluginManager::getPortableConfigPath() const 
+{
+	std::string execDir = getExecutableDir();
+	return execDir + "/" + m_configurationLocation;
 }
 
 void PluginManager::startPluginAutoScan()
@@ -445,13 +475,10 @@ bool PluginManager::getAutoScanEnabled() const
 	return m_config.autoScan;
 }
 
-
 void PluginManager::reloadPluginConfig()
 {
 	loadConfig();
 }
-
-
 
 void PluginManager::enablePluginDebugLogging(const std::string& pluginName)
 {
@@ -489,7 +516,6 @@ void PluginManager::tick()
 		plugin->tick();
 	}
 }
-
 
 //Need to work into things
 void PluginManager::registerServicesForPlugin(PluginRuntimeContext* context, const PluginDescriptor* desc) const
