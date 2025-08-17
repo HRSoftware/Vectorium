@@ -39,7 +39,7 @@ std::type_index NumberGeneratorPlugin::getType() const
 	return  typeid(NumberDataPacket);
 }
 
-void NumberGeneratorPlugin::onPluginTick()
+void NumberGeneratorPlugin::tick()
 {
 	int value = m_dist(m_rng);
 

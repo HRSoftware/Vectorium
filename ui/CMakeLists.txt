@@ -19,13 +19,13 @@ target_link_libraries(imgui_backend PUBLIC glfw OpenGL::GL)
 
 # UI library
 add_library(ui
-    UI.cpp
-    EngineUIBridge.cpp
-	UILogSink.cpp )
+    "src/UI.cpp"
+    "src/EngineUIBridge.cpp")
 
 target_include_directories(ui
     PUBLIC
-        ${CMAKE_CURRENT_SOURCE_DIR}
+		${CMAKE_CURRENT_SOURCE_DIR}/src
+		${CMAKE_CURRENT_SOURCE_DIR}/include
         ${PROJECT_SOURCE_DIR}/src
         ${PROJECT_SOURCE_DIR}/include
 		${imgui_SOURCE_DIR}

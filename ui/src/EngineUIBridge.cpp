@@ -5,7 +5,7 @@
 
 #include "Engine.h"
 #include "imgui.h"
-#include "UILogSink.h"
+#include "Services/Logging/UILogSink.h"
 #include "Services/Logging/ILogger.h"
 #include "Services/Logging/LogLevel.h"
 #include "Plugin/PluginInstance.h"
@@ -39,15 +39,16 @@ namespace
 	}
 }
 
-EngineUIBridge::EngineUIBridge(
-	std::shared_ptr<PluginManager> pluginMgr,
-	std::shared_ptr<DataPacketRegistry> registry,
-	std::shared_ptr<ILogger> logger,
-	std::shared_ptr<UILogSink> logSink)
-: m_pluginManager(std::move(pluginMgr))
-, m_dataPacketRegistry(std::move(registry))
-, m_logger(std::move(logger))
-, m_LogSink(std::move(logSink))
+EngineUIBridge::EngineUIBridge(PluginManager& pluginMgr,
+	DataPacketRegistry& registry,
+	ILogger& logger,
+	UILogSink& logSink,
+	EngineSettings& engineSettings)
+: m_pluginManager(pluginMgr)
+, m_dataPacketRegistry(registry)
+, m_logger(logger)
+, m_LogSink(logSink)
+, m_engineSettings(engineSettings)
 {
 }
 
@@ -56,33 +57,49 @@ void EngineUIBridge::drawConfigUI()
 	if (!showConfigWindow) return;
 	ImGui::Begin("Plugin Config", &showConfigWindow);
 
-	const auto& config = m_pluginManager->getConfig();
+	const auto& config = m_pluginManager.getConfig();
 	bool autoScan = config.autoScan;
 	int interval = static_cast<int>(config.pluginScanInterval.count());
 
 	if(ImGui::Checkbox("Auto-scan", &autoScan))
 	{
-		m_pluginManager->setAutoScan(autoScan);
+		m_pluginManager.setAutoScan(autoScan);
 	}
 
 	if (ImGui::InputInt("Scan Interval (sec)", &interval))
 	{
 		if (interval > 0)
 		{
-			m_pluginManager->setScanInterval(std::chrono::seconds(interval));
+			m_pluginManager.setScanInterval(std::chrono::seconds(interval));
 		}
 	}
 
 	if (ImGui::Button("Save Config"))
 	{
-		if(m_pluginManager->saveConfig())
+		if(m_pluginManager.saveConfig())
 		{
-			m_pluginManager->reloadPluginConfig();
+			m_pluginManager.reloadPluginConfig();
 		}
 		else
 		{
-			m_logger->log(LogLevel::Error, "Failed to save config");
+			m_logger.log(LogLevel::Error, "Failed to save config");
 		}
+	}
+
+	ImGui::End();
+}
+
+void EngineUIBridge::drawEngineSettingsUI()
+{
+
+	if (!showEngineWindow) return;
+	ImGui::Begin("Settings", &showEngineWindow);
+
+	bool bEngineDebugLogging = m_engineSettings.isDebugLoggingEnabled();
+
+	if(ImGui::Checkbox("Engine debug logging", &bEngineDebugLogging))
+	{
+		m_engineSettings.setDebugLogging(bEngineDebugLogging);
 	}
 
 	ImGui::End();
@@ -102,18 +119,20 @@ void EngineUIBridge::drawMenuBar()
 	{
 		if(ImGui::BeginMenu("File"))
 		{
-			if(ImGui::MenuItem("Plugin Dir watcher", nullptr, m_pluginManager->isPluginFolderWatcherEnabled()))
+			if(ImGui::MenuItem("Plugin Dir watcher", nullptr, m_pluginManager.isPluginFolderWatcherEnabled()))
 			{
-				m_pluginManager->isPluginFolderWatcherEnabled() ? m_pluginManager->stopPluginAutoScan() : m_pluginManager->startPluginAutoScan();
+				m_pluginManager.isPluginFolderWatcherEnabled() ? m_pluginManager.stopPluginAutoScan() : m_pluginManager.startPluginAutoScan();
 			}
 
 			ImGui::MenuItem("Plugin Config", nullptr, &showConfigWindow);
+
+			ImGui::MenuItem("Settings", nullptr, &showEngineWindow);
 
 			ImGui::MenuItem("Log Panel", nullptr, &showLogPanel);
 
 			if (ImGui::MenuItem("Quit"))
 			{
-				m_logger->log(LogLevel::Info, "Quit requested");
+				m_logger.log(LogLevel::Info, "Quit requested");
 				quitRequested = true;
 			}
 			ImGui::EndMenu();
@@ -123,11 +142,11 @@ void EngineUIBridge::drawMenuBar()
 
 		if (ImGui::BeginMenu("Plugins"))
 		{
-			for (const auto& [name, pluginInfo] : m_pluginManager->getDiscoveredPlugins())
+			for (const auto& [name, pluginInfo] : m_pluginManager.getDiscoveredPlugins())
 			{
 				if (ImGui::MenuItem(name.c_str(), nullptr, pluginInfo.loaded))
 				{
-					pluginInfo.loaded ? m_pluginManager->unloadPlugin(name) : m_pluginManager->loadPlugin(pluginInfo.path);
+					pluginInfo.loaded ? m_pluginManager.unloadPlugin(name) : m_pluginManager.loadPlugin(pluginInfo.path);
 				}
 			}
 
@@ -146,7 +165,7 @@ void EngineUIBridge::drawSideBar() const
 {
 	ImGui::Begin("Sidebar");
 		ImGui::Text("Loaded Plugins:");
-		for (const auto& pluginName : m_pluginManager->getNamesOfAllLoadedPlugins()) {
+		for (const auto& pluginName : m_pluginManager.getNamesOfAllLoadedPlugins()) {
 			ImGui::BulletText("%s", pluginName.c_str());
 		}
 	ImGui::End();
@@ -162,7 +181,7 @@ void EngineUIBridge::drawStatusBar()
 		ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
 		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
 		ImGui::SameLine();
-		ImGui::Text("Loaded Plugins: %zu", m_pluginManager->getLoadedPlugins().size());
+		ImGui::Text("Loaded Plugins: %zu", m_pluginManager.getLoadedPlugins().size());
 	ImGui::End();
 }
 
@@ -172,31 +191,31 @@ void EngineUIBridge::drawLoggingSettingUI()
 	ImGui::Begin("Plugin Config", &showLoggingSettingsWindow);
 
 	bool isDebugEnabled;
-	for(const auto& [name, plugin] : m_pluginManager->getLoadedPlugins())
+	for(const auto& [name, plugin] : m_pluginManager.getLoadedPlugins())
 	{
-		isDebugEnabled = plugin->isDebugLoggingEnabled();
+		isDebugEnabled = plugin->isPluginDebugLoggingEnabled();
 		if(ImGui::Checkbox(name.c_str(), &isDebugEnabled))
 		{
-			isDebugEnabled ? plugin->enableDebugLogging() : plugin->disableDebugLogging();
+			isDebugEnabled ? plugin->enabledPluginDebugLogging() : plugin->disablePluginDebugLogging();
 		}
 	}
 
 	ImGui::End();
 }
 
-void EngineUIBridge::drawLogPanel(std::shared_ptr<UILogSink> uiSink)
+void EngineUIBridge::drawLogPanel(UILogSink& uiSink)
 {
-	if (!showLogPanel || !uiSink) return;
+	if (!showLogPanel) return;
 
 	if(ImGui::Begin("Log Console"))
 	{
 		ImGui::BeginChild("ScrollingRegion", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
 		if(ImGui::Button("Clear"))
 		{
-			uiSink->logBuffer.clear();
+			uiSink.logBuffer.clear();
 		}
 
-		for(const auto& line : uiSink->logBuffer)
+		for(const auto& line : uiSink.logBuffer)
 		{
 			ImGui::PushStyleColor(ImGuiCol_Text, getColorForLevel(line.level));
 			ImGui::TextUnformatted(line.message.c_str());
@@ -219,6 +238,7 @@ void EngineUIBridge::draw()
 
 	drawConfigUI();
 	drawLoggingSettingUI();
+	drawEngineSettingsUI();
 	drawLogPanel(m_LogSink);
 }
 

@@ -5,6 +5,7 @@
 #include <mutex>
 #include <atomic>
 #include <chrono>
+#include <condition_variable>
 
 #include "Plugin/IPlugin.h"
 
@@ -31,17 +32,27 @@ class PolygonIO_Plugin : public IPlugin
 	private:
 		void queryLatestCandles();
 
-		std::vector<PolygonIO_Candle> m_candleHistory;
-		std::mutex m_dataMutex;
+	public:
+		void tick() override;
+		~PolygonIO_Plugin() override;
 
-		std::jthread m_pollThread;
+	private:
+		void runAPIThread(std::stop_token);
+
+	private:
+		std::vector<PolygonIO_Candle> m_candleHistory;
+		std::mutex                    m_dataMutex;
+
+		std::jthread m_apiThread;
 		std::atomic_bool m_running = false;
+		std::condition_variable_any m_sleepCondition;
 
 		std::string m_APIKey = "EQYZuQWtWMRKXg9_kmjdSLU6pEy2FVzv";
 		std::string m_symbol = "AAPL";
-		std::chrono::seconds m_pollInterval = std::chrono::seconds(20);
+		std::chrono::seconds m_pollInterval = std::chrono::seconds(10);
 
 		ServiceProxy<ILogger>     m_logger{nullptr};
 		ServiceProxy<IRestClient> m_RESTClient{nullptr};
-		std::string m_pluginName = "PolygonIO";
+		std::string               m_pluginName = "PolygonIO";
+		std::string               m_baseURL = "https://api.polygon.io";
 };

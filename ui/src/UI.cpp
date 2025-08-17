@@ -7,7 +7,7 @@
 
 #include <GLFW/glfw3.h>
 
-#include "../include/Engine.h"
+#include "Engine.h"
 #include "Services/Logging/ILogger.h"
 #include "Services/Logging/LogLevel.h"
 
@@ -54,7 +54,11 @@ bool UI::init()
 	io.ConfigFlags |= ImGuiConfigFlags_DockingEnable;*/
 
 
-	uiBridge = std::make_unique<EngineUIBridge>(engine.getPluginManager(), engine.getDataPacketRegistry(), engine.getLogger(), engine.getLogSink());
+	uiBridge = std::make_unique<EngineUIBridge>(*engine.getPluginManager(),
+		*engine.getDataPacketRegistry(),
+		*engine.getLogger(),
+		*engine.getLogSink(),
+		engine.getEngineSettings());
 
 	m_logger->log(LogLevel::Info, "Init complete");
 	return true;

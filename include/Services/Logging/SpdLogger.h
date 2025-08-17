@@ -3,6 +3,7 @@
 #include <memory>
 
 #include "Services/Logging/ILogger.h"
+#include "spdlog/common.h"
 
 namespace spdlog
 {
@@ -15,12 +16,12 @@ namespace spdlog
 class SpdLogger : public ILogger
 {
 public:
-	SpdLogger(std::string logName = "Default");
-	void log(LogLevel level, const std::string& msg) override;
-	void enableDebugLogging() override;
-	void disableDebugLogging() override;
-	bool isDebugLoggingEnabled() const override;
-	void setPluginName(const std::string& name) override;
+	SpdLogger(const std::string& name, const std::vector<spdlog::sink_ptr>& sinks);
+	void         log(LogLevel level, const std::string& msg) override;
+	void         enableDebugLogging() override;
+	void         disableDebugLogging() override;
+	bool         isDebugLoggingEnabled() const override;
+	void         setPluginName(const std::string& name) override;
 
 	private:
 	bool m_isDebugLogEnabled{false};

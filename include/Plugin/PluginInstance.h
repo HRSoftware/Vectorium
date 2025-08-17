@@ -38,32 +38,33 @@ class PluginRuntimeContext;
 class PluginInstance
 {
 public:
-	PluginInstance(LibraryHandle h, std::unique_ptr<IPlugin> p, std::unique_ptr<PluginRuntimeContext> ctx, std::string name = "");
+	PluginInstance(LibraryHandle h, std::unique_ptr<IPlugin> p, std::unique_ptr<PluginRuntimeContext>, std::string name = "");
 	~PluginInstance();
 
 	PluginInstance(const PluginInstance&) = delete;
 	PluginInstance& operator=(const PluginInstance&) = delete;
 
-	PluginInstance(PluginInstance&&) noexcept;
-	PluginInstance& operator=(PluginInstance&& other) noexcept;
+	PluginInstance(PluginInstance&&) = delete;
+	PluginInstance& operator=(PluginInstance&& other) = delete;
 
-	[[nodiscard]] IPlugin*                                    get() const;
-	[[nodiscard]] std::expected<std::type_index, std::string> getType() const;
-	[[nodiscard]] PluginRuntimeContext*                       getContext() const;
+	[[nodiscard]] IPlugin* getPlugin() const;
+	//[[nodiscard]] std::expected<std::type_index, std::string> getType() const;
+	[[nodiscard]] PluginRuntimeContext* getContext() const;
+	const std::string& getPluginName();
+
+	void enabledPluginDebugLogging();
+	void disablePluginDebugLogging();
+	bool isPluginDebugLoggingEnabled() const;
 
 	void tick() const;
-	bool unload();
-
-	void enableDebugLogging();
-	void disableDebugLogging();
-	bool isDebugLoggingEnabled() const ;
 
 private:
 
-	void log(LogLevel level, const std::string& msg) const;
 	LibraryHandle m_handle = nullptr;
 	std::unique_ptr<IPlugin> m_plugin;
-	std::shared_ptr<PluginRuntimeContext> m_context;
+	std::unique_ptr<PluginRuntimeContext> m_context;
 	std::string m_pluginName;
-	std::shared_ptr<ILogger> m_logger; // Remove?
+
+	std::chrono::steady_clock::time_point m_lastPluginUpdate;
+	std::chrono::seconds m_pluginUpdateInterval{ 5 };
 };

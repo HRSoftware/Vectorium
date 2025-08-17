@@ -29,7 +29,7 @@ struct NumberGeneratorPlugin final : public IPlugin
 	void onPluginUnload() override;
 
 	[[nodiscard]] std::type_index getType() const override;
-	void                          onPluginTick() override;
+	void                          tick() override;
 
 	private:
 		IPluginContext* m_context;

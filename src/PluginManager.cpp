@@ -18,6 +18,7 @@
 
 #include "Services/Logging/LogLevel.h"
 #include "Services/ServiceId.h"
+#include "Services/Logging/PluginLogger.h"
 
 namespace
 {
@@ -142,11 +143,11 @@ bool PluginManager::isPluginFolderWatcherEnabled() const
 	return m_scanningThread.joinable();
 }
 
-PluginManager::PluginManager(std::shared_ptr<ILogger> logger, std::shared_ptr<DataPacketRegistry> ptrDataPacketReg): m_dataPacketRegistry(std::move(ptrDataPacketReg))
-	, m_Logger(std::move(logger))
+PluginManager::PluginManager(ILogger& logger, DataPacketRegistry& ptrDataPacketReg, std::shared_ptr<IRestClient> RESTClient)
+: m_dataPacketRegistry(ptrDataPacketReg)
+, m_baseLogger(logger)
+, m_restClient(RESTClient)
 {
-	assert(m_Logger && "logger was nullptr");
-	assert(m_dataPacketRegistry && "dataPacketReg was nullptr");
 }
 
 
@@ -182,7 +183,7 @@ void PluginManager::scanPluginsFolder(const std::string& pluginDirectory)
 	logMessage(LogLevel::Debug, "Scanning plugin folder");
 	if(!std::filesystem::exists(pluginDirectory))
 	{
-		m_Logger->log(LogLevel::Info, std::format("Could not find 'plugins' folder at '{}'", pluginDirectory));
+		m_baseLogger.log(LogLevel::Info, std::format("Could not find 'plugins' folder at '{}'", pluginDirectory));
 		return;
 	}
 
@@ -289,9 +290,13 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 			return false;
 		}
 
+
+		auto pluginLogger = createPluginLogger(pluginName);
+
 		// Construct plugin and context(currently just one type of Context)
-		auto assignedPluginContext = std::make_unique<PluginRuntimeContext>(m_Logger, m_dataPacketRegistry, pluginName);
-		assignedPluginContext->registerService<IRestClient>(std::make_shared<RESTClient_HttpLib>("test"));
+		auto assignedPluginContext = std::make_unique<PluginRuntimeContext>(pluginLogger, m_dataPacketRegistry, pluginName);
+		assignedPluginContext->registerService<ILogger>(pluginLogger);
+		assignedPluginContext->registerService<IRestClient>(m_restClient); // This might be wrong
 
 		std::unique_ptr<IPlugin> plugin(pluginEntryFunction());
 
@@ -327,7 +332,6 @@ bool PluginManager::unloadPlugin(const std::string& name)
 	if(pluginItr != m_loadedPlugins.end())
 	{
 		// Unload and remove from collection of loaded plugins
-		const auto bSuccess = pluginItr->second->unload();
 		m_loadedPlugins.erase(pluginItr);
 
 		// Update the collection of all known plugins
@@ -337,7 +341,7 @@ bool PluginManager::unloadPlugin(const std::string& name)
 			discovered->second.loaded = false;
 		}
 
-		return bSuccess;
+		return true;
 	}
 
 	logMessage(LogLevel::Error, std::format("Plugin '{}' is not loaded; cannot unload.", name));
@@ -368,10 +372,16 @@ const std::unordered_map<std::string, std::unique_ptr<PluginInstance>>& PluginMa
 
 void PluginManager::logMessage(const LogLevel logLvl, const std::string& msg) const
 {
-	if(m_Logger)
-	{
-		m_Logger->log(logLvl, std::format("[{}] - {}", "PluginManager", msg));
-	}
+	m_baseLogger.log(logLvl, std::format("[{}] - {}", "PluginManager", msg));
+}
+
+std::shared_ptr<ILogger> PluginManager::createPluginLogger(const std::string& pluginName) const
+{
+	// Create wrapper that uses base logger for output but has independent debug state
+	return std::make_shared<PluginLogger>(
+		std::shared_ptr<ILogger>(&m_baseLogger, [](ILogger*){}),  // Non-owning shared_ptr
+		pluginName
+	);
 }
 
 void PluginManager::startPluginAutoScan()
@@ -443,26 +453,33 @@ void PluginManager::reloadPluginConfig()
 
 
 
-void PluginManager::enableDebugLogging()
+void PluginManager::enablePluginDebugLogging(const std::string& pluginName)
 {
-	if(m_Logger)
+	auto it = m_loadedPlugins.find(pluginName);
+	if(it != m_loadedPlugins.end())
 	{
-		m_Logger->enableDebugLogging();
+		it->second->enabledPluginDebugLogging();
 	}
 }
 
-void PluginManager::disableDebugLogging()
+void PluginManager::disablePluginDebugLogging(const std::string& pluginName)
 {
-	if(m_Logger)
+	auto it = m_loadedPlugins.find(pluginName);
+	if(it != m_loadedPlugins.end())
 	{
-		m_Logger->disableDebugLogging();
+		it->second->disablePluginDebugLogging();
 	}
 }
 
-bool PluginManager::isDebugLoggingEnabled() const
+bool PluginManager::isPluginDebugLoggingEnabled(const std::string& pluginName) const
 {
-	if (!m_Logger) return false;
-	return m_Logger->isDebugLoggingEnabled();
+	auto it = m_loadedPlugins.find(pluginName);
+	if(it != m_loadedPlugins.end())
+	{
+		return it->second->isPluginDebugLoggingEnabled();
+	}
+
+	return false;
 }
 
 void PluginManager::tick()
@@ -474,11 +491,10 @@ void PluginManager::tick()
 }
 
 
-
+//Need to work into things
 void PluginManager::registerServicesForPlugin(PluginRuntimeContext* context, const PluginDescriptor* desc) const
 {
-	// Always register logger
-	context->registerService<ILogger>(m_Logger);
+	
 
 	// Simple policy logic inline
 	if (isTrustedPlugin(desc->name))

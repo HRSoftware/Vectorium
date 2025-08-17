@@ -19,7 +19,7 @@ class DataPacketRegistry
 
 	using pluginNameAndHandlerPointer = std::pair<std::shared_ptr<IDataPacketHandler>, std::string>;
 public:
-		explicit DataPacketRegistry(std::shared_ptr<ILogger> log);
+		explicit DataPacketRegistry(ILogger& log);
 
 		bool registerDataPacketHandler(std::type_index packetType, std::shared_ptr<IDataPacketHandler> handler, const std::string& pluginName);
 		bool registerWildcardHandler(std::shared_ptr<IDataPacketHandler> handler, const std::string& pluginName);
@@ -39,9 +39,7 @@ private:
 		std::unordered_map<std::type_index, std::vector<pluginNameAndHandlerPointer>> m_handlers;
 		std::vector<pluginNameAndHandlerPointer> m_wildcardHandlers;
 
-		std::shared_ptr<ILogger> logger;
-
-
+		ILogger& m_logger;
 };
 
 

@@ -11,6 +11,8 @@
 #define EXPORT extern "C" __attribute__((visibility("default")))
 #endif
 
+enum class EngineEventType;
+
 // Used to indicate that services the plugin needs ie REST, logging, etc
 struct PluginDescriptor
 {
@@ -33,7 +35,9 @@ struct IPlugin
 	virtual void onPluginLoad(IPluginContext& context) = 0;
 	virtual void onPluginUnload() = 0;
 
-	virtual void onPluginTick() {};
+	virtual void tick() {};
+	virtual void onDataPacket(const DataPacket& packet) {};
+	virtual void onEngineEvent(const EngineEventType& event) {};
 	virtual std::type_index getType() const = 0;
 	virtual void onRender() {}; // optional UI overload
 	virtual ~IPlugin() = default;

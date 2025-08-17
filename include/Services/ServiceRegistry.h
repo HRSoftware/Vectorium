@@ -29,9 +29,11 @@ public:
 	std::shared_ptr<T> getService() const
 	{
 		auto it = m_services.find(typeid(T));
-		if (it != m_services.end()) {
+		if (it != m_services.end())
+		{
 			return std::static_pointer_cast<T>(it->second);
 		}
+
 		return nullptr;
 	}
 

@@ -1,7 +1,7 @@
 ﻿
 #include "Vectorium.h"
 #include "include/Engine.h"
-#include "ui/UI.h"
+#include "UI.h"
 
 int main()
 {

@@ -3,13 +3,11 @@
 #include <string>
 #include <Services/Logging/SpdLogger.h>
 #include "spdlog/spdlog.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
 
-SpdLogger::SpdLogger(std::string logName) : m_pluginName(std::move(logName))
+SpdLogger::SpdLogger(const std::string& name, const std::vector<spdlog::sink_ptr>& sinks)
 {
-	auto console_sink = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-	m_logger = std::make_shared<spdlog::logger>(m_pluginName, console_sink);
-	m_logger->set_level(spdlog::level::info);
+	m_pluginName = name;
+	m_logger = std::make_shared<spdlog::logger>(name, sinks.begin(), sinks.end());
 }
 
 void SpdLogger::log(LogLevel level, const std::string& msg)

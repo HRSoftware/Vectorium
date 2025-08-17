@@ -32,7 +32,7 @@ class PluginManager
 public:
 	bool loadConfig();
 	bool saveConfig() const;
-	PluginManager(std::shared_ptr<ILogger> logger, std::shared_ptr<DataPacketRegistry> ptrDataPacketReg);
+	PluginManager(ILogger& logger, DataPacketRegistry& ptrDataPacketReg, std::shared_ptr<IRestClient> RESTClient);
 	std::unique_ptr<IPluginContext> createContextForPlugin(const PluginDescriptor* desc, const std::string& pluginName);
 
 
@@ -91,10 +91,9 @@ public:
 	/// </summary>
 	void               reloadPluginConfig();
 
-	void enableDebugLogging();
-	void disableDebugLogging();
-
-	bool isDebugLoggingEnabled() const;
+	void enablePluginDebugLogging(const std::string& pluginName);
+	void disablePluginDebugLogging(const std::string& pluginName);
+	bool isPluginDebugLoggingEnabled(const std::string& pluginName) const;
 
 	void tick();
 
@@ -107,20 +106,18 @@ public:
 	/// <param name="context">The runtime context for the plugin, used to register services.</param>
 	/// <param name="desc">The descriptor containing metadata about the plugin, such as its name.</param>
 	void registerServicesForPlugin(PluginRuntimeContext* context, const PluginDescriptor* desc) const;
+	void logMessage(LogLevel logLvl, const std::string& msg) const;
+	std::shared_ptr<ILogger> createPluginLogger(const std::string& pluginName) const;
 
-	private:
+private:
 	std::unordered_map<std::string, PluginInfo> m_discoveredPlugins;
 	std::unordered_map<std::string, std::unique_ptr<PluginInstance>> m_loadedPlugins;
 
-	std::shared_ptr<DataPacketRegistry> m_dataPacketRegistry;
-	std::shared_ptr<ILogger> m_Logger;
+	DataPacketRegistry& m_dataPacketRegistry;
+
+	//Services from Engine
+	ILogger& m_baseLogger;
 	std::shared_ptr<IRestClient> m_restClient;
-	//std::shared_ptr<IFileSystem> m_fileSystem;
-
-
-
-	void logMessage(LogLevel logLvl, const std::string& msg) const;
-
 	std::string m_configurationLocation = "config/plugins_config.json";
 
 	PluginManagerConfig m_config;

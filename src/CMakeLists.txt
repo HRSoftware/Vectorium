@@ -10,7 +10,11 @@ add_library(engine "Engine.cpp"
 "PluginManager.cpp"
 "DataPacketRegistry.cpp"
 "Plugin/PluginRuntimeContext.cpp"  
-"Plugin/IPluginContext.cpp" )
+"Plugin/IPluginContext.cpp"
+#"RestClient/RestClient_HttpLib.cpp" 
+"Logger/SpdLogger.cpp"
+"Logger/UILogSink.cpp"
+)
 
 target_include_directories(engine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}

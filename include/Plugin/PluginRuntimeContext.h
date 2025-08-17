@@ -12,8 +12,8 @@ class DataPacketRegistry;
 class PluginRuntimeContext : public IPluginContext
 {
 public:
-	PluginRuntimeContext(std::shared_ptr<ILogger> centralLogger
-						,std::shared_ptr<DataPacketRegistry> registry
+	PluginRuntimeContext(std::shared_ptr<ILogger> pluginLogger
+						,DataPacketRegistry& registry
 						,std::string pluginName);
 
 	template<typename T>
@@ -29,8 +29,8 @@ public:
 	void        log(LogLevel level, const std::string& message) const override;
 
 private:
-	std::shared_ptr<DataPacketRegistry> m_registry;
-	std::shared_ptr<ILogger> scopedLogger;
+	DataPacketRegistry& m_registry;
+	std::shared_ptr<ILogger> m_pluginLogger;
 	std::string m_pluginName;
 
 	std::unordered_map<std::type_index, std::shared_ptr<void>> m_services;
