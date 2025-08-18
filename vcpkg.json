@@ -1,0 +1,9 @@
+{
+  "name": "vectorium",
+  "version": "1.0.0",
+  "description": "A modular, high-performance C++ engine for streaming and processing real-time data",
+  "dependencies": [
+    "openssl"
+  ],
+  "builtin-baseline": "c8696863d371ab7f46e213d8f5ca923c4aef2a00"
+}

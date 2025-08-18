@@ -112,8 +112,8 @@ public:
 	std::shared_ptr<ILogger> createPluginLogger(const std::string& pluginName) const;
 
 	private:
-	std::string getExecutableDir() const;
-	std::string getPortableConfigPath() const;
+		std::filesystem::path getExecutableDir() const;
+		std::filesystem::path getPortableConfigPath() const;
 
 private:
 	std::unordered_map<std::string, PluginInfo> m_discoveredPlugins;
@@ -124,7 +124,7 @@ private:
 	//Services from Engine
 	ILogger& m_baseLogger;
 	std::shared_ptr<IRestClient> m_restClient;
-	std::string m_configurationLocation = "config/plugins_config.json";
+	std::string m_configurationFileName = "plugins_config.json";
 
 	PluginManagerConfig m_config;
 

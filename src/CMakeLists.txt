@@ -31,6 +31,7 @@ REST_Client)
 
 if (WIN32)
     target_compile_definitions(engine PRIVATE PLATFORM_WINDOWS)
+	target_compile_options(engine PRIVATE /bigobj)
 	set_target_properties(engine PROPERTIES
         LINK_FLAGS "/FORCE:UNRESOLVED" )
 elseif(UNIX)

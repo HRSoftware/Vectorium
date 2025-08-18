@@ -3,6 +3,13 @@
 #include "Services/REST/IRestClient.h"
 
 #include <mutex>
+#include <variant>
+
+namespace httplib
+{
+	class SSLClient;
+	class Client;
+}
 
 class RESTClient_HttpLib : public IRestClient
 {
@@ -25,6 +32,12 @@ class RESTClient_HttpLib : public IRestClient
 		void setBaseUrl(std::string url) override;
 
 	private:
+		using ClientVariant = std::variant<std::unique_ptr<httplib::Client>, 
+		                                   std::unique_ptr<httplib::SSLClient>>;
+
+		std::expected<RESTClient_HttpLib::ClientVariant, std::string> createRESTClient(const std::string& baseURL) const;
+
+
 		std::string m_baseUrl;
 		HeaderMap m_defaultHeaders;
 		std::chrono::milliseconds m_timeout_ms{ 10000 }; //Def 10s

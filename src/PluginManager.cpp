@@ -65,7 +65,7 @@ namespace
 
 bool PluginManager::loadConfig()
 {
-	const auto configPath = getPortableConfigPath();
+	const auto configPath = getPortableConfigPath().string();
 	logMessage(LogLevel::Info, std::format("Load Config path: - {}", configPath));
 	std::ifstream file(configPath);
 	if(!file)
@@ -92,7 +92,7 @@ bool PluginManager::loadConfig()
 
 bool PluginManager::saveConfig() const
 {
-	const auto configPath = getPortableConfigPath();
+	const auto configPath = getPortableConfigPath().string();
 	logMessage(LogLevel::Info, std::format("Save Config path: - {}", configPath));
 	if(!std::filesystem::exists(configPath))
 	{
@@ -147,7 +147,7 @@ void PluginManager::init()
 		return;
 	}
 
-	logMessage(LogLevel::Error, std::format("Could not find PluginManager configuration file '{}'", m_configurationLocation));
+	logMessage(LogLevel::Error, std::format("Could not find PluginManager configuration file '{}'", m_configurationFileName));
 }
 
 bool PluginManager::isPluginFolderWatcherEnabled() const
@@ -393,25 +393,38 @@ std::shared_ptr<ILogger> PluginManager::createPluginLogger(const std::string& pl
 	);
 }
 
-std::string PluginManager::getExecutableDir() const 
+std::filesystem::path PluginManager::getExecutableDir() const
 {
 #ifdef _WIN32
         char path[MAX_PATH];
         GetModuleFileNameA(NULL, path, MAX_PATH);
-        return std::filesystem::path(path).parent_path().string();
+        return std::filesystem::path(path).parent_path();
 #else
         char path[PATH_MAX];
         ssize_t count = readlink("/proc/self/exe", path, PATH_MAX);
         if (count == -1) return ".";
         std::string exePath(path, count);
-        return std::filesystem::path(exePath).parent_path().string();
+        return std::filesystem::path(exePath).parent_path();
 #endif
     }
 
-std::string PluginManager::getPortableConfigPath() const 
+std::filesystem::path PluginManager::getPortableConfigPath() const
 {
-	std::string execDir = getExecutableDir();
-	return execDir + "/" + m_configurationLocation;
+	std::filesystem::path execDir = getExecutableDir();
+	std::filesystem::path configDir = execDir / "config";
+
+	// Ensure config directory exists
+	std::error_code ec;
+	std::filesystem::create_directories(configDir, ec);
+	if (ec) 
+	{
+		logMessage(LogLevel::Warning, std::format("Could not create config directory '{}': {}",
+			configDir.string(), ec.message()));
+		// Fall back to executable directory
+		return (execDir / m_configurationFileName);
+	}
+
+	return (configDir / m_configurationFileName);
 }
 
 void PluginManager::startPluginAutoScan()
@@ -520,8 +533,6 @@ void PluginManager::tick()
 //Need to work into things
 void PluginManager::registerServicesForPlugin(PluginRuntimeContext* context, const PluginDescriptor* desc) const
 {
-	
-
 	// Simple policy logic inline
 	if (isTrustedPlugin(desc->name))
 	{

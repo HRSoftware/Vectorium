@@ -17,6 +17,8 @@ void PolygonIO_Plugin::onPluginLoad(IPluginContext& context)
 	if(context.hasService<IRestClient>())
 	{
 		m_RESTClient = ServiceProxy(context.getService<IRestClient>());
+		m_RESTClient->set_bearer_token(m_APIKey);
+		m_RESTClient->setBaseUrl(m_baseURL);
 		m_logger->log(LogLevel::Info, "REST service added");
 	}
 	else
@@ -26,6 +28,8 @@ void PolygonIO_Plugin::onPluginLoad(IPluginContext& context)
 	}
 
 	m_running = true;
+
+	
 
 	m_apiThread = std::jthread([this](std::stop_token token)
 	{
@@ -63,7 +67,7 @@ void PolygonIO_Plugin::queryLatestCandles()
 {
 	m_logger->log(LogLevel::Debug, "Querying lastest candles SENT");
 
-	auto statusResponse = m_RESTClient->GET(m_baseURL + "/v1/marketstatus/now?apikey=" + m_APIKey);
+	auto statusResponse = m_RESTClient->GET("/v3/reference/tickers?market=stocks&active=true&order=asc&limit=100&sort=ticker");
 
 	m_logger->log(LogLevel::Debug, "Querying lastest candles RESPONSE");
 	if(!statusResponse.has_value())
@@ -81,12 +85,13 @@ void PolygonIO_Plugin::tick()
 
 PolygonIO_Plugin::~PolygonIO_Plugin()
 {
+	m_running = false;
+
 	if(m_apiThread.joinable())
 	{
 		m_apiThread.request_stop();
 		m_sleepCondition.notify_all();
 	}
-	m_running = false;
 }
 
 void PolygonIO_Plugin::runAPIThread(std::stop_token token)
@@ -125,7 +130,8 @@ void PolygonIO_Plugin::runAPIThread(std::stop_token token)
 			);
 		}
 	}
-	m_logger->log(LogLevel::Debug, "API Thread exited");
+
+	//m_logger->log(LogLevel::Debug, "API Thread exited");
 }
 
 EXPORT PluginDescriptor* getPluginDescriptor()

@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.8)
+cmake_minimum_required(VERSION 3.16)
 
 add_library(GPS_Plugin SHARED "GPS_Plugin.cpp")
 
