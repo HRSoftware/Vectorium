@@ -18,7 +18,7 @@ private:
 class NumberLoggerPlugin : public IPlugin
 {
 	public:
-		void            onPluginLoad(IPluginContext& context) override;
+		std::expected<void, std::string> onPluginLoad(IPluginContext& context) override;
 		void            onPluginUnload() override;
 		std::type_index getType() const override;
 

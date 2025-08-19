@@ -8,6 +8,7 @@
 #include "Services/REST/RestClient_HttpLib.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "Services/Logging/UILogSink.h"
+#include "Services/REST/RestClient_Cpr.h"
 #include "spdlog/spdlog.h"
 
 
@@ -24,7 +25,7 @@ Engine::Engine()
 	m_engineLogger = std::make_shared<SpdLogger>("Engine", sinks);
 
 	m_pDataPacketRegistry = std::make_unique<DataPacketRegistry>(*m_engineLogger);
-	m_pRestClient         = std::make_unique<RESTClient_HttpLib>();
+	m_pRestClient         = std::make_unique<RESTClient_Cpr>();
 	m_pPluginManager      = std::make_unique<PluginManager>(*m_engineLogger, *m_pDataPacketRegistry, m_pRestClient, m_pUiLogSink);
 
 	spdlog::set_level(spdlog::level::info);

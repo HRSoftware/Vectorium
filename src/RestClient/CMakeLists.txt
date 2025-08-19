@@ -1,7 +1,7 @@
 ﻿cmake_minimum_required(VERSION 3.16)
 
 add_library(REST_Client STATIC)
-target_sources(REST_Client PRIVATE RestClient_HttpLib.cpp)
+target_sources(REST_Client PRIVATE "RestClient_HttpLib.cpp" "RestClient_Cpr.cpp")
 
 set_property(TARGET REST_Client PROPERTY CXX_STANDARD 23)
 
@@ -40,14 +40,15 @@ target_include_directories(httplib_interface INTERFACE "${_httplib_inc}")
 
 # Check if we have OpenSSL available (from vcpkg or system)
 find_package(OpenSSL QUIET)
-if(OpenSSL_FOUND)
+if(OpenSSL_FOUND) 
+  set(HTTPLIB_ENABLE_SSL ON)
   message(STATUS "REST_Client: Using OpenSSL ${OPENSSL_VERSION}")
   target_compile_definitions(httplib_interface INTERFACE CPPHTTPLIB_OPENSSL_SUPPORT)
   target_link_libraries(httplib_interface INTERFACE OpenSSL::SSL OpenSSL::Crypto)
-  set(HTTPLIB_ENABLE_SSL ON)
 else()
-  message(STATUS "REST_Client: OpenSSL not found - HTTPS support disabled")
   set(HTTPLIB_ENABLE_SSL OFF)
+  message(STATUS "REST_Client: OpenSSL not found - HTTPS support disabled")
+ 
 endif()
 
 # Platform-specific linking
@@ -67,5 +68,9 @@ message(STATUS "httplib source dir: ${httplib_SOURCE_DIR}")
 message(STATUS "Using include: ${_httplib_inc}")
 message(STATUS "SSL support: ${HTTPLIB_ENABLE_SSL}")
 
-target_link_libraries(REST_Client PRIVATE logger httplib_interface)
+target_link_libraries(REST_Client PRIVATE 
+logger 
+httplib_interface 
+cpr::cpr)
+
 target_include_directories(REST_Client PRIVATE ${PROJECT_SOURCE_DIR}/include ${_httplib_inc})

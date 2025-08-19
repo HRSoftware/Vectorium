@@ -8,7 +8,7 @@
 RESTClient_HttpLib::RESTClient_HttpLib(std::string baseUrl, bool bUseHttps) : m_baseUrl(std::move(baseUrl)), m_useHttps(bUseHttps)
 {
 	//Auto-detect if not explicitly set
-	m_useHttps = m_baseUrl.starts_with("https://");
+	m_useHttps = m_baseUrl.starts_with("https");
 }
 
 static void apply_headers(httplib::Headers& dst, const HeaderMap& src)
@@ -36,15 +36,22 @@ void RESTClient_HttpLib::set_timeout(std::chrono::milliseconds ms)
 
 void RESTClient_HttpLib::set_bearer_token(std::string_view token)
 {
+
+	std::cout << "[RESTClient] Setting bearer token: " << (token.empty() ? "EMPTY" : "SET") << std::endl;
+	std::cout << "[RESTClient] Token length: " << token.length() << std::endl;
+
 	std::scoped_lock lk(m_mutex);
 	m_bearer.assign(token);
 	if(!m_bearer.empty())
 	{
 		m_defaultHeaders["Authorization"] = "Bearer " + m_bearer;
+
+		std::cout << "[RESTClient] Setting bearer token: " << (token.empty() ? "EMPTY" : "SET") << std::endl;
+		std::cout << "[RESTClient] Token length: " << token.length() << std::endl;
 	}
 }
 
-std::expected<RESTResponse, RESTError> RESTClient_HttpLib::GET(std::string_view path, const HeaderMap& headers)
+std::expected<RESTResponse, RESTError> RESTClient_HttpLib::GET(const std::string_view path, const HeaderMap& headers)
 {
 	std::scoped_lock lk(m_mutex);
 	httplib::Headers tmpHeaders;
@@ -71,9 +78,15 @@ std::expected<RESTResponse, RESTError> RESTClient_HttpLib::GET(std::string_view 
 
 		RESTResponse out;
 		out.status = response->status;
-		for (auto& hkv : response->headers) out.headers.emplace(hkv.first, hkv.second);
+		for (auto& hkv : response->headers)
+		{
+			out.headers.emplace(hkv.first, hkv.second);
+		}
+
 		out.body.assign(response->body.begin(), response->body.end());
+
 		return out;
+
 	}, clientVariant);
 
 	return GetResponse;
@@ -119,15 +132,26 @@ std::expected<RESTResponse, RESTError> RESTClient_HttpLib::POST(const std::strin
 
 void RESTClient_HttpLib::setBaseUrl(const std::string url)
 {
-	m_useHttps = url.starts_with("https://");
+	m_useHttps = url.starts_with("https");
 	m_baseUrl = url;
 }
 
+void RESTClient_HttpLib::testConnection()
+{
+
+	httplib::Client("https://fakerapi.it/api/2")
+		.Get("/persons", [&](const char *data, size_t data_length)
+	{
+		std::cout << std::string(data, data_length);
+		return true;
+	});
+}
+
 std::expected<RESTClient_HttpLib::ClientVariant, std::string> RESTClient_HttpLib::createRESTClient(
-	const std::string& baseURL) const
+	const std::string& baseURL, bool bUseHttps) const
 {
 #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
-	if (m_useHttps)
+	if (bUseHttps)
 	{
 		return std::make_unique<httplib::SSLClient>(baseURL.c_str());
 	} else
@@ -142,4 +166,9 @@ std::expected<RESTClient_HttpLib::ClientVariant, std::string> RESTClient_HttpLib
 
 	return std::make_unique<httplib::Client>(baseURL.c_str());
 #endif
+}
+
+std::string RESTClient_HttpLib::getBaseUrl() const
+{
+	return m_baseUrl;
 }

@@ -7,13 +7,14 @@ bool GPSDataHandler::handleType(const std::shared_ptr<GPSDataPacket>& packet)
 	return false;
 }
 
-void GPSPlugin::onPluginLoad(IPluginContext& context)
+std::expected<void, std::string> GPSPlugin::onPluginLoad(IPluginContext& context)
 {
 	m_Logger = ServiceProxy(context.getService<ILogger>());
 
 	// Registering our interest in GPSDataPackets
 	context.registerTypedHandler<GPSDataPacket>(std::make_shared<GPSDataHandler>());
 	m_Logger->log(LogLevel::Info, "Loaded");
+	return {};
 }
 
 void GPSPlugin::onPluginUnload()

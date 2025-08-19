@@ -68,8 +68,22 @@ FetchContent_Declare(
 )
 FetchContent_MakeAvailable(json)
 
+### cpr (C++ Requests)
+FetchContent_Declare(
+  cpr 
+  GIT_REPOSITORY https://github.com/libcpr/cpr.git
+  GIT_TAG 1.10.5
+)
+
+# Configure cpr options
+set(CPR_USE_SYSTEM_CURL OFF CACHE BOOL "Use system curl")
+set(CPR_BUILD_TESTS OFF CACHE BOOL "Don't build cpr tests")
+set(CPR_ENABLE_SSL ON CACHE BOOL "Enable SSL support")
+
+FetchContent_MakeAvailable(cpr)
+
 # Add source to this project's executable.
-add_executable (Vectorium "Vectorium.cpp" "include/Services/Logging/PluginLogger.h")
+add_executable (Vectorium "Vectorium.cpp")
 
 set_target_properties(Vectorium PROPERTIES CXX_STANDARD 23)
 

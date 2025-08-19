@@ -13,7 +13,7 @@ bool NumberLoggerHandler::handleType(const std::shared_ptr<int>& data)
 }
 
 
-void NumberLoggerPlugin::onPluginLoad(IPluginContext& context)
+std::expected<void, std::string> NumberLoggerPlugin::onPluginLoad(IPluginContext& context)
 {
 	m_logger = ServiceProxy(context.getService<ILogger>());
 
@@ -22,6 +22,8 @@ void NumberLoggerPlugin::onPluginLoad(IPluginContext& context)
 	context.registerTypedHandler<int>(m_handler);
 
 	m_logger->log (LogLevel::Info, "NumberLoggerPlugin registered for int packets");
+
+	return {};
 }
 
 

@@ -32,7 +32,7 @@ struct PluginDescriptor
 
 struct IPlugin
 {
-	virtual void onPluginLoad(IPluginContext& context) = 0;
+	virtual std::expected<void, std::string> onPluginLoad(IPluginContext& context) = 0;
 	virtual void onPluginUnload() = 0;
 
 	virtual void tick() {};

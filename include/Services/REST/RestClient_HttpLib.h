@@ -31,18 +31,24 @@ class RESTClient_HttpLib : public IRestClient
 													std::string_view content_type) override;
 		void setBaseUrl(std::string url) override;
 
+		void testConnection() override;
+
+
 	private:
 		using ClientVariant = std::variant<std::unique_ptr<httplib::Client>, 
 		                                   std::unique_ptr<httplib::SSLClient>>;
 
-		std::expected<RESTClient_HttpLib::ClientVariant, std::string> createRESTClient(const std::string& baseURL) const;
+		std::expected<RESTClient_HttpLib::ClientVariant, std::string> createRESTClient(const std::string& baseURL, bool bUseHttps = true) const;
 
+	public:
+		std::string getBaseUrl() const override;
 
-		std::string m_baseUrl;
-		HeaderMap m_defaultHeaders;
+	private:
+		std::string               m_baseUrl;
+		HeaderMap                 m_defaultHeaders;
 		std::chrono::milliseconds m_timeout_ms{ 10000 }; //Def 10s
-		std::string m_bearer;
-		bool m_useHttps = false;
+		std::string               m_bearer;
+		bool                      m_useHttps = false;
 
 		std::mutex m_mutex;
 };

@@ -20,7 +20,7 @@ struct GPSDataHandler final : ITypedDataPacketHandler<GPSDataPacket>
 
 struct GPSPlugin final : public IPlugin
 {
-	void onPluginLoad(IPluginContext& context) override;
+	std::expected<void, std::string> onPluginLoad(IPluginContext& context) override;
 	void onPluginUnload()override;
 
 	ServiceProxy<ILogger> m_Logger{nullptr};

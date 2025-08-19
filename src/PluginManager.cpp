@@ -80,6 +80,18 @@ namespace
 	}
 }
 
+
+PluginManager::PluginManager(ILogger& logger,
+	DataPacketRegistry& ptrDataPacketReg
+	, std::shared_ptr<IRestClient> RESTClient
+	, spdlog::sink_ptr uiLogSink)
+	: m_uiLogSink(std::move(uiLogSink))
+	, m_dataPacketRegistry(ptrDataPacketReg)
+	, m_baseLogger(logger)
+	, m_restClient(std::move(RESTClient))
+{
+}
+
 bool PluginManager::loadConfig()
 {
 	const auto configPath = getPortableConfigPath().string();
@@ -174,18 +186,6 @@ bool PluginManager::isPluginFolderWatcherEnabled() const
 {
 	return m_scanningThread.joinable();
 }
-
-PluginManager::PluginManager(ILogger& logger,
-	DataPacketRegistry& ptrDataPacketReg
-	, std::shared_ptr<IRestClient> RESTClient
-	, spdlog::sink_ptr uiLogSink)
-: m_uiLogSink(uiLogSink)
-, m_dataPacketRegistry(ptrDataPacketReg)
-, m_baseLogger(logger)
-, m_restClient(std::move(RESTClient))
-{
-}
-
 
 PluginInfo& PluginManager::getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& pluginPath)
 {
@@ -336,7 +336,18 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 
 		std::unique_ptr<IPlugin> plugin(pluginEntryFunction());
 
-		plugin->onPluginLoad(*assignedPluginContext);
+		auto loadResult = plugin->onPluginLoad(*assignedPluginContext);
+
+
+		// Handle issue loading plugin
+		if(!loadResult.has_value())
+		{
+			info.errorMessage = loadResult.error();
+			log(LogLevel::Error, std::format("Plugin '{}' failed to load: {}", pluginName, loadResult.error()));
+
+			plugin->onPluginUnload();
+			return false;
+		}
 
 		// Package plugin instance
 		auto pluginInstance = std::make_unique<PluginInstance>(
@@ -350,8 +361,8 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 		info.errorMessage.clear();
 
 		m_loadedPlugins.emplace(pluginName, std::move(pluginInstance));
-
 		log(LogLevel::Info, std::format("Successfully loaded plugin '{}'", pluginName));
+
 		return true;
 	}
 	catch (const std::exception& ex)

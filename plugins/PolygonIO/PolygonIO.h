@@ -22,7 +22,7 @@ struct PolygonIO_Candle
 class PolygonIO_Plugin : public IPlugin
 {
 	public:
-		void onPluginLoad(IPluginContext& context) override;
+		std::expected<void, std::string> onPluginLoad(IPluginContext& context) override;
 		void onPluginUnload() override;
 		void onRender() override;
 		std::type_index getType() const override;
@@ -38,6 +38,7 @@ class PolygonIO_Plugin : public IPlugin
 
 	private:
 		void runAPIThread(std::stop_token);
+		void testConnection();
 
 	private:
 		std::vector<PolygonIO_Candle> m_candleHistory;

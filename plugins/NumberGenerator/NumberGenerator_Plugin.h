@@ -19,7 +19,7 @@ struct NumberHandler final : IDataPacketHandler
 struct NumberGeneratorPlugin final : public IPlugin
 {
 	NumberGeneratorPlugin();
-	void onPluginLoad(IPluginContext& context) override;
+	std::expected<void, std::string> onPluginLoad(IPluginContext& context) override;
 	void onPluginUnload() override;
 
 	[[nodiscard]] std::type_index getType() const override;

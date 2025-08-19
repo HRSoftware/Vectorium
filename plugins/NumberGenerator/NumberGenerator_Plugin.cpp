@@ -19,7 +19,7 @@ bool NumberHandler::handle(const DataPacket& packet)
 
 NumberGeneratorPlugin::NumberGeneratorPlugin() = default;
 
-void NumberGeneratorPlugin::onPluginLoad(IPluginContext& context)
+std::expected<void, std::string> NumberGeneratorPlugin::onPluginLoad(IPluginContext& context)
 {
 	m_logger = ServiceProxy(context.getService<ILogger>());
 	m_logger->setPluginName(context.getPluginName());
@@ -27,6 +27,7 @@ void NumberGeneratorPlugin::onPluginLoad(IPluginContext& context)
 	// No need to register a handler as we don't want to do anything
 
 	m_logger->log(LogLevel::Info, "loaded");
+	return {};
 }
 
 void NumberGeneratorPlugin::onPluginUnload()
