@@ -143,9 +143,9 @@ void PluginManager::init()
 {
 	if(loadConfig())
 	{
-		const auto pluginFolderLoc = std::format("{}\\{}", getExecutableDir().string(), m_config.pluginDirectory);
-		m_baseLogger.log(LogLevel::Info, std::format("Checking plugin folder: {}", pluginFolderLoc));
-		scanPluginsFolder(std::format("{}", pluginFolderLoc));
+		const auto pluginFolderLoc = getExecutableDir() / m_config.pluginDirectory;
+		m_baseLogger.log(LogLevel::Info, std::format("Checking plugin folder: {}", pluginFolderLoc.string()));
+		scanPluginsFolder(std::format("{}", pluginFolderLoc.string()));
 
 		log(LogLevel::Info, std::format("Loading previously enabled Plugin [{}]", join_range(m_config.enabledPluginsOnStartup)));
 
