@@ -72,7 +72,7 @@ const std::string& PluginInstance::getPluginName()
 	return m_pluginName;
 }
 
-void PluginInstance::enabledPluginDebugLogging()
+void PluginInstance::enablePluginDebugLogging()
 {
 	m_context->getLoggerShared()->enableDebugLogging();
 }

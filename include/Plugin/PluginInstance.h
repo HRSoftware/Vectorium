@@ -52,7 +52,7 @@ public:
 	[[nodiscard]] PluginRuntimeContext* getContext() const;
 	const std::string& getPluginName();
 
-	void enabledPluginDebugLogging();
+	void enablePluginDebugLogging();
 	void disablePluginDebugLogging();
 	bool isPluginDebugLoggingEnabled() const;
 

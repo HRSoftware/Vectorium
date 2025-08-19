@@ -1,10 +1,57 @@
 #include "Engine.h"
+
+#include <iostream>
+
 #include "DataPacket/DataPacketRegistry.h"
 #include "Services/Logging/SpdLogger.h"
 #include "Plugin/PluginManager.h"
 #include "Services/REST/RestClient_HttpLib.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "Services/Logging/UILogSink.h"
+#include "spdlog/spdlog.h"
+
+
+Engine::Engine()
+{
+	auto consoleSink   = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
+	m_pUiLogSink = std::make_shared<UILogSink>();
+	m_pUiLogSink->set_level(spdlog::level::debug);
+
+	std::vector<spdlog::sink_ptr> sinks;
+	sinks.push_back(consoleSink);
+	sinks.push_back(m_pUiLogSink);
+
+	m_engineLogger = std::make_shared<SpdLogger>("Engine", sinks);
+
+	m_pDataPacketRegistry = std::make_unique<DataPacketRegistry>(*m_engineLogger);
+	m_pRestClient         = std::make_unique<RESTClient_HttpLib>();
+	m_pPluginManager      = std::make_unique<PluginManager>(*m_engineLogger, *m_pDataPacketRegistry, m_pRestClient, m_pUiLogSink);
+
+	spdlog::set_level(spdlog::level::info);
+
+	m_engineSetting.onSettingChanged = [this](const std::string& setting, const std::any& value)
+	{
+		handleSettingChanged(setting, value);
+	};
+}
+
+Engine::~Engine()
+{
+	// This order so nothing crashes
+	m_pPluginManager.reset();
+	m_pDataPacketRegistry.reset();
+	m_pRestClient.reset();
+	m_engineLogger.reset();
+}
+
+void Engine::init() const
+{
+	m_engineLogger->log(LogLevel::Info, "[Engine::init] - Engine starting");
+
+	m_pPluginManager->init();
+
+	m_engineLogger->log(LogLevel::Info, "[Engine::init] - complete");
+}
 
 void EngineSettings::setDebugLogging(bool enabled)
 {
@@ -22,37 +69,6 @@ void EngineSettings::setDebugLogging(bool enabled)
 bool EngineSettings::isDebugLoggingEnabled() const
 {
 	return m_debugLoggingEnabled;
-}
-
-Engine::Engine()
-{
-	auto consoleSink   = std::make_shared<spdlog::sinks::stdout_color_sink_mt>();
-	//const auto ui_sink = std::make_shared<UILogSink>();
-
-	std::vector<spdlog::sink_ptr> sinks{consoleSink /*ui_sink*/};
-	m_engineLogger = std::make_shared<SpdLogger>("Engine", sinks);
-
-	m_pDataPacketRegistry = std::make_unique<DataPacketRegistry>(*m_engineLogger);
-	m_pRestClient         = std::make_unique<RESTClient_HttpLib>();
-	m_pPluginManager      = std::make_unique<PluginManager>(*m_engineLogger, *m_pDataPacketRegistry, m_pRestClient);
-
-	//spdlog::set_default_logger(m_engineLogger);
-	spdlog::set_level(spdlog::level::info);
-
-	m_engineSetting.onSettingChanged = [this](const std::string& setting, const std::any& value) {
-		handleSettingChanged(setting, value);
-	};
-}
-
-Engine::~Engine() = default;
-
-void Engine::init() const
-{
-	m_engineLogger->log(LogLevel::Info, "[Engine::init] - Engine starting");
-
-	m_pPluginManager->init();
-
-	m_engineLogger->log(LogLevel::Info, "[Engine::init] - complete");
 }
 
 bool Engine::shouldTick() const
@@ -96,9 +112,9 @@ std::shared_ptr<ILogger> Engine::getLogger()
 	return m_engineLogger;
 }
 
-UILogSink* Engine::getLogSink()
+std::shared_ptr<UILogSink> Engine::getLogSink() const
 {
-	return m_pLogSink.get();
+	return m_pUiLogSink;
 }
 
 void Engine::enableEngineDebugLogging()

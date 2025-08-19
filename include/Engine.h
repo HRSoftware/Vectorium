@@ -72,20 +72,20 @@ public:
 	[[nodiscard]] DataPacketRegistry* getDataPacketRegistry() const;
 	[[nodiscard]] PluginManager*      getPluginManager() const;
 	std::shared_ptr<ILogger>          getLogger();
-	UILogSink*                        getLogSink();
+	std::shared_ptr<UILogSink>        getLogSink() const;
 	void                              enableEngineDebugLogging();
 	void                              disableEngineDebugLogging();
 	bool                              isEngineDebugLoggingEnabled() const;
 	EngineSettings&                   getEngineSettings();
-	void handleSettingChanged(const std::string& setting, const std::any& value);
-	void updateLoggerFromSettings();
+	void                              handleSettingChanged(const std::string& setting, const std::any& value);
+	void                              updateLoggerFromSettings();
 
 private:
 
 	EngineSettings     m_engineSetting;
 	std::unique_ptr<PluginManager>      m_pPluginManager;
 	std::unique_ptr<DataPacketRegistry> m_pDataPacketRegistry;
-	std::shared_ptr<UILogSink>          m_pLogSink;
+	std::shared_ptr<UILogSink>          m_pUiLogSink;
 
 	//Services
 	std::shared_ptr<IRestClient> m_pRestClient;

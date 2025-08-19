@@ -8,7 +8,9 @@
 
 #include "PluginManagerConfig.h"
 #include "Plugin/PluginInstance.h"
+#include "spdlog/sinks/sink.h"
 
+class UILogSink;
 class IRestClient;
 struct PluginDescriptor;
 class IPluginContext;
@@ -30,11 +32,11 @@ struct PluginInfo
 class PluginManager
 {
 public:
+
+	PluginManager(ILogger& logger, DataPacketRegistry& ptrDataPacketReg, std::shared_ptr<IRestClient> RESTClient, spdlog::sink_ptr uiLogSink);
+	std::unique_ptr<IPluginContext> createContextForPlugin(const PluginDescriptor* desc, const std::string& pluginName);
 	bool loadConfig();
 	bool saveConfig() const;
-	PluginManager(ILogger& logger, DataPacketRegistry& ptrDataPacketReg, std::shared_ptr<IRestClient> RESTClient);
-	std::unique_ptr<IPluginContext> createContextForPlugin(const PluginDescriptor* desc, const std::string& pluginName);
-
 
 	/// <summary>
 	/// Retrieves the PluginInfo for a plugin by name, or adds a new entry if it does not exist.
@@ -108,16 +110,17 @@ public:
 	/// <param name="context">The runtime context for the plugin, used to register services.</param>
 	/// <param name="desc">The descriptor containing metadata about the plugin, such as its name.</param>
 	void registerServicesForPlugin(PluginRuntimeContext* context, const PluginDescriptor* desc) const;
-	void logMessage(LogLevel logLvl, const std::string& msg) const;
+	void log(LogLevel logLvl, const std::string& msg) const;
 	std::shared_ptr<ILogger> createPluginLogger(const std::string& pluginName) const;
 
 	private:
-		std::filesystem::path getExecutableDir() const;
 		std::filesystem::path getPortableConfigPath() const;
 
 private:
 	std::unordered_map<std::string, PluginInfo> m_discoveredPlugins;
 	std::unordered_map<std::string, std::unique_ptr<PluginInstance>> m_loadedPlugins;
+
+	spdlog::sink_ptr m_uiLogSink;
 
 	DataPacketRegistry& m_dataPacketRegistry;
 
@@ -128,5 +131,5 @@ private:
 
 	PluginManagerConfig m_config;
 
-    std::jthread m_scanningThread;
+	std::jthread               m_scanningThread;
 };

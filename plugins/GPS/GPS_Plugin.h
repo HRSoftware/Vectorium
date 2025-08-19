@@ -26,4 +26,5 @@ struct GPSPlugin final : public IPlugin
 	ServiceProxy<ILogger> m_Logger{nullptr};
 
 	[[nodiscard]] std::type_index getType() const override;
+	void                          tick() override;
 };

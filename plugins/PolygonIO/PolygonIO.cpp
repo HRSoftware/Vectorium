@@ -1,4 +1,6 @@
 #include "PolygonIO.h"
+
+#include <utility>
 #include "Services/IServiceSpecialisations.h"
 
 void PolygonIO_Plugin::onPluginLoad(IPluginContext& context)
@@ -8,6 +10,7 @@ void PolygonIO_Plugin::onPluginLoad(IPluginContext& context)
 		m_logger = ServiceProxy(context.getService<ILogger>());
 		m_logger->setPluginName(m_pluginName);
 		m_logger->log(LogLevel::Info, "Logger service added");
+		m_logger->enableDebugLogging();
 	}
 	else
 	{
@@ -29,9 +32,7 @@ void PolygonIO_Plugin::onPluginLoad(IPluginContext& context)
 
 	m_running = true;
 
-	
-
-	m_apiThread = std::jthread([this](std::stop_token token)
+	m_apiThread = std::jthread([this](const std::stop_token& token)
 	{
 		runAPIThread(token);
 	});
@@ -40,12 +41,12 @@ void PolygonIO_Plugin::onPluginLoad(IPluginContext& context)
 
 void PolygonIO_Plugin::onPluginUnload()
 {
+	m_running = false;
 	if(m_apiThread.joinable())
 	{
 		m_apiThread.request_stop();
 		m_sleepCondition.notify_all();
 	}
-	m_running = false;
 }
 
 void PolygonIO_Plugin::onRender()
@@ -81,6 +82,7 @@ void PolygonIO_Plugin::queryLatestCandles()
 
 void PolygonIO_Plugin::tick()
 {
+	m_logger->log(LogLevel::Debug, "Tick");
 }
 
 PolygonIO_Plugin::~PolygonIO_Plugin()

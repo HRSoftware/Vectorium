@@ -111,6 +111,9 @@ bool UI::shouldClose() const
 void UI::shutdown()
 {
 	if(uiBridge)
+	{
+		uiBridge.reset();
+	}
 	// Cleanup
 	if(window)
 	{

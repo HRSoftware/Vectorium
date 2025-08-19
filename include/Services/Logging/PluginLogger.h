@@ -10,9 +10,8 @@ class SpdLogger;
 class PluginLogger : public ILogger
 {
 private:
-	std::shared_ptr<ILogger> m_baseLogger;  // Shared base logger for actual output
+	std::shared_ptr<ILogger> m_underlyingLogger;  // Shared base logger for actual output
 	std::string m_pluginName;
-	bool m_debugEnabled = false;
 
 public:
 	PluginLogger(std::shared_ptr<ILogger> baseLogger, std::string pluginName);

@@ -29,6 +29,11 @@ std::type_index GPSPlugin::getType() const
 	return typeid(GPSDataPacket);
 }
 
+void GPSPlugin::tick()
+{
+	m_Logger->log(LogLevel::Debug, "Tick");
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////////////
 
 EXPORT PluginDescriptor* getPluginDescriptor()

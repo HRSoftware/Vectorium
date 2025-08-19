@@ -196,7 +196,7 @@ void EngineUIBridge::drawLoggingSettingUI()
 		isDebugEnabled = plugin->isPluginDebugLoggingEnabled();
 		if(ImGui::Checkbox(name.c_str(), &isDebugEnabled))
 		{
-			isDebugEnabled ? plugin->enabledPluginDebugLogging() : plugin->disablePluginDebugLogging();
+			isDebugEnabled ? plugin->enablePluginDebugLogging() : plugin->disablePluginDebugLogging();
 		}
 	}
 
@@ -207,20 +207,36 @@ void EngineUIBridge::drawLogPanel(UILogSink& uiSink)
 {
 	if (!showLogPanel) return;
 
-	if(ImGui::Begin("Log Console"))
+	if(ImGui::Begin("Log Console", &showLogPanel))
 	{
-		ImGui::BeginChild("ScrollingRegion", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
+		// Control buttons
 		if(ImGui::Button("Clear"))
 		{
-			uiSink.logBuffer.clear();
+			uiSink.clearBuffer();
 		}
+		ImGui::SameLine();
 
-		for(const auto& line : uiSink.logBuffer)
+		static bool autoScroll = true;
+		ImGui::Checkbox("Auto-scroll", &autoScroll);
+
+		ImGui::Separator();
+
+		// Log content in scrollable region
+		ImGui::BeginChild("ScrollingRegion", ImVec2(0, 0), true, ImGuiWindowFlags_HorizontalScrollbar);
+
+		for(const auto& entry : uiSink.logBuffer)
 		{
-			ImGui::PushStyleColor(ImGuiCol_Text, getColorForLevel(line.level));
-			ImGui::TextUnformatted(line.message.c_str());
+			ImGui::PushStyleColor(ImGuiCol_Text, getColorForLevel(entry.level));
+			ImGui::TextUnformatted(entry.message.c_str());
 			ImGui::PopStyleColor();
 		}
+
+		// Auto-scroll to bottom if enabled
+		if (autoScroll && ImGui::GetScrollY() >= ImGui::GetScrollMaxY())
+		{
+			ImGui::SetScrollHereY(1.0f);
+		}
+
 		ImGui::EndChild();
 	}
 
