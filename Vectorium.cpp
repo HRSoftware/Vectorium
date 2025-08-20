@@ -1,15 +1,22 @@
 ﻿
 #include "Vectorium.h"
+
+#include <iostream>
+
 #include "include/Engine.h"
 #include "UI.h"
 
 int main()
 {
 	Engine dataEngine;
-	dataEngine.init();
-
 	UI ui(dataEngine);
-	ui.init();
+	if (!ui.init())
+	{
+		std::cerr << "Failed to initialize UI\n";
+		return -1;
+	}
+
+	dataEngine.init();
 
 	while(!ui.shouldClose())
 	{

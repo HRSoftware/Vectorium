@@ -21,7 +21,7 @@ public:
 	void drawSideBar() const;
 	void drawConfigUI();
 	void drawEngineSettingsUI();
-	void drawMainPanels();
+	void drawMainPanels() const;
 	void drawStatusBar();
 
 	void drawDataPacketUI();

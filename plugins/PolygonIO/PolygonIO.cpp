@@ -3,8 +3,20 @@
 #include <utility>
 #include "Services/IServiceSpecialisations.h"
 
+PolygonIO_Plugin::~PolygonIO_Plugin()
+{
+	m_running = false;
+
+	if(m_apiThread.joinable())
+	{
+		m_apiThread.request_stop();
+		m_sleepCondition.notify_all();
+	}
+}
+
 std::expected<void, std::string> PolygonIO_Plugin::onPluginLoad(IPluginContext& context)
 {
+	m_pluginContext = &context;
 	if(context.hasService<ILogger>())
 	{
 		m_logger = ServiceProxy(context.getService<ILogger>());
@@ -41,11 +53,14 @@ std::expected<void, std::string> PolygonIO_Plugin::onPluginLoad(IPluginContext& 
 	}
 
 	m_running = true;
+	m_showMainWindow = true;
 
 	m_apiThread = std::jthread([this](const std::stop_token& token)
 	{
 		runAPIThread(token);
 	});
+
+	return {};
 }
 
 void PolygonIO_Plugin::onPluginUnload()
@@ -60,7 +75,22 @@ void PolygonIO_Plugin::onPluginUnload()
 
 void PolygonIO_Plugin::onRender()
 {
-	IPlugin::onRender();
+	static int call_count = 0;
+	call_count++;
+
+	m_logger->log(LogLevel::Debug, std::format("PolygonIO::onRender() call #{}", call_count));
+
+	if (m_showMainWindow)
+	{
+		try
+		{
+			renderMainWindow();  // Back to normal ImGui calls!
+		}
+		catch (const std::exception& e)
+		{
+			m_logger->log(LogLevel::Error, std::format("Error in renderMainWindow: {}", e.what()));
+		}
+	}
 }
 
 std::type_index PolygonIO_Plugin::getType() const
@@ -99,17 +129,6 @@ void PolygonIO_Plugin::queryLatestCandles()
 void PolygonIO_Plugin::tick()
 {
 	m_logger->log(LogLevel::Debug, "Tick");
-}
-
-PolygonIO_Plugin::~PolygonIO_Plugin()
-{
-	m_running = false;
-
-	if(m_apiThread.joinable())
-	{
-		m_apiThread.request_stop();
-		m_sleepCondition.notify_all();
-	}
 }
 
 void PolygonIO_Plugin::runAPIThread(std::stop_token token)
@@ -181,6 +200,55 @@ void PolygonIO_Plugin::testConnection()
 	m_logger->log(LogLevel::Info, std::format("Response status: {}", statusResponse.value().status));
 	m_logger->log(LogLevel::Info, "Response body (should show Authorization header):");
 	m_logger->log(LogLevel::Info, RESTUtils::formatForLogging(statusResponse.value()));
+}
+
+void PolygonIO_Plugin::renderMainWindow()
+{
+	if (m_pluginContext->uiBegin("PolygonIO Market Data", &m_showMainWindow))
+	{
+		m_pluginContext->uiText("Hello from PolygonIO Plugin!");
+
+		std::string status = "Connection Status: " + m_uiState.connectionStatus;
+		m_pluginContext->uiText(status.c_str());
+
+		std::string requests = "Requests Made: " + std::to_string(m_uiState.requestCount);
+		m_pluginContext->uiText(requests.c_str());
+
+		if (m_pluginContext->uiButton("Test Button")) {
+			m_logger->log(LogLevel::Info, "Test button clicked!");
+		}
+
+		/*if (m_pluginContext->uiButton("Apply Configuration")) {
+			applyConfiguration();
+		}*/
+	}
+	m_pluginContext->uiEnd();
+}
+
+bool PolygonIO_Plugin::hasUIWindow() const
+{
+	return true;
+}
+
+std::string PolygonIO_Plugin::getUIWindowTitle() const
+{
+	return m_pluginName;
+}
+
+bool PolygonIO_Plugin::isUIWindowVisible() const
+{
+	return m_showMainWindow;
+}
+
+void PolygonIO_Plugin::setUIWindowVisible(bool visible)
+{
+	m_showMainWindow = visible;
+	m_logger->log(LogLevel::Info, std::format("PolygonIO window visibility set to: {}", visible));
+}
+
+void PolygonIO_Plugin::toggleUIWindow()
+{
+	m_showMainWindow = !isUIWindowVisible();
 }
 
 EXPORT PluginDescriptor* getPluginDescriptor()

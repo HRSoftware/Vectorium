@@ -36,8 +36,11 @@ private:
 	std::unordered_map<std::type_index, std::shared_ptr<void>> m_services;
 	mutable std::shared_mutex m_mutex;
 
-	protected:
-		bool registerDataPacketHandler(std::type_index type, std::shared_ptr<IDataPacketHandler> handler) override;
+	std::function<void*()> m_getImGuiContextFunc;
+	std::function<bool(void*)> m_setImGuiContextFunc;
+
+protected:
+	bool registerDataPacketHandler(std::type_index type, std::shared_ptr<IDataPacketHandler> handler) override;
 
 public:
 	void                         dispatch(const DataPacket& packet) override;
@@ -45,6 +48,16 @@ public:
 private:
 	std::expected<std::shared_ptr<void>, std::string> getServiceByTypeIndex(std::type_index tIdx) override;
 	bool hasServiceByTypeIndex(std::type_index tIdx) const override;
+
+public:
+	void* getMainAppImGuiContext() override;
+	bool  setImGuiContext(void* ctx) override;
+	void  setImGuiContextFunctions(std::function<void*()> getFunc, std::function<bool(void*)> setFunc);
+	void  uiSetNextWindowSize(float width, float height, int cond) override;
+	bool  uiBegin(const char* name, bool* p_open) override;
+	void  uiEnd() override;
+	void  uiText(const char* text) override;
+	bool  uiButton(const char* label) override;
 };
 
 template <typename T> void PluginRuntimeContext::registerService(std::shared_ptr<T> service)

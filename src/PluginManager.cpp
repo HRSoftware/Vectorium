@@ -9,6 +9,8 @@
 #include <utility>
 #include <nlohmann/json.hpp>
 
+#include "ImguiContextManager.h"
+#include "imgui_internal.h"
 #include "DataPacket/DataPacketRegistry.h"
 #include "Plugin/PluginInstance.h"
 #include "Plugin/PluginRuntimeContext.h"
@@ -335,6 +337,20 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 		assignedPluginContext->registerService<IRestClient>(m_restClient); // This might be wrong
 
 		std::unique_ptr<IPlugin> plugin(pluginEntryFunction());
+
+		assignedPluginContext->setImGuiContextFunctions(
+			[]() -> void*
+				{
+					return static_cast<void*>(ImGui::GetCurrentContext());
+				},
+			[](void* ctx) -> bool
+				{
+					ImGui::SetCurrentContext(static_cast<ImGuiContext*>(ctx));
+					return ImGui::GetCurrentContext() == static_cast<ImGuiContext*>(ctx);
+				}
+			);
+
+		log(LogLevel::Debug, std::format("ImGui context functions set for plugin '{}'", pluginName));
 
 		auto loadResult = plugin->onPluginLoad(*assignedPluginContext);
 

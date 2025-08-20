@@ -1,10 +1,14 @@
 #include "EngineUIBridge.h"
 //#include <cxxabi.h>
 #include <memory>
+#include <ranges>
 #include <utility>
 
 #include "Engine.h"
 #include "imgui.h"
+#include "ImguiContextManager.h"
+#include "imgui_internal.h"
+#include "Plugin/IPlugin.h"
 #include "Services/Logging/UILogSink.h"
 #include "Services/Logging/ILogger.h"
 #include "Services/Logging/LogLevel.h"
@@ -157,6 +161,26 @@ void EngineUIBridge::drawMenuBar()
 			ImGui::EndMenu();
 		}
 
+		if (ImGui::BeginMenu("Windows"))
+		{
+			// Show available plugin windows
+			for (const auto& [name, pluginInstance] : m_pluginManager.getLoadedPlugins())
+			{
+				if(auto* plugin = pluginInstance->getPlugin())
+				{
+					if (plugin->hasUIWindow())
+					{
+						bool isVisible = plugin->isUIWindowVisible();
+						if (ImGui::MenuItem(plugin->getUIWindowTitle().c_str(), nullptr, isVisible))
+						{
+							plugin->toggleUIWindow();
+						}
+					}
+				}
+			}
+			ImGui::EndMenu();
+		}
+
 		ImGui::EndMainMenuBar();
 	}
 }
@@ -171,8 +195,30 @@ void EngineUIBridge::drawSideBar() const
 	ImGui::End();
 }
 
-void EngineUIBridge::drawMainPanels()
+void EngineUIBridge::drawMainPanels() const
 {
+	auto& contextMgr = ImGuiContextManager::getInstance();
+
+	if (!contextMgr.ensureContextActive()) {
+		m_logger.log(LogLevel::Error, "Failed to activate ImGui context for plugin rendering");
+		return;
+	}
+
+	// Render plugins
+	for (const auto& [name, pluginInstance] : m_pluginManager.getLoadedPlugins())
+	{
+		if (auto* plugin = pluginInstance->getPlugin())
+		{
+			try
+			{
+				plugin->onRender();
+			}
+			catch (const std::exception& e)
+			{
+				m_logger.log(LogLevel::Error, std::format("Error rendering plugin '{}': {}", name, e.what()));
+			}
+		}
+	}
 }
 
 void EngineUIBridge::drawStatusBar()
@@ -245,6 +291,13 @@ void EngineUIBridge::drawLogPanel(UILogSink& uiSink)
 
 void EngineUIBridge::draw()
 {
+	auto& contextManager = ImGuiContextManager::getInstance();
+
+	if(!contextManager.ensureContextActive())
+	{
+		m_logger.log(LogLevel::Error, "Failed to active ImGui context in EngineUIBridge::Draw()");
+		return;
+	}
 	drawMenuBar();
 	//ImGui::DockSpaceOverViewPort();
 
@@ -257,6 +310,8 @@ void EngineUIBridge::draw()
 	drawEngineSettingsUI();
 	drawLogPanel(m_LogSink);
 }
+
+
 
 bool EngineUIBridge::shouldQuit() const
 {

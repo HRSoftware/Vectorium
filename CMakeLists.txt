@@ -45,13 +45,39 @@ set(GLFW_BUILD_TESTS OFF CACHE BOOL "" FORCE)
 set(GLFW_BUILD_DOCS OFF CACHE BOOL "" FORCE)
 FetchContent_MakeAvailable(glfw)
 
-###			ImGui
+
+###			ImGui static build
 FetchContent_Declare(
   imgui
   GIT_REPOSITORY https://github.com/ocornut/imgui.git
-  GIT_TAG        v1.90.4
+  GIT_TAG        v1.89.9
 )
 FetchContent_MakeAvailable(imgui)
+
+# Create ImGui as a static library instead of static
+add_library(imgui_static STATIC
+    ${imgui_SOURCE_DIR}/imgui.cpp
+    ${imgui_SOURCE_DIR}/imgui_draw.cpp
+    ${imgui_SOURCE_DIR}/imgui_tables.cpp
+    ${imgui_SOURCE_DIR}/imgui_widgets.cpp
+    ${imgui_SOURCE_DIR}/imgui_demo.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
+)
+
+target_include_directories(imgui_static PUBLIC
+    ${imgui_SOURCE_DIR}
+    ${imgui_SOURCE_DIR}/backends
+)
+
+target_link_libraries(imgui_static PUBLIC glfw OpenGL::GL)
+
+
+
+set_target_properties(imgui_static PROPERTIES 
+    OUTPUT_NAME "imgui"
+    CXX_STANDARD 23
+)
 
 ###			SPDLog
 FetchContent_Declare(

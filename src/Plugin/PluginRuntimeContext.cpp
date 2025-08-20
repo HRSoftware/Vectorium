@@ -3,6 +3,8 @@
 #include <format>
 #include <utility>
 #include "Plugin/PluginRuntimeContext.h"
+
+#include "imgui.h"
 #include "Services/Logging/ILogger.h"
 #include "Services/Logging/SpdLogger.h"
 #include "DataPacket/DataPacketRegistry.h"
@@ -53,7 +55,96 @@ bool PluginRuntimeContext::hasServiceByTypeIndex(std::type_index tIdx) const
 	return it != m_services.end() && it->second != nullptr;
 }
 
+void* PluginRuntimeContext::getMainAppImGuiContext()
+{
+	if (m_getImGuiContextFunc)
+	{
+		return m_getImGuiContextFunc();
+	}
 
+	log(LogLevel::Warning, "No ImGui context function available");
+	return nullptr;
+}
+
+bool PluginRuntimeContext::setImGuiContext(void* ctx)
+{
+	if (m_setImGuiContextFunc)
+	{
+		return m_setImGuiContextFunc(ctx);
+	}
+	log(LogLevel::Warning, "No ImGui set context function available");
+	return false;
+}
+
+void PluginRuntimeContext::setImGuiContextFunctions(std::function<void*()> getFunc, std::function<bool(void*)> setFunc)
+{
+	m_getImGuiContextFunc = getFunc;
+	m_setImGuiContextFunc = setFunc;
+	log(LogLevel::Debug, "ImGui context functions set in plugin runtime context");
+}
+
+void PluginRuntimeContext::uiSetNextWindowSize(float width, float height, int cond)
+{
+	// Call main app's ImGui through the context functions
+	if (m_getImGuiContextFunc && m_setImGuiContextFunc)
+	{
+		void* ctx = m_getImGuiContextFunc();
+		if (ctx && m_setImGuiContextFunc(ctx))
+		{
+			ImGui::SetNextWindowSize(ImVec2(width, height), cond);
+		}
+	}
+}
+
+bool PluginRuntimeContext::uiBegin(const char* name, bool* p_open)
+{
+	if (m_getImGuiContextFunc && m_setImGuiContextFunc)
+	{
+		void* ctx = m_getImGuiContextFunc();
+		if (ctx && m_setImGuiContextFunc(ctx))
+		{
+			return ImGui::Begin(name, p_open);
+		}
+	}
+	return false;
+}
+
+void PluginRuntimeContext::uiEnd()
+{
+	if (m_getImGuiContextFunc && m_setImGuiContextFunc)
+	{
+		void* ctx = m_getImGuiContextFunc();
+		if (ctx && m_setImGuiContextFunc(ctx))
+		{
+			ImGui::End();
+		}
+	}
+}
+
+void PluginRuntimeContext::uiText(const char* text)
+{
+	if (m_getImGuiContextFunc && m_setImGuiContextFunc)
+	{
+		void* ctx = m_getImGuiContextFunc();
+		if (ctx && m_setImGuiContextFunc(ctx))
+		{
+			ImGui::Text("%s", text);
+		}
+	}
+}
+
+bool PluginRuntimeContext::uiButton(const char* label)
+{
+	if (m_getImGuiContextFunc && m_setImGuiContextFunc)
+	{
+		void* ctx = m_getImGuiContextFunc();
+		if (ctx && m_setImGuiContextFunc(ctx))
+		{
+			return ImGui::Button(label);
+		}
+	}
+	return false;
+}
 
 //Needed? Move to base class?
 void PluginRuntimeContext::unregisterDataPacketHandler()

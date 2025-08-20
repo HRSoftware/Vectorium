@@ -1,9 +1,10 @@
 
 cmake_minimum_required(VERSION 3.16)
 
-add_subdirectory(Logger)
-add_subdirectory(Mocking)
-add_subdirectory(RestClient)
+add_subdirectory(Services)
+
+
+
 
 add_library(engine "Engine.cpp" 
 "PluginInstance.cpp" 
@@ -12,8 +13,8 @@ add_library(engine "Engine.cpp"
 "Plugin/PluginRuntimeContext.cpp"  
 "Plugin/IPluginContext.cpp"
 #"RestClient/RestClient_HttpLib.cpp" 
-"Logger/SpdLogger.cpp"
-"Logger/UILogSink.cpp"
+"Services/Logging/SpdLogger.cpp"
+"Services/Logging/UILogSink.cpp"
 )
 
 target_include_directories(engine PUBLIC
@@ -27,7 +28,9 @@ set_target_properties(engine PROPERTIES CXX_STANDARD 23)
 target_link_libraries(engine PUBLIC 
 logger 
 nlohmann_json::nlohmann_json 
-REST_Client)
+REST_Client
+ui_services
+)
 
 if (WIN32)
     target_compile_definitions(engine PRIVATE PLATFORM_WINDOWS)

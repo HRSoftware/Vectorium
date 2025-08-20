@@ -16,6 +16,16 @@ set_target_properties(PolygonIO PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins # for DLLs
 )
 
-target_link_libraries(PolygonIO PRIVATE logger REST_Client)
+# Not currently needed
+#target_compile_definitions(PolygonIO PRIVATE VECTORIUM_UI_ENABLED)
 
-target_include_directories (PolygonIO PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_link_libraries(PolygonIO PRIVATE 
+	logger 
+	REST_Client
+	nlohmann_json::nlohmann_json
+	ui_services
+)
+
+target_include_directories (PolygonIO PRIVATE 
+	${CMAKE_SOURCE_DIR}/include )
+	#${imgui_SOURCE_DIR})  # Add ImGui include directory

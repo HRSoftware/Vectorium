@@ -19,28 +19,68 @@ struct PolygonIO_Candle
 	uint64_t volume;
 };
 
+struct PolygonIO_MarketStatus
+{
+	std::string market;
+	std::string serverTime;
+	std::string exchanges;
+	bool afterHours = false;
+	bool earlyHours = false;
+};
+
+struct PolygonIO_UIState
+{
+	char apiKeyBuffer[256] = "EQYZuQWtWMRKXg9_kmjdSLU6pEy2FVzv";
+	char symbolBuffer[16] = "AAPL";
+	int pollIntervalSeconds = 10;
+	bool autoUpdate = true;
+
+	// Display settings
+	bool showRawData = false;
+	bool showChart = true;
+	int maxCandles = 100;
+
+	// Status
+	std::string lastError;
+	std::string connectionStatus = "Disconnected";
+	int requestCount = 0;
+	std::chrono::system_clock::time_point lastRequestTime;
+
+	// Market status
+	PolygonIO_MarketStatus marketStatus;
+	bool hasMarketStatus = false;
+};
+
 class PolygonIO_Plugin : public IPlugin
 {
 	public:
+		~PolygonIO_Plugin() override;
+
 		std::expected<void, std::string> onPluginLoad(IPluginContext& context) override;
-		void onPluginUnload() override;
-		void onRender() override;
-		std::type_index getType() const override;
+		void                             onPluginUnload() override;
+		void                             onRender() override;
+		std::type_index                  getType() const override;
 
 		const std::vector<PolygonIO_Candle>& getCandles() const;
-
+		void tick() override;
 	private:
 		void queryLatestCandles();
 
-	public:
-		void tick() override;
-		~PolygonIO_Plugin() override;
-
-	private:
 		void runAPIThread(std::stop_token);
 		void testConnection();
+		void renderMainWindow();
+
+		//UI Related
+	public:
+		bool        hasUIWindow() const override;
+		std::string getUIWindowTitle() const override;
+		bool        isUIWindowVisible() const override;
+		void        setUIWindowVisible(bool visible) override;
+		void        toggleUIWindow() override;
 
 	private:
+
+		IPluginContext* m_pluginContext = nullptr;
 		std::vector<PolygonIO_Candle> m_candleHistory;
 		std::mutex                    m_dataMutex;
 
@@ -56,4 +96,7 @@ class PolygonIO_Plugin : public IPlugin
 		ServiceProxy<IRestClient> m_RESTClient{nullptr};
 		std::string               m_pluginName = "PolygonIO";
 		std::string               m_baseURL = "https://api.polygon.io";
+
+		PolygonIO_UIState m_uiState;
+		bool m_showMainWindow = true;
 };

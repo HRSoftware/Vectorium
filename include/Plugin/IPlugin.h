@@ -35,12 +35,21 @@ struct IPlugin
 	virtual std::expected<void, std::string> onPluginLoad(IPluginContext& context) = 0;
 	virtual void onPluginUnload() = 0;
 
-	virtual void tick() {};
-	virtual void onDataPacket(const DataPacket& packet) {};
-	virtual void onEngineEvent(const EngineEventType& event) {};
+	virtual void            tick() {}
+	virtual void            onDataPacket(const DataPacket& packet) {}
+	virtual void            onEngineEvent(const EngineEventType& event) {}
 	virtual std::type_index getType() const = 0;
-	virtual void onRender() {}; // optional UI overload
+
 	virtual ~IPlugin() = default;
+
+
+	// UI Related stuff
+	virtual bool        hasUIWindow() const { return false; }
+	virtual std::string getUIWindowTitle() const { return "Plugin Window"; }
+	virtual bool        isUIWindowVisible() const { return false; }
+	virtual void        setUIWindowVisible(bool visible) {}
+	virtual void        toggleUIWindow() { }
+	virtual void        onRender() {} // optional UI overload
 
 	PluginDescriptor getPluginDescriptor()
 	{
