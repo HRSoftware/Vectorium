@@ -1,6 +1,7 @@
 #include "Services/ServiceContainer.h"
 
 #include <iostream>
+#include <format>
 
 void ServiceContainer::registerServiceByType(std::type_index typeIdx, std::shared_ptr<void> service)
 {
