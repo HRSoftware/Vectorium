@@ -1,10 +1,10 @@
 #include "UI/ImGuiContextManager.h"
+#include <algorithm>
+#include <format>
+#include <imgui.h>
+#include <ranges>
 #include "Services/Logging/ILogger.h"
 #include "Services/Logging/LogLevel.h"
-#include <imgui.h>
-#include <format>
-#include <algorithm>
-#include <ranges>
 
 ImGuiContextManager::ImGuiContextManager(std::shared_ptr<ILogger> logger)
 	: m_logger(std::move(logger))
