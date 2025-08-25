@@ -8,8 +8,8 @@
 #include <ranges>
 #include <utility>
 #include <nlohmann/json.hpp>
-
-#include "../ui/include/Services/UI/IUIService.h"
+#include <Services/REST/IRestClient.h>
+#include <Services/IServiceSpecialisations.h>
 #include "DataPacket/DataPacketRegistry.h"
 #include "Plugin/PluginInstance.h"
 #include "Plugin/PluginRuntimeContext.h"
@@ -18,8 +18,6 @@
 #include "Services/Logging/LogLevel.h"
 #include "Services/Logging/PluginLogger.h"
 #include "Services/Logging/SpdLogger.h"
-#include "Services/REST/RestClient_HttpLib.h"
-#include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "Utils/range_utils.h"
 

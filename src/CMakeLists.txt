@@ -3,12 +3,12 @@ cmake_minimum_required(VERSION 3.16)
 add_subdirectory(Services)
 
 add_library(engine "Engine.cpp" 
-"PluginInstance.cpp" 
-"PluginManager.cpp"
-"DataPacketRegistry.cpp"
-"Plugin/PluginRuntimeContext.cpp"  
-"Plugin/IPluginContext.cpp"
-)
+	"PluginInstance.cpp" 
+	"PluginManager.cpp"
+	"DataPacketRegistry.cpp"
+	"Plugin/PluginRuntimeContext.cpp"  
+	"Plugin/IPluginContext.cpp"
+	"Services/ServiceContainer.cpp")
 
 target_include_directories(engine PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}

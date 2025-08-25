@@ -23,6 +23,18 @@ m_dataPacketRegistry(registry)
 	populateServices();
 }
 
+void PluginRuntimeContext::registerServiceByType(std::type_index typeIdx, std::shared_ptr<void> service)
+{
+	std::unique_lock lk(m_mutex);
+	m_localServices[typeIdx] = std::move(service);
+}
+
+void PluginRuntimeContext::unregisterServiceByType(std::type_index typeIdx)
+{
+	std::unique_lock lock(m_mutex);
+	m_localServices.erase(typeIdx);
+}
+
 std::shared_ptr<ILogger> PluginRuntimeContext::getLoggerShared()
 {
 	return m_pluginLogger;
@@ -51,7 +63,7 @@ std::expected<std::shared_ptr<void>, std::string> PluginRuntimeContext::getServi
 	}
 
 	// Fallback to global service container
-	if (auto service = m_services.getService(tIdx))
+	if (auto service = m_services.getServiceByType(tIdx))
 	{
 		return service;
 	}
@@ -62,7 +74,7 @@ std::expected<std::shared_ptr<void>, std::string> PluginRuntimeContext::getServi
 bool PluginRuntimeContext::hasServiceByTypeIndex(std::type_index tIdx) const
 {
 	std::shared_lock lock(m_mutex);
-	return m_services.hasService(tIdx);
+	return m_services.hasServiceByType(tIdx);
 }
 
 void* PluginRuntimeContext::getMainAppImGuiContext()
@@ -129,3 +141,4 @@ void PluginRuntimeContext::populateServices()
 		}
 		// Add other services as needed
 }
+

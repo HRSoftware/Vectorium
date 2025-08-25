@@ -3,9 +3,10 @@
 #include <set>
 #include <shared_mutex>
 #include <mutex>
-
 #include "IPlugin.h"
 #include "Services/ServiceContainer.h"
+
+class IUIService;
 class ILogger;
 class DataPacketRegistry;
 
@@ -17,6 +18,12 @@ public:
 		                     , std::string            pluginName
 		                     , ServiceContainer&      services );
 
+		// Type-erased core methods
+	void registerServiceByType(std::type_index typeIdx, std::shared_ptr<void> service);
+	void unregisterServiceByType(std::type_index typeIdx);
+
+
+		// Template wrappers for type safety
 	template<typename T>
 	void registerService(const std::shared_ptr<T>& service);
 
@@ -62,12 +69,10 @@ public:
 
 template <typename T> void PluginRuntimeContext::registerService(const std::shared_ptr<T>& service)
 {
-	std::unique_lock lk(m_mutex);
-	m_localServices[std::type_index(typeid(T))] = service;
+	registerServiceByType(std::type_index(typeid(T)), service);
 }
 
 template <typename T> void PluginRuntimeContext::unregisterService()
 {
-	std::unique_lock lock(m_mutex);
-	m_localServices.erase(std::type_index(typeid(T)));
+	unregisterServiceByType(std::type_index(typeid(T)));
 }

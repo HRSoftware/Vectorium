@@ -3,43 +3,47 @@
 #include <unordered_map>
 #include <typeindex>
 
+
+
 class ServiceContainer
 {
 public:
+
+	// Type-erased core methods
+	void registerServiceByType(std::type_index typeIdx, std::shared_ptr<void> service);
+	void unregisterServiceByType(std::type_index typeIdx);
+	std::shared_ptr<void> getServiceByType(std::type_index typeIdx) const;
+	bool hasServiceByType(std::type_index tIdx) const;
+	void clear();
+
+
+		// Template wrapper for type safety
 	template<typename T>
 	void registerService(std::shared_ptr<T> service)
 	{
-		m_services[std::type_index(typeid(T))] = service;
+		registerServiceByType(std::type_index(typeid(T)), service);
 	}
 
 	template<typename T>
 	std::shared_ptr<T> getService() const
 	{
-		auto service = getService(std::type_index(typeid(T)));
+		auto service = getServiceByType(std::type_index(typeid(T)));
 		return std::static_pointer_cast<T>(service);
-	}
-
-	std::shared_ptr<void> getService(std::type_index tIdx) const
-	{
-		const auto it = m_services.find(tIdx);
-		return (it != m_services.end()) ? it->second : nullptr;
-	}
-
-	bool hasService(std::type_index tIdx) const
-	{
-		return m_services.contains(tIdx);
 	}
 
 	template<typename T>
 	bool hasService() const
 	{
-		return m_services.contains(std::type_index(typeid(T)));
+		return hasServiceByType(std::type_index(typeid(T)));
 	}
 
 	template<typename T>
-	void removeService()
+	bool unregisterService()
 	{
-		m_services.erase(std::type_index(typeid(T)));
+		auto typeIdx = std::type_index(typeid(T));
+		bool existed = hasServiceByType(typeIdx);
+		unregisterServiceByType(typeIdx);
+		return existed;
 	}
 
 private:
