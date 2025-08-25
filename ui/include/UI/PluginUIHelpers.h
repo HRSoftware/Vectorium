@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Services/UI/IUIService.h"
+#include "Services/UI/IPluginUIService.h"
 #include "Services/IService.h"
 #include <functional>
 #include <memory>
@@ -14,9 +14,9 @@
 // Macro to safely register plugin UI with error checking
 #define REGISTER_PLUGIN_UI(context, renderFunction) \
     do { \
-        if (auto uiService = (context).getService<IUIService>()) { \
+        if (auto uiService = (context).getService<IPluginUIService>()) { \
             if (uiService->isAvailable()) { \
-                uiService->registerPluginUI((context).getPluginName(), [this]() { renderFunction(); }); \
+                uiService->registerPluginUIRenderer((context).getPluginName(), [this]() { renderFunction(); }); \
             } \
         } \
     } while(0)
@@ -36,7 +36,7 @@
 class PluginUIManager
 {
 public:
-	PluginUIManager(std::shared_ptr<IUIService> uiService, 
+	PluginUIManager(std::shared_ptr<IPluginUIService> uiService, 
 		const std::string& pluginName,
 		std::function<void()> renderCallback)
 		: m_uiService(std::move(uiService))
@@ -44,7 +44,7 @@ public:
 		, m_registered(false)
 	{
 		if (m_uiService && m_uiService->isContextValid()) {
-			m_uiService->registerPluginUI(m_pluginName, std::move(renderCallback));
+			m_uiService->registerPluginUIRenderer(m_pluginName, std::move(renderCallback));
 			m_registered = true;
 		}
 	}
@@ -52,7 +52,7 @@ public:
 	~PluginUIManager()
 	{
 		if (m_registered && m_uiService) {
-			m_uiService->unregisterPluginUI(m_pluginName);
+			m_uiService->unregisterPluginUIRenderer(m_pluginName);
 		}
 	}
 
@@ -72,7 +72,7 @@ public:
 	{
 		if (this != &other) {
 			if (m_registered && m_uiService) {
-				m_uiService->unregisterPluginUI(m_pluginName);
+				m_uiService->unregisterPluginUIRenderer(m_pluginName);
 			}
 
 			m_uiService = std::move(other.m_uiService);
@@ -86,7 +86,7 @@ public:
 	bool isRegistered() const { return m_registered; }
 
 private:
-	std::shared_ptr<IUIService> m_uiService;
+	std::shared_ptr<IPluginUIService> m_uiService;
 	std::string m_pluginName;
 	bool m_registered;
 };
@@ -163,7 +163,7 @@ namespace PluginUIUtils
 	/// <summary>
 	/// Shows UI service diagnostic information
 	/// </summary>
-	inline void ShowUIServiceDiagnostics(std::shared_ptr<IUIService> uiService)
+	inline void ShowUIServiceDiagnostics(std::shared_ptr<IPluginUIService> uiService)
 	{
 		if (!uiService) {
 			ImGui::Text("No UI Service Available");

@@ -63,7 +63,7 @@ set_target_properties(imgui_backend PROPERTIES
 # LIBRARY 2: UI services (no engine dependencies, no UI components)
 add_library(imgui_service STATIC
     # ONLY UI service implementations - NO UI components here
-    "src/Services/UI/UIService_ImGui.cpp"
+    "src/Services/UI/PluginUIService_ImGui.cpp"
     "src/Services/UI/UIContextProvider.cpp"
 )
 

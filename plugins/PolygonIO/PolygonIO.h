@@ -59,7 +59,7 @@ class PolygonIO_Plugin : public IPlugin
 
 		std::expected<void, std::string> onPluginLoad(IPluginContext& context) override;
 		void                             onPluginUnload() override;
-		void                             onRender() override;
+		void                             renderPluginUI();
 		std::type_index                  getType() const override;
 
 		const std::vector<PolygonIO_Candle>& getCandles() const;
@@ -101,7 +101,7 @@ class PolygonIO_Plugin : public IPlugin
 
 		ServiceProxy<ILogger>     m_logger{ nullptr };
 		ServiceProxy<IPluginRESTService> m_RESTClient{ nullptr };
-		ServiceProxy<IUIService>  m_uiService{ nullptr };
+		ServiceProxy<IPluginUIService>  m_uiService{ nullptr };
 
 		std::string               m_pluginName = "PolygonIO";
 		std::string               m_baseURL = "https://api.polygon.io";

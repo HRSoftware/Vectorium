@@ -6,7 +6,7 @@
 #include "IEngineUIBridge.h"
 #include "Services/ServiceContainer.h"
 
-class IUIService;
+class IPluginUIService;
 
 namespace spdlog
 {
@@ -90,8 +90,8 @@ public:
 	void                              updateLoggerFromSettings();
 	void                              notifyUIInitialised() override;
 
-	void                        setUIService(std::shared_ptr<IUIService> uiService) override;
-	std::shared_ptr<IUIService> getUIService() const override;
+	void                        setUIService(std::shared_ptr<IPluginUIService> uiService) override;
+	std::shared_ptr<IPluginUIService> getUIService() const override;
 
 private:
 
@@ -103,7 +103,7 @@ private:
 	//Services
 	std::shared_ptr<IPluginRESTService> m_pRestClient;
 	std::shared_ptr<ILogger> m_loggingService;
-	std::shared_ptr<IUIService> m_uiService;
+	std::shared_ptr<IPluginUIService> m_uiService;
 
 
 	std::chrono::high_resolution_clock::time_point m_lastUpdateTime;

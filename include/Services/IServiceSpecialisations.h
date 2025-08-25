@@ -2,8 +2,8 @@
 #include "Services/IService.h"
 
 // Then include all the service interfaces
-#include "../../ui/include/Services/UI/IUIService.h"
-#include "../../ui/include/Services/UI/UIService_ImGui.h"
+#include "../../ui/include/Services/UI/IPluginUIService.h"
+#include "../../ui/include/Services/UI/PluginUIService_ImGui.h"
 #include "REST/PluginRESTService_Cpr.h"
 #include "REST/PluginRESTService_HttpLib.h"
 #include "Services/Logging/ILogger.h"
@@ -104,31 +104,31 @@ struct NullObjectImpl<PluginRESTService_Cpr> : IPluginRESTService
 };
 
 template<>
-struct NullObjectImpl<IUIService> : IUIService
+struct NullObjectImpl<IPluginUIService> : IPluginUIService
 {
 	ImGuiContext* getImGuiContext() override { return nullptr; }
 	void          setImGuiContext(ImGuiContext* context) override {}
-	void          registerPluginUI(const std::string& pluginName, std::function<void()> renderCallback) override {}
-	void          unregisterPluginUI(const std::string& pluginName) override {}
+	void          registerPluginUIRenderer(const std::string& pluginName, std::function<void()> renderCallback) override {}
+	void          unregisterPluginUIRenderer(const std::string& pluginName) override {}
 	void          renderPluginUIs() override {}
 	bool          isContextValid() const override { return false; }
-	bool          executeWithContext(std::function<void()> imguiCode, const std::string& operationName) override { return false; }
 	std::string   getDiagnosticInfo() const override { return {}; }
 	size_t        getRegisteredPluginCount() const override { return 0; }
 	void          setErrorCallback(std::function<void(const std::string&)> callback) override {}
+	bool isUIAvailable() const override { return false; }
 };
 
 template<>
-struct NullObjectImpl<UIService_ImGui> : IUIService
+struct NullObjectImpl<PluginUIService_ImGui> : IPluginUIService
 {
 	ImGuiContext* getImGuiContext() override { return nullptr; }
 	void          setImGuiContext(ImGuiContext* context) override {}
-	void          registerPluginUI(const std::string& pluginName, std::function<void()> renderCallback) override {}
-	void          unregisterPluginUI(const std::string& pluginName) override {}
+	void          registerPluginUIRenderer(const std::string& pluginName, std::function<void()> renderCallback) override {}
+	void          unregisterPluginUIRenderer(const std::string& pluginName) override {}
 	void          renderPluginUIs() override {}
 	bool          isContextValid() const override { return false; }
-	bool          executeWithContext(std::function<void()> imguiCode, const std::string& operationName) override { return false; }
 	std::string   getDiagnosticInfo() const override { return {}; }
 	size_t        getRegisteredPluginCount() const override { return 0; }
 	void          setErrorCallback(std::function<void(const std::string&)> callback) override {}
+	bool isUIAvailable() const override { return false; }
 };

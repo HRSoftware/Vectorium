@@ -4,7 +4,7 @@
 #include <string>
 
 class ImGuiContextManager;
-class IUIService;
+class IPluginUIService;
 class ILogger;
 struct ImGuiContext;
 
@@ -38,7 +38,7 @@ public:
 	/// Gets the UI service for plugins to use
 	/// </summary>
 	/// <returns>Shared pointer to the UI service interface</returns>
-	std::shared_ptr<IUIService> getUIService();
+	std::shared_ptr<IPluginUIService> getUIService();
 
 	/// <summary>
 	/// Gets the context manager for advanced use cases
@@ -64,7 +64,7 @@ private:
 
 	// Core components
 	std::unique_ptr<ImGuiContextManager> m_contextManager;
-	std::shared_ptr<IUIService> m_imguiService;
+	std::shared_ptr<IPluginUIService> m_imguiService;
 
 	// Logging helpers
 	void logError(const std::string& message) const;

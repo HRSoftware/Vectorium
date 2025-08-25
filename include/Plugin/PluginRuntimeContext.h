@@ -6,7 +6,7 @@
 #include "IPlugin.h"
 #include "Services/ServiceContainer.h"
 
-class IUIService;
+class IPluginUIService;
 class ILogger;
 class DataPacketRegistry;
 

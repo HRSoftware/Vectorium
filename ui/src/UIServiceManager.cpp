@@ -1,6 +1,6 @@
 #include "UI/UIServiceManager.h"
 #include "UI/ImGuiContextManager.h"
-#include "Services/UI/UIService_ImGui.h"
+#include "Services/UI/PluginUIService_ImGui.h"
 #include "Services/Logging/ILogger.h"
 #include "Services/Logging/LogLevel.h"
 #include <format>
@@ -35,7 +35,7 @@ bool UIServiceManager::initialise()
 	}
 
 	// Create ImGui service
-	m_imguiService = std::make_shared<UIService_ImGui>(m_logger);
+	m_imguiService = std::make_shared<PluginUIService_ImGui>(m_logger);
 	m_imguiService->setImGuiContext(m_contextManager->getContext());
 
 	m_initialised = true;
@@ -93,7 +93,7 @@ void UIServiceManager::renderPluginUIs() const
 	m_contextManager->renderAllPluginUIs();
 }
 
-std::shared_ptr<IUIService> UIServiceManager::getUIService()
+std::shared_ptr<IPluginUIService> UIServiceManager::getUIService()
 {
 	return m_imguiService;
 }

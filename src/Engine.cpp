@@ -3,7 +3,7 @@
 #include <iostream>
 #include <utility>
 
-#include "../ui/include/Services/UI/UIService_ImGui.h"
+#include "../ui/include/Services/UI/PluginUIService_ImGui.h"
 #include "DataPacket/DataPacketRegistry.h"
 #include "Services/Logging/SpdLogger.h"
 #include "Plugin/PluginManager.h"
@@ -189,17 +189,17 @@ void Engine::notifyUIInitialised()
 	m_loggingService->log(LogLevel::Info, "Received notification of UI initialisation");
 }
 
-void Engine::setUIService(std::shared_ptr<IUIService> uiService)
+void Engine::setUIService(std::shared_ptr<IPluginUIService> uiService)
 {
 	m_uiService = std::move(uiService);
 	if (m_uiService)
 	{
-		m_serviceContainer.registerService<IUIService>(m_uiService);
+		m_serviceContainer.registerService<IPluginUIService>(m_uiService);
 		m_loggingService->log(LogLevel::Info, "UI service registered with engine");
 	}
 }
 
-std::shared_ptr<IUIService> Engine::getUIService() const
+std::shared_ptr<IPluginUIService> Engine::getUIService() const
 {
 	return m_uiService;
 }

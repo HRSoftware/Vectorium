@@ -8,7 +8,7 @@ class ILogger;
 class UILogSink;
 class EngineSettings;
 class UIServiceManager;
-class IUIService;
+class IPluginUIService;
 
 /// <summary>
 /// Interface providing UI with only what it needs from Engine
@@ -26,8 +26,8 @@ public:
 	virtual std::shared_ptr<UILogSink> getLogSink() const = 0;
 	virtual EngineSettings& getEngineSettings() = 0;
 
-	virtual void setUIService(std::shared_ptr<IUIService> uiService) = 0;
-	virtual std::shared_ptr<IUIService> getUIService() const = 0;
+	virtual void setUIService(std::shared_ptr<IPluginUIService> uiService) = 0;
+	virtual std::shared_ptr<IPluginUIService> getUIService() const = 0;
 
 	virtual void notifyUIInitialised() = 0;
 };

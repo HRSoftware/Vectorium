@@ -135,9 +135,9 @@ void PluginRuntimeContext::populateServices()
 			registerService<IPluginRESTService>(restClient);
 		}
 
-		if(auto uiService = m_services.getService<IUIService>())
+		if(auto uiService = m_services.getService<IPluginUIService>())
 		{
-			registerService<IUIService>(uiService);
+			registerService<IPluginUIService>(uiService);
 		}
 		// Add other services as needed
 }

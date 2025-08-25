@@ -58,17 +58,17 @@ std::expected<void, std::string> PolygonIO_Plugin::onPluginLoad(IPluginContext& 
 		return std::unexpected("Context does not have the service 'IPluginRESTService'");
 	}
 
-	if(context.hasService<IUIService>())
+	if(context.hasService<IPluginUIService>())
 	{
-		m_uiService = ServiceProxy(context.getService<IUIService>());
+		m_uiService = ServiceProxy(context.getService<IPluginUIService>());
 		m_logger->log(LogLevel::Info, "UI service added");
 
 		if(m_uiService.isAvailable())
 		{
 			//Register the main UI callback with the service
-			m_uiService->registerPluginUI(context.getPluginName(), [this]()
+			m_uiService->registerPluginUIRenderer(context.getPluginName(), [this]()
 			{
-				renderMainWindow();
+				renderPluginUI();
 			});
 
 			m_logger->log(LogLevel::Info, "UI service registered");
@@ -97,7 +97,7 @@ void PolygonIO_Plugin::onPluginUnload()
 
 	if (m_uiService.isAvailable())
 	{
-		m_uiService->unregisterPluginUI(m_pluginName);
+		m_uiService->unregisterPluginUIRenderer(m_pluginName);
 	}
 
 	m_running = false;
@@ -108,7 +108,7 @@ void PolygonIO_Plugin::onPluginUnload()
 	}
 }
 
-void PolygonIO_Plugin::onRender()
+void PolygonIO_Plugin::renderPluginUI()
 {
 	static int call_count = 0;
 	call_count++;
@@ -130,7 +130,7 @@ void PolygonIO_Plugin::onRender()
 		return;
 	}
 
-	m_logger->log(LogLevel::Debug, std::format("PolygonIO::onRender() call #{}", call_count));
+	m_logger->log(LogLevel::Debug, std::format("PolygonIO::renderPluginUI() call #{}", call_count));
 
 	if (m_showMainWindow)
 	{

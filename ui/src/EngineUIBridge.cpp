@@ -14,7 +14,7 @@
 #include "Services/Logging/LogLevel.h"
 #include "Plugin/PluginInstance.h"
 #include "Plugin/PluginManager.h"
-#include "Services/UI/UIService_ImGui.h"
+#include "Services/UI/PluginUIService_ImGui.h"
 #include "UI/UIServiceManager.h"
 
 //static std::string demangle(const char* name) {

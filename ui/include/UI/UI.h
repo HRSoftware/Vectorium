@@ -71,7 +71,7 @@ public:
 	/// <returns>True if init() was successful and window exists</returns>
 	bool isInitialized() const { return m_window != nullptr; }
 
-	std::shared_ptr<IUIService> getUIService() const;
+	std::shared_ptr<IPluginUIService> getUIService() const;
 	void                        createUIService();
 
 private:
@@ -85,7 +85,7 @@ private:
 
 	// UI state
 	bool m_initialised = false;
-	std::shared_ptr<IUIService>  m_uiService;
+	std::shared_ptr<IPluginUIService>  m_uiService;
 
 	// Private helper methods
 	bool initialiseGLFW() const;

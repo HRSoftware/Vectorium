@@ -186,25 +186,6 @@ bool PluginManager::isPluginFolderWatcherEnabled() const
 	return m_scanningThread.joinable();
 }
 
-void PluginManager::renderAllPlugins() const
-{
-	for(const auto& [name, plugin] : m_loadedPlugins)
-	{
-		if(plugin && plugin->getPlugin())
-		{
-			try
-			{
-				plugin->getPlugin()->onRender();
-			}
-			catch (const std::exception& e)
-			{
-				log(LogLevel::Error, std::format("Plugin '{}' onRender error: {}", name, e.what()));
-			}
-		}
-	}
-
-}
-
 PluginInfo& PluginManager::getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& pluginPath)
 {
 	std::string name = pluginPath.stem().string();
@@ -357,9 +338,9 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 			assignedPluginContext->registerService<IPluginRESTService>(restClient); // This might be wrong
 		}
 
-		if(const auto uiService = m_services.getService<IUIService>())
+		if(const auto uiService = m_services.getService<IPluginUIService>())
 		{
-			assignedPluginContext->registerService<IUIService>(uiService);
+			assignedPluginContext->registerService<IPluginUIService>(uiService);
 		}
 
 		std::unique_ptr<IPlugin> plugin(pluginEntryFunction());

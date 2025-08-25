@@ -49,7 +49,7 @@ struct IPlugin
 	virtual bool        isUIWindowVisible() const { return false; }
 	virtual void        setUIWindowVisible(bool visible) {}
 	virtual void        toggleUIWindow() { }
-	virtual void        onRender() {} // optional UI overload
+	//virtual void        renderPluginUI() {} // optional UI overload
 
 	PluginDescriptor getPluginDescriptor()
 	{

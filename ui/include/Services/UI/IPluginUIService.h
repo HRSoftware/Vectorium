@@ -13,10 +13,10 @@ class ILogger;
 /// Allows plugins to render UI elements using the main application's ImGui context
 /// This is the main interface that plugins will interact with
 /// </summary>
-class IUIService
+class IPluginUIService
 {
 public:
-	virtual ~IUIService() = default;
+	virtual ~IPluginUIService() = default;
 
 	/// <summary>
 	/// Gets the current ImGui context that plugins should use
@@ -36,14 +36,13 @@ public:
 	/// </summary>
 	/// <param name="pluginName">Name of the plugin</param>
 	/// <param name="renderCallback">Function to call during UI rendering</param>
-	virtual void registerPluginUI(const std::string& pluginName, 
-		std::function<void()> renderCallback) = 0;
+	virtual void registerPluginUIRenderer(const std::string& pluginName, std::function<void()> renderCallback) = 0;
 
 	/// <summary>
 	/// Unregisters a plugin's UI callbacks
 	/// </summary>
 	/// <param name="pluginName">Name of the plugin to unregister</param>
-	virtual void unregisterPluginUI(const std::string& pluginName) = 0;
+	virtual void unregisterPluginUIRenderer(const std::string& pluginName) = 0;
 
 	/// <summary>
 	/// Renders all registered plugin UIs (called by main application)
@@ -55,16 +54,6 @@ public:
 	/// </summary>
 	/// <returns>True if context is valid</returns>
 	virtual bool isContextValid() const = 0;
-
-	/// <summary>
-	/// Helper function for plugins to safely execute ImGui code
-	/// Automatically sets context before execution and handles errors
-	/// </summary>
-	/// <param name="imguiCode">Lambda containing ImGui calls</param>
-	/// <param name="operationName">Name for debugging/logging</param>
-	/// <returns>True if execution was successful</returns>
-	virtual bool executeWithContext(std::function<void()> imguiCode, 
-		const std::string& operationName = "Plugin UI") = 0;
 
 	/// <summary>
 	/// Gets diagnostic information about the UI service state
@@ -85,4 +74,6 @@ public:
 	/// </summary>
 	/// <param name="callback">Function to call when UI errors occur</param>
 	virtual void setErrorCallback(std::function<void(const std::string&)> callback) = 0;
+
+	virtual bool isUIAvailable() const = 0;
 };

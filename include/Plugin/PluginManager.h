@@ -13,7 +13,6 @@
 
 #include "Services/ServiceContainer.h"
 
-class IUIService;
 class UILogSink;
 class IPluginRESTService;
 struct PluginDescriptor;
@@ -81,8 +80,6 @@ public:
 
 	bool isPluginFolderWatcherEnabled() const;
 
-
-	void renderAllPlugins() const;
 
     void startPluginAutoScan();
     void stopPluginAutoScan();

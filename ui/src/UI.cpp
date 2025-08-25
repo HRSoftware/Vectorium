@@ -8,7 +8,7 @@
 #include <imgui_impl_opengl3.h>
 #include <GLFW/glfw3.h>
 
-#include "Services/UI/UIService_ImGui.h"
+#include "Services/UI/PluginUIService_ImGui.h"
 
 const std::string appName = "Vectorium";
 
@@ -162,7 +162,7 @@ void UI::shutdown()
 	m_logger.reset();
 }
 
-std::shared_ptr<IUIService> UI::getUIService() const
+std::shared_ptr<IPluginUIService> UI::getUIService() const
 {
 	return m_uiService;
 }
@@ -189,7 +189,7 @@ void UI::createUIService()
 		m_logger->log(LogLevel::Info, "Creating UI service...");
 
 		//Create the UI and set the ImGui context for it
-		m_uiService = std::make_shared<UIService_ImGui>(m_logger);
+		m_uiService = std::make_shared<PluginUIService_ImGui>(m_logger);
 		m_uiService->setImGuiContext(ImGui::GetCurrentContext());
 		m_engineBridge.setUIService(m_uiService);
 
@@ -198,7 +198,7 @@ void UI::createUIService()
 	}
 	catch (const std::exception& e)
 	{
-		m_logger->log(LogLevel::Error, std::format("Exception during UIService_ImGui creation: {}\n", e.what()));
+		m_logger->log(LogLevel::Error, std::format("Exception during PluginUIService_ImGui creation: {}\n", e.what()));
 		m_uiService = nullptr;
 	}
 
@@ -306,7 +306,13 @@ void UI::renderPluginUIs() const
 	// Plugin UIs are rendered as part of EngineUIBridge::draw()
 	// which calls EngineUIBridge::drawPluginUI()
 	// This happens automatically in renderMainUI() above
-	m_engineBridge.getPluginManager()->renderAllPlugins();
+	//m_engineBridge.getPluginManager()->renderAllPlugins();
+
+	if(m_uiService && m_uiService->isUIAvailable())
+	{
+		const auto imguiService = std::static_pointer_cast<PluginUIService_ImGui>(m_uiService);
+		imguiService->renderPluginUIs();
+	}
 }
 
 void UI::cleanupImGui()
