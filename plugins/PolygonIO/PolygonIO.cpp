@@ -33,9 +33,9 @@ std::expected<void, std::string> PolygonIO_Plugin::onPluginLoad(IPluginContext& 
 		context.log(LogLevel::Error, "Context does not have the service 'ILogger'");
 	}
 
-	if (context.hasService<IRestClient>())
+	if (context.hasService<IPluginRESTService>())
 	{
-		m_RESTClient = ServiceProxy(context.getService<IRestClient>());
+		m_RESTClient = ServiceProxy(context.getService<IPluginRESTService>());
 		m_logger->log(LogLevel::Info, "REST service added");
 
 		m_RESTClient->set_bearer_token(m_APIKey);
@@ -55,7 +55,7 @@ std::expected<void, std::string> PolygonIO_Plugin::onPluginLoad(IPluginContext& 
 	}
 	else
 	{
-		return std::unexpected("Context does not have the service 'IRestClient'");
+		return std::unexpected("Context does not have the service 'IPluginRESTService'");
 	}
 
 	if(context.hasService<IUIService>())
@@ -323,7 +323,7 @@ EXPORT PluginDescriptor* getPluginDescriptor()
 				.required = false
 			},
 			{
-				.type = typeid(IRestClient),
+				.type = typeid(IPluginRESTService),
 				.name = "RESTClient",
 				.minVersion = ">=1.0.0",
 				.required = true

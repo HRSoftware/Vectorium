@@ -100,7 +100,7 @@ class PolygonIO_Plugin : public IPlugin
 		std::chrono::seconds m_pollInterval = std::chrono::seconds(10);
 
 		ServiceProxy<ILogger>     m_logger{ nullptr };
-		ServiceProxy<IRestClient> m_RESTClient{ nullptr };
+		ServiceProxy<IPluginRESTService> m_RESTClient{ nullptr };
 		ServiceProxy<IUIService>  m_uiService{ nullptr };
 
 		std::string               m_pluginName = "PolygonIO";

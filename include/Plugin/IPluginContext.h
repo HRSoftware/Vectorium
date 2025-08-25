@@ -10,7 +10,7 @@
 
 class ILogger;
 enum class LogLevel;
-class IRestClient;
+class IPluginRESTService;
 class IDataPacketHandler;
 
 /// <summary>

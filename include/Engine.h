@@ -14,7 +14,7 @@ namespace spdlog
 }
 
 class SpdLogger;
-class IRestClient;
+class IPluginRESTService;
 class ILogger;
 class UILogSink;
 class PluginManager;
@@ -101,7 +101,7 @@ private:
 	std::shared_ptr<UILogSink>          m_pUiLogSink;
 
 	//Services
-	std::shared_ptr<IRestClient> m_pRestClient;
+	std::shared_ptr<IPluginRESTService> m_pRestClient;
 	std::shared_ptr<ILogger> m_loggingService;
 	std::shared_ptr<IUIService> m_uiService;
 

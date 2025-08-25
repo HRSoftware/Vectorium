@@ -8,7 +8,7 @@
 #include <ranges>
 #include <utility>
 #include <nlohmann/json.hpp>
-#include <Services/REST/IRestClient.h>
+#include <Services/REST/IPluginRESTService.h>
 #include <Services/IServiceSpecialisations.h>
 #include "DataPacket/DataPacketRegistry.h"
 #include "Plugin/PluginInstance.h"
@@ -49,11 +49,11 @@ namespace
 
 	bool needsNetworkAccess(const PluginDescriptor* desc)
 	{
-		// Check if plugin requests IRestClient in its services list
+		// Check if plugin requests IPluginRESTService in its services list
 		return std::ranges::any_of(desc->services,
 			[](const auto& service)
 			{
-				return service.type == typeid(IRestClient);
+				return service.type == typeid(IPluginRESTService);
 			});
 	}
 
@@ -352,9 +352,9 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 
 		assignedPluginContext->registerService<ILogger>(pluginLogger);
 
-		if(const auto restClient = m_services.getService<IRestClient>())
+		if(const auto restClient = m_services.getService<IPluginRESTService>())
 		{
-			assignedPluginContext->registerService<IRestClient>(restClient); // This might be wrong
+			assignedPluginContext->registerService<IPluginRESTService>(restClient); // This might be wrong
 		}
 
 		if(const auto uiService = m_services.getService<IUIService>())
@@ -637,9 +637,9 @@ void PluginManager::registerServicesForPlugin(PluginRuntimeContext* context, con
 	// Simple policy logic inline
 	if (isTrustedPlugin(desc->name))
 	{
-		if(const auto resClient = m_services.getService<IRestClient>())
+		if(const auto resClient = m_services.getService<IPluginRESTService>())
 		{
-			context->registerService<IRestClient>(resClient);
+			context->registerService<IPluginRESTService>(resClient);
 		}
 		//context->registerService<IFileSystem>(m_fileSystem);
 	}
@@ -652,9 +652,9 @@ void PluginManager::registerServicesForPlugin(PluginRuntimeContext* context, con
 	// Network plugins get REST client
 	if (needsNetworkAccess(desc))
 	{
-		if(const auto restClient = m_services.getService<IRestClient>())
+		if(const auto restClient = m_services.getService<IPluginRESTService>())
 		{
-			context->registerService<IRestClient>(restClient);
+			context->registerService<IPluginRESTService>(restClient);
 		}
 	}
 }

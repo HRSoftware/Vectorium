@@ -8,7 +8,7 @@
 #include "Services/Logging/SpdLogger.h"
 #include "Plugin/PluginManager.h"
 #include "Services/Logging/UILogSink.h"
-#include "Services/REST/RestClient_Cpr.h"
+#include "Services/REST/PluginRESTService_Cpr.h"
 #include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 
@@ -25,7 +25,7 @@ Engine::Engine()
 	m_loggingService = std::make_shared<SpdLogger>("Engine", sinks);
 
 	m_pDataPacketRegistry = std::make_unique<DataPacketRegistry>(*m_loggingService);
-	m_pRestClient = std::make_shared<RESTClient_Cpr>();
+	m_pRestClient = std::make_shared<PluginRESTService_Cpr>();
 
 	m_serviceContainer.registerService(m_loggingService);
 	m_serviceContainer.registerService(m_pRestClient);

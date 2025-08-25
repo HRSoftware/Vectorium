@@ -108,10 +108,10 @@ namespace RESTUtils
 /// <summary>
 /// Defines an interface for a REST client, providing methods to configure the client and perform HTTP requests.
 /// </summary>
-class IRestClient
+class IPluginRESTService
 {
 public:
-	virtual ~IRestClient() = default;
+	virtual ~IPluginRESTService() = default;
 
 	virtual void set_default_headers(HeaderMap headers) = 0;
 	virtual void set_timeout(std::chrono::milliseconds ms) = 0;

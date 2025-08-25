@@ -4,11 +4,11 @@
 // Then include all the service interfaces
 #include "../../ui/include/Services/UI/IUIService.h"
 #include "../../ui/include/Services/UI/UIService_ImGui.h"
-#include "REST/RestClient_Cpr.h"
-#include "REST/RestClient_HttpLib.h"
+#include "REST/PluginRESTService_Cpr.h"
+#include "REST/PluginRESTService_HttpLib.h"
 #include "Services/Logging/ILogger.h"
 #include "Services/Logging/SpdLogger.h"
-#include "Services/REST/IRestClient.h"
+#include "Services/REST/IPluginRESTService.h"
 
 template<>
 struct NullObjectImpl<ILogger> : ILogger
@@ -33,7 +33,7 @@ struct NullObjectImpl<SpdLogger> : ILogger
 };
 
 template<>
-struct NullObjectImpl<IRestClient> : IRestClient
+struct NullObjectImpl<IPluginRESTService> : IPluginRESTService
 {
 	~NullObjectImpl() override = default;
 	void set_default_headers(HeaderMap headers) override {}
@@ -58,7 +58,7 @@ struct NullObjectImpl<IRestClient> : IRestClient
 };
 
 template<>
-struct NullObjectImpl<RESTClient_HttpLib> : IRestClient
+struct NullObjectImpl<PluginRESTService_HttpLib> : IPluginRESTService
 {
 	~NullObjectImpl() override = default;
 	void set_default_headers(HeaderMap headers) override {}
@@ -81,7 +81,7 @@ struct NullObjectImpl<RESTClient_HttpLib> : IRestClient
 };
 
 template<>
-struct NullObjectImpl<RESTClient_Cpr> : IRestClient
+struct NullObjectImpl<PluginRESTService_Cpr> : IPluginRESTService
 {
 	~NullObjectImpl() override = default;
 	void set_default_headers(HeaderMap headers) override {}

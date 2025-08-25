@@ -1,11 +1,11 @@
-#include "Services/REST/RestClient_HttpLib.h"
+#include "Services/REST/PluginRESTService_HttpLib.h"
 
 #include <string>
 #include <utility>
 #include <httplib.h>
 
 
-RESTClient_HttpLib::RESTClient_HttpLib(std::string baseUrl, bool bUseHttps) : m_baseUrl(std::move(baseUrl)), m_useHttps(bUseHttps)
+PluginRESTService_HttpLib::PluginRESTService_HttpLib(std::string baseUrl, bool bUseHttps) : m_baseUrl(std::move(baseUrl)), m_useHttps(bUseHttps)
 {
 	//Auto-detect if not explicitly set
 	m_useHttps = m_baseUrl.starts_with("https");
@@ -22,19 +22,19 @@ static void apply_headers(httplib::Headers& dst, const HeaderMap& src)
 
 
 
-void RESTClient_HttpLib::set_default_headers(HeaderMap headers)
+void PluginRESTService_HttpLib::set_default_headers(HeaderMap headers)
 {
 	std::scoped_lock lk(m_mutex);
 	m_defaultHeaders = std::move(headers);
 }
 
-void RESTClient_HttpLib::set_timeout(std::chrono::milliseconds ms)
+void PluginRESTService_HttpLib::set_timeout(std::chrono::milliseconds ms)
 {
 	std::scoped_lock lk(m_mutex);
 	m_timeout_ms = ms;
 }
 
-void RESTClient_HttpLib::set_bearer_token(std::string_view token)
+void PluginRESTService_HttpLib::set_bearer_token(std::string_view token)
 {
 
 	std::cout << "[RESTClient] Setting bearer token: " << (token.empty() ? "EMPTY" : "SET") << std::endl;
@@ -51,7 +51,7 @@ void RESTClient_HttpLib::set_bearer_token(std::string_view token)
 	}
 }
 
-std::expected<RESTResponse, RESTError> RESTClient_HttpLib::GET(const std::string_view path, const HeaderMap& headers)
+std::expected<RESTResponse, RESTError> PluginRESTService_HttpLib::GET(const std::string_view path, const HeaderMap& headers)
 {
 	std::scoped_lock lk(m_mutex);
 	httplib::Headers tmpHeaders;
@@ -92,7 +92,7 @@ std::expected<RESTResponse, RESTError> RESTClient_HttpLib::GET(const std::string
 	return GetResponse;
 }
 
-std::expected<RESTResponse, RESTError> RESTClient_HttpLib::POST(const std::string_view path,
+std::expected<RESTResponse, RESTError> PluginRESTService_HttpLib::POST(const std::string_view path,
 	std::string_view body,
 	const HeaderMap& headers,
 	std::string_view content_type)
@@ -130,13 +130,13 @@ std::expected<RESTResponse, RESTError> RESTClient_HttpLib::POST(const std::strin
 	return PostResponse;
 }
 
-void RESTClient_HttpLib::setBaseUrl(const std::string url)
+void PluginRESTService_HttpLib::setBaseUrl(const std::string url)
 {
 	m_useHttps = url.starts_with("https");
 	m_baseUrl = url;
 }
 
-void RESTClient_HttpLib::testConnection()
+void PluginRESTService_HttpLib::testConnection()
 {
 
 	httplib::Client("https://fakerapi.it/api/2")
@@ -147,7 +147,7 @@ void RESTClient_HttpLib::testConnection()
 	});
 }
 
-std::expected<RESTClient_HttpLib::ClientVariant, std::string> RESTClient_HttpLib::createRESTClient(
+std::expected<PluginRESTService_HttpLib::ClientVariant, std::string> PluginRESTService_HttpLib::createRESTClient(
 	const std::string& baseURL, bool bUseHttps) const
 {
 #ifdef CPPHTTPLIB_OPENSSL_SUPPORT
@@ -168,7 +168,7 @@ std::expected<RESTClient_HttpLib::ClientVariant, std::string> RESTClient_HttpLib
 #endif
 }
 
-std::string RESTClient_HttpLib::getBaseUrl() const
+std::string PluginRESTService_HttpLib::getBaseUrl() const
 {
 	return m_baseUrl;
 }

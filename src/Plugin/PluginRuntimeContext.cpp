@@ -130,9 +130,9 @@ void PluginRuntimeContext::populateServices()
 			registerService<ILogger>(logger);
 		}
 
-		if (auto restClient = m_services.getService<IRestClient>())
+		if (auto restClient = m_services.getService<IPluginRESTService>())
 		{
-			registerService<IRestClient>(restClient);
+			registerService<IPluginRESTService>(restClient);
 		}
 
 		if(auto uiService = m_services.getService<IUIService>())

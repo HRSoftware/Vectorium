@@ -1,4 +1,4 @@
-#include "Services/REST/RestClient_Cpr.h"
+#include "Services/REST/PluginRESTService_Cpr.h"
 
 #include <cpr/cpr.h>
 #include <cpr/session.h>
@@ -26,48 +26,48 @@ namespace
 	}
 }
 
-RESTClient_Cpr::RESTClient_Cpr(const std::string& baseUrl)
+PluginRESTService_Cpr::PluginRESTService_Cpr(const std::string& baseUrl)
 : m_baseUrl(baseUrl)
 , m_session(std::make_unique<cpr::Session>())
 {
 }
 
-RESTClient_Cpr::~RESTClient_Cpr() = default;
+PluginRESTService_Cpr::~PluginRESTService_Cpr() = default;
 
-void RESTClient_Cpr::set_default_headers(HeaderMap headers)
+void PluginRESTService_Cpr::set_default_headers(HeaderMap headers)
 {
 	std::scoped_lock lock(m_mutex);
 	m_defaultHeaders = headers;
 }
 
-void RESTClient_Cpr::set_timeout(std::chrono::milliseconds ms)
+void PluginRESTService_Cpr::set_timeout(std::chrono::milliseconds ms)
 {
 	std::scoped_lock lock(m_mutex);
 	m_timeout_ms = ms;
 }
 
-void RESTClient_Cpr::set_bearer_token(std::string_view token)
+void PluginRESTService_Cpr::set_bearer_token(std::string_view token)
 {
 	std::scoped_lock lock(m_mutex);
 	m_bearer = token;
 }
 
-void RESTClient_Cpr::setBaseUrl(std::string url)
+void PluginRESTService_Cpr::setBaseUrl(std::string url)
 {
 	std::scoped_lock lock(m_mutex);
 	m_baseUrl = url;
 }
 
-void RESTClient_Cpr::testConnection()
+void PluginRESTService_Cpr::testConnection()
 {
 }
 
-std::string RESTClient_Cpr::getBaseUrl() const
+std::string PluginRESTService_Cpr::getBaseUrl() const
 {
 	return m_baseUrl;
 }
 
-std::expected<RESTResponse, RESTError> RESTClient_Cpr::GET(std::string_view path, const HeaderMap& headers)
+std::expected<RESTResponse, RESTError> PluginRESTService_Cpr::GET(std::string_view path, const HeaderMap& headers)
 {
 	std::scoped_lock lock(m_mutex);
 
@@ -99,7 +99,7 @@ std::expected<RESTResponse, RESTError> RESTClient_Cpr::GET(std::string_view path
 	}
 }
 
-std::expected<RESTResponse, RESTError> RESTClient_Cpr::POST(std::string_view path,
+std::expected<RESTResponse, RESTError> PluginRESTService_Cpr::POST(std::string_view path,
 	std::string_view body,
 	const HeaderMap& headers,
 	std::string_view content_type)
@@ -107,7 +107,7 @@ std::expected<RESTResponse, RESTError> RESTClient_Cpr::POST(std::string_view pat
 	return {};
 }
 
-std::string RESTClient_Cpr::buildFullUrl(std::string_view path) const
+std::string PluginRESTService_Cpr::buildFullUrl(std::string_view path) const
 {
 	if (path.starts_with("http"))
 	{
@@ -123,7 +123,7 @@ std::string RESTClient_Cpr::buildFullUrl(std::string_view path) const
 	return result;
 }
 
-HeaderMap RESTClient_Cpr::mergeHeaders(const HeaderMap& additional) const
+HeaderMap PluginRESTService_Cpr::mergeHeaders(const HeaderMap& additional) const
 {
 	HeaderMap merged = m_defaultHeaders;
 	for (const auto& [key, value] : additional)

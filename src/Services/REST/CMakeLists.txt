@@ -1,7 +1,7 @@
 ﻿cmake_minimum_required(VERSION 3.16)
 
 add_library(REST_Client STATIC)
-target_sources(REST_Client PRIVATE "RestClient_HttpLib.cpp" "RestClient_Cpr.cpp")
+target_sources(REST_Client PRIVATE "PluginRESTService_HttpLib.cpp" "PluginRESTService_Cpr.cpp") 
 
 set_property(TARGET REST_Client PROPERTY CXX_STANDARD 23)
 

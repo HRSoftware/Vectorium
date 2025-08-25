@@ -2,17 +2,17 @@
 
 #include <mutex>
 
-#include "IRestClient.h"
+#include "IPluginRESTService.h"
 
 namespace cpr
 {
 	class Session;
 }
-class RESTClient_Cpr : public IRestClient
+class PluginRESTService_Cpr : public IPluginRESTService
 {
 	public:
-		RESTClient_Cpr(const std::string& baseUrl = "");
-		~RESTClient_Cpr() override;
+		PluginRESTService_Cpr(const std::string& baseUrl = "");
+		~PluginRESTService_Cpr() override;
 		void                                   set_default_headers(HeaderMap headers) override;
 		void                                   set_timeout(std::chrono::milliseconds ms) override;
 		void                                   set_bearer_token(std::string_view token) override;

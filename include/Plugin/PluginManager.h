@@ -15,7 +15,7 @@
 
 class IUIService;
 class UILogSink;
-class IRestClient;
+class IPluginRESTService;
 struct PluginDescriptor;
 class IPluginContext;
 enum class LogLevel;

@@ -1,6 +1,6 @@
 #pragma once
 
-#include "Services/REST/IRestClient.h"
+#include "Services/REST/IPluginRESTService.h"
 
 #include <mutex>
 #include <variant>
@@ -11,12 +11,12 @@ namespace httplib
 	class Client;
 }
 
-class RESTClient_HttpLib : public IRestClient
+class PluginRESTService_HttpLib : public IPluginRESTService
 {
 	public:
-		explicit RESTClient_HttpLib(std::string baseUrl = "", bool bUseHttps = true);
+		explicit PluginRESTService_HttpLib(std::string baseUrl = "", bool bUseHttps = true);
 
-		// Inherited via IRestClient
+		// Inherited via IPluginRESTService
 		void set_default_headers(HeaderMap headers) override;
 
 		void set_timeout(std::chrono::milliseconds ms) override;
@@ -38,7 +38,7 @@ class RESTClient_HttpLib : public IRestClient
 		using ClientVariant = std::variant<std::unique_ptr<httplib::Client>, 
 		                                   std::unique_ptr<httplib::SSLClient>>;
 
-		std::expected<RESTClient_HttpLib::ClientVariant, std::string> createRESTClient(const std::string& baseURL, bool bUseHttps = true) const;
+		std::expected<PluginRESTService_HttpLib::ClientVariant, std::string> createRESTClient(const std::string& baseURL, bool bUseHttps = true) const;
 
 	public:
 		std::string getBaseUrl() const override;
