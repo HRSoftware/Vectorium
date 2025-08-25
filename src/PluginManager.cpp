@@ -9,7 +9,6 @@
 #include <utility>
 #include <nlohmann/json.hpp>
 
-#include "../out/build/x64-debug/_deps/imgui-src/imgui.h"
 #include "../ui/include/Services/UI/IUIService.h"
 #include "DataPacket/DataPacketRegistry.h"
 #include "Plugin/PluginInstance.h"
@@ -191,22 +190,6 @@ bool PluginManager::isPluginFolderWatcherEnabled() const
 
 void PluginManager::renderAllPlugins() const
 {
-	// Check if ImGui context is valid
-	if (!ImGui::GetCurrentContext())
-	{
-		log(LogLevel::Warning, "No ImGui context available for plugin rendering");
-		return;
-	}
-
-	// Check if we're in a valid frame
-	ImGuiIO& io = ImGui::GetIO();
-	if (!io.WantCaptureMouse && !io.WantCaptureKeyboard)
-	{
-		// Might not be in a valid render state
-		log(LogLevel::Debug, "ImGui not in active render state");
-		return;
-	}
-
 	for(const auto& [name, plugin] : m_loadedPlugins)
 	{
 		if(plugin && plugin->getPlugin())

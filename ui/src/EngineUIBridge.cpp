@@ -243,13 +243,148 @@ void EngineUIBridge::drawSideBar() const
 		m_logger.log(LogLevel::Error, "Could not get PluginManger");
 		return;
 	}
-	ImGui::Begin("Sidebar");
-		ImGui::Text("Loaded Plugins:");
-		for (const auto& pluginName : pluginManager->getNamesOfAllLoadedPlugins())
-		{
-			ImGui::BulletText("%s", pluginName.c_str());
-		}
-	ImGui::End();
+
+	// Get the main viewport to calculate positioning
+    ImGuiViewport* viewport = ImGui::GetMainViewport();
+
+    // Sidebar configuration
+	constexpr float sidebarWidth = 250.0f;  // Adjust width as needed
+    const float menuBarHeight = ImGui::GetFrameHeight(); // Account for menu bar
+
+    // Position sidebar on the right side
+    ImVec2 sidebarPos = ImVec2(
+        viewport->Pos.x + viewport->Size.x - sidebarWidth,  // Right edge
+        viewport->Pos.y + menuBarHeight                     // Below menu bar
+    );
+
+    ImVec2 sidebarSize = ImVec2(
+        sidebarWidth,
+        viewport->Size.y - menuBarHeight  // Full height minus menu bar
+    );
+
+    // Set window flags to pin it in place
+    ImGuiWindowFlags windowFlags =
+        ImGuiWindowFlags_NoMove |           // Can't be moved
+        ImGuiWindowFlags_NoResize |         // Can't be resized
+        ImGuiWindowFlags_NoCollapse |       // Can't be collapsed
+        ImGuiWindowFlags_NoTitleBar |       // No title bar for cleaner look
+        ImGuiWindowFlags_NoBringToFrontOnFocus; // Don't steal focus
+
+    // Set next window position and size
+    ImGui::SetNextWindowPos(sidebarPos, ImGuiCond_Always);
+    ImGui::SetNextWindowSize(sidebarSize, ImGuiCond_Always);
+
+    // Create the pinned sidebar
+    if (ImGui::Begin("##PluginSidebar", nullptr, windowFlags))
+    {
+        // Sidebar header
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 1.0f, 0.8f));
+        ImGui::Text("LOADED PLUGINS");
+        ImGui::PopStyleColor();
+
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        // Plugin list
+        const auto& loadedPlugins = pluginManager->getLoadedPlugins();
+
+        if (loadedPlugins.empty())
+        {
+            ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.6f, 0.6f, 0.6f, 1.0f));
+            ImGui::Text("No plugins loaded");
+            ImGui::PopStyleColor();
+        }
+        else
+        {
+            for (const auto& [pluginName, plugin] : loadedPlugins)
+            {
+                // Plugin entry with status indicator
+                ImGui::PushID(pluginName.c_str());
+
+                // Status indicator (green dot for running)
+                ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.0f, 1.0f, 0.0f, 1.0f));
+                ImGui::Text("X");
+                ImGui::PopStyleColor();
+
+                ImGui::SameLine();
+
+                // Plugin name
+                if (ImGui::Selectable(pluginName.c_str(), false, ImGuiSelectableFlags_AllowDoubleClick))
+                {
+                    if (ImGui::IsMouseDoubleClicked(0))
+                    {
+                        // Double-click to toggle debug logging
+                        if (plugin->isPluginDebugLoggingEnabled())
+						{
+                            plugin->disablePluginDebugLogging();
+                        } else {
+                            plugin->enablePluginDebugLogging();
+                        }
+                    }
+                }
+
+                // Context menu for plugin actions
+                if (ImGui::BeginPopupContextItem())
+                {
+                    if (ImGui::MenuItem("Unload Plugin"))
+                    {
+                        // Store name for later unloading (avoid iterator invalidation)
+                        m_pluginToUnload = pluginName;
+                    }
+
+                    if (ImGui::MenuItem("Toggle Debug Logging"))
+                    {
+                        if (plugin->isPluginDebugLoggingEnabled())
+						{
+                            plugin->disablePluginDebugLogging();
+                        } else {
+                            plugin->enablePluginDebugLogging();
+                        }
+                    }
+
+                    ImGui::EndPopup();
+                }
+
+            	// Show debug status
+                if (plugin->isPluginDebugLoggingEnabled())
+                {
+                    ImGui::SameLine();
+                    ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1.0f, 1.0f, 0.0f, 0.7f));
+                    ImGui::Text("(DEBUG)");
+                    ImGui::PopStyleColor();
+                }
+
+            	ImGui::PopID();
+            }
+        }
+
+    	ImGui::Spacing();
+        ImGui::Separator();
+
+    	// Quick stats
+        ImGui::Text("Total: %zu", loadedPlugins.size());
+
+    	// Quick actions
+        if (ImGui::Button("Reload All"))
+        {
+            // Implement reload all functionality
+            m_shouldReloadAllPlugins = true;
+        }
+    }
+    ImGui::End();
+
+	// Handle deferred actions (to avoid iterator invalidation)
+    if (!m_pluginToUnload.empty())
+    {
+        pluginManager->unloadPlugin(m_pluginToUnload);
+        m_pluginToUnload.clear();
+    }
+
+	if (m_shouldReloadAllPlugins)
+    {
+        // Implement reload all logic
+        m_shouldReloadAllPlugins = false;
+    }
 }
 
 void EngineUIBridge::drawMainPanels() const

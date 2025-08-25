@@ -42,4 +42,8 @@ private:
 
 	bool quitRequested = false;
 	bool  m_showPluginUIs;
+
+		//Experimental
+	mutable std::string m_pluginToUnload;
+	mutable bool m_shouldReloadAllPlugins = false;
 };
