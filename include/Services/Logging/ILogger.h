@@ -1,5 +1,6 @@
 #pragma once
 
+#include <iostream>
 #include <string>
 #include "LogLevel.h"
 
@@ -9,7 +10,10 @@
 class ILogger
 {
 	public:
-	virtual ~ILogger() = default;
+	virtual ~ILogger()
+	{
+		std::cout << "ILogger destroyed\n";
+	};
 	virtual void log(LogLevel level, const std::string& message) = 0;
 
 	virtual void enableDebugLogging() = 0;

@@ -4,19 +4,16 @@
 #include "DataPacket/DataPacketRegistry.h"
 #include "Plugin/PluginManager.h"
 
+class IEngineUIBridge;
 class EngineSettings;
 class Engine;
 
 class EngineUIBridge
 {
 public:
-	EngineUIBridge(PluginManager& pluginMgr,
-		DataPacketRegistry& registry,
-		ILogger& logger,
-		UILogSink& logSink,
-		EngineSettings& engineSettings);
+	EngineUIBridge(IEngineUIBridge& engineBridge);
 
-	void drawPluginUI();
+	void drawPluginUI() const;
 	void drawMenuBar();
 	void drawSideBar() const;
 	void drawConfigUI();
@@ -28,19 +25,15 @@ public:
 	void drawLoggingSettingUI();
 
 	void drawLogPanel(UILogSink& uiSink);
-	
-	void draw();
 
+	void draw();
 
 	bool shouldQuit() const;
 
 private:
-	PluginManager& m_pluginManager;
-	DataPacketRegistry& m_dataPacketRegistry;
-	ILogger& m_logger;
-	UILogSink& m_LogSink;
-	EngineSettings& m_engineSettings;
 
+	IEngineUIBridge& m_engineBridge;  // Use interface reference
+	ILogger& m_logger;
 
 	bool showConfigWindow = false;
 	bool showEngineWindow = false;
@@ -48,4 +41,5 @@ private:
 	bool showLogPanel = false;
 
 	bool quitRequested = false;
+	bool  m_showPluginUIs;
 };

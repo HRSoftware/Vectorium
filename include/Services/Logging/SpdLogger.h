@@ -1,9 +1,8 @@
 #pragma once
 
 #include <memory>
-
 #include "Services/Logging/ILogger.h"
-#include "spdlog/common.h"
+#include "spdlog/spdlog.h"
 
 namespace spdlog
 {

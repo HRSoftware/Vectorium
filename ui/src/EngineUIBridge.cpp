@@ -6,7 +6,7 @@
 
 #include "Engine.h"
 #include "imgui.h"
-#include "ImguiContextManager.h"
+#include "UI/ImguiContextManager.h"
 #include "imgui_internal.h"
 #include "Plugin/IPlugin.h"
 #include "Services/Logging/UILogSink.h"
@@ -14,6 +14,8 @@
 #include "Services/Logging/LogLevel.h"
 #include "Plugin/PluginInstance.h"
 #include "Plugin/PluginManager.h"
+#include "Services/UI/UIService_ImGui.h"
+#include "UI/UIServiceManager.h"
 
 //static std::string demangle(const char* name) {
 //	int status = 0;
@@ -43,16 +45,9 @@ namespace
 	}
 }
 
-EngineUIBridge::EngineUIBridge(PluginManager& pluginMgr,
-	DataPacketRegistry& registry,
-	ILogger& logger,
-	UILogSink& logSink,
-	EngineSettings& engineSettings)
-: m_pluginManager(pluginMgr)
-, m_dataPacketRegistry(registry)
-, m_logger(logger)
-, m_LogSink(logSink)
-, m_engineSettings(engineSettings)
+EngineUIBridge::EngineUIBridge(IEngineUIBridge& engineBridge) : m_engineBridge(engineBridge),
+                                                                m_logger(*engineBridge.getLogger()),
+                                                                m_showPluginUIs(false)
 {
 }
 
@@ -60,29 +55,35 @@ void EngineUIBridge::drawConfigUI()
 {
 	if (!showConfigWindow) return;
 	ImGui::Begin("Plugin Config", &showConfigWindow);
+	auto pluginManager = m_engineBridge.getPluginManager();
+	if(!pluginManager)
+	{
+		m_logger.log(LogLevel::Error, "Could not get pluginManager");
+		return;
+	}
+	const auto& config = pluginManager->getConfig();
 
-	const auto& config = m_pluginManager.getConfig();
 	bool autoScan = config.autoScan;
 	int interval = static_cast<int>(config.pluginScanInterval.count());
 
 	if(ImGui::Checkbox("Auto-scan", &autoScan))
 	{
-		m_pluginManager.setAutoScan(autoScan);
+		pluginManager->setAutoScan(autoScan);
 	}
 
 	if (ImGui::InputInt("Scan Interval (sec)", &interval))
 	{
 		if (interval > 0)
 		{
-			m_pluginManager.setScanInterval(std::chrono::seconds(interval));
+			pluginManager->setScanInterval(std::chrono::seconds(interval));
 		}
 	}
 
 	if (ImGui::Button("Save Config"))
 	{
-		if(m_pluginManager.saveConfig())
+		if(pluginManager->saveConfig())
 		{
-			m_pluginManager.reloadPluginConfig();
+			pluginManager->reloadPluginConfig();
 		}
 		else
 		{
@@ -99,18 +100,61 @@ void EngineUIBridge::drawEngineSettingsUI()
 	if (!showEngineWindow) return;
 	ImGui::Begin("Settings", &showEngineWindow);
 
-	bool bEngineDebugLogging = m_engineSettings.isDebugLoggingEnabled();
+	bool bEngineDebugLogging = m_engineBridge.getEngineSettings().isDebugLoggingEnabled();
 
 	if(ImGui::Checkbox("Engine debug logging", &bEngineDebugLogging))
 	{
-		m_engineSettings.setDebugLogging(bEngineDebugLogging);
+		m_engineBridge.getEngineSettings().setDebugLogging(bEngineDebugLogging);
 	}
 
 	ImGui::End();
 }
 
-void EngineUIBridge::drawPluginUI()
+void EngineUIBridge::drawPluginUI() const
 {
+	if (!ImGui::Begin("Plugin UI"))
+	{
+		ImGui::End();
+		return;
+	}
+
+	ImGui::Text("Plugin Management");
+	ImGui::Separator();
+
+	std::vector<std::string> pluginsToUnload;  // Collect names (we crash if we unload on a currently displaying plugin)
+
+	for (const auto& [name, plugin] : m_engineBridge.getPluginManager()->getLoadedPlugins())
+	{
+		if (ImGui::CollapsingHeader(name.c_str()))
+		{
+			ImGui::Indent();
+
+			ImGui::Text("Status: Running");
+			ImGui::Text("Debug: %s", plugin->isPluginDebugLoggingEnabled() ? "On" : "Off");
+
+			if (ImGui::Button(("Unload##" + name).c_str()))
+			{
+				pluginsToUnload.push_back(name);
+			}
+
+			ImGui::SameLine();
+			if (ImGui::Button(("Toggle Debug##" + name).c_str()))
+			{
+				plugin->isPluginDebugLoggingEnabled()
+				? plugin->disablePluginDebugLogging()
+				: plugin->enablePluginDebugLogging();
+			}
+
+			ImGui::Unindent();
+		}
+	}
+
+	ImGui::End();
+
+	for(const auto& pluginName : pluginsToUnload)
+	{
+		m_engineBridge.getPluginManager()->unloadPlugin(pluginName);
+	}
 }
 
 void EngineUIBridge::drawDataPacketUI()
@@ -119,13 +163,19 @@ void EngineUIBridge::drawDataPacketUI()
 
 void EngineUIBridge::drawMenuBar()
 {
+	auto pluginManager = m_engineBridge.getPluginManager();
+	if(!pluginManager)
+	{
+		m_logger.log(LogLevel::Error, "Could not get PluginManger");
+		return;
+	}
 	if(ImGui::BeginMainMenuBar())
 	{
 		if(ImGui::BeginMenu("File"))
 		{
-			if(ImGui::MenuItem("Plugin Dir watcher", nullptr, m_pluginManager.isPluginFolderWatcherEnabled()))
+			if(ImGui::MenuItem("Plugin Dir watcher", nullptr, pluginManager->isPluginFolderWatcherEnabled()))
 			{
-				m_pluginManager.isPluginFolderWatcherEnabled() ? m_pluginManager.stopPluginAutoScan() : m_pluginManager.startPluginAutoScan();
+				pluginManager->isPluginFolderWatcherEnabled() ? pluginManager->stopPluginAutoScan() : pluginManager->startPluginAutoScan();
 			}
 
 			ImGui::MenuItem("Plugin Config", nullptr, &showConfigWindow);
@@ -146,11 +196,11 @@ void EngineUIBridge::drawMenuBar()
 
 		if (ImGui::BeginMenu("Plugins"))
 		{
-			for (const auto& [name, pluginInfo] : m_pluginManager.getDiscoveredPlugins())
+			for (const auto& [name, pluginInfo] : pluginManager->getDiscoveredPlugins())
 			{
 				if (ImGui::MenuItem(name.c_str(), nullptr, pluginInfo.loaded))
 				{
-					pluginInfo.loaded ? m_pluginManager.unloadPlugin(name) : m_pluginManager.loadPlugin(pluginInfo.path);
+					pluginInfo.loaded ? pluginManager->unloadPlugin(name) : pluginManager->loadPlugin(pluginInfo.path);
 				}
 			}
 
@@ -164,13 +214,13 @@ void EngineUIBridge::drawMenuBar()
 		if (ImGui::BeginMenu("Windows"))
 		{
 			// Show available plugin windows
-			for (const auto& [name, pluginInstance] : m_pluginManager.getLoadedPlugins())
+			for (const auto& pluginInstance : pluginManager->getLoadedPlugins() | std::views::values)
 			{
 				if(auto* plugin = pluginInstance->getPlugin())
 				{
 					if (plugin->hasUIWindow())
 					{
-						bool isVisible = plugin->isUIWindowVisible();
+						const bool isVisible = plugin->isUIWindowVisible();
 						if (ImGui::MenuItem(plugin->getUIWindowTitle().c_str(), nullptr, isVisible))
 						{
 							plugin->toggleUIWindow();
@@ -187,9 +237,16 @@ void EngineUIBridge::drawMenuBar()
 
 void EngineUIBridge::drawSideBar() const
 {
+	auto pluginManager = m_engineBridge.getPluginManager();
+	if(!pluginManager)
+	{
+		m_logger.log(LogLevel::Error, "Could not get PluginManger");
+		return;
+	}
 	ImGui::Begin("Sidebar");
 		ImGui::Text("Loaded Plugins:");
-		for (const auto& pluginName : m_pluginManager.getNamesOfAllLoadedPlugins()) {
+		for (const auto& pluginName : pluginManager->getNamesOfAllLoadedPlugins())
+		{
 			ImGui::BulletText("%s", pluginName.c_str());
 		}
 	ImGui::End();
@@ -197,47 +254,39 @@ void EngineUIBridge::drawSideBar() const
 
 void EngineUIBridge::drawMainPanels() const
 {
-	auto& contextMgr = ImGuiContextManager::getInstance();
-
-	if (!contextMgr.ensureContextActive()) {
-		m_logger.log(LogLevel::Error, "Failed to activate ImGui context for plugin rendering");
-		return;
-	}
-
-	// Render plugins
-	for (const auto& [name, pluginInstance] : m_pluginManager.getLoadedPlugins())
-	{
-		if (auto* plugin = pluginInstance->getPlugin())
-		{
-			try
-			{
-				plugin->onRender();
-			}
-			catch (const std::exception& e)
-			{
-				m_logger.log(LogLevel::Error, std::format("Error rendering plugin '{}': {}", name, e.what()));
-			}
-		}
-	}
+	
 }
 
 void EngineUIBridge::drawStatusBar()
 {
+	auto pluginManager = m_engineBridge.getPluginManager();
+	if(!pluginManager)
+	{
+		m_logger.log(LogLevel::Error, "Could not get PluginManger");
+		return;
+	}
+
 	ImGui::Begin("Status", nullptr, ImGuiWindowFlags_NoTitleBar | ImGuiWindowFlags_NoResize |
 		ImGuiWindowFlags_NoMove | ImGuiWindowFlags_NoScrollbar);
 		ImGui::Text("FPS: %.1f", ImGui::GetIO().Framerate);
 		ImGui::SameLine();
-		ImGui::Text("Loaded Plugins: %zu", m_pluginManager.getLoadedPlugins().size());
+		ImGui::Text("Loaded Plugins: %zu", pluginManager->getLoadedPlugins().size());
 	ImGui::End();
 }
 
 void EngineUIBridge::drawLoggingSettingUI()
 {
+	auto pluginManager = m_engineBridge.getPluginManager();
+	if(!pluginManager)
+	{
+		m_logger.log(LogLevel::Error, "Could not get PluginManger");
+		return;
+	}
 	if (!showLoggingSettingsWindow) return;
 	ImGui::Begin("Plugin Config", &showLoggingSettingsWindow);
 
 	bool isDebugEnabled;
-	for(const auto& [name, plugin] : m_pluginManager.getLoadedPlugins())
+	for(const auto& [name, plugin] : pluginManager->getLoadedPlugins())
 	{
 		isDebugEnabled = plugin->isPluginDebugLoggingEnabled();
 		if(ImGui::Checkbox(name.c_str(), &isDebugEnabled))
@@ -291,13 +340,6 @@ void EngineUIBridge::drawLogPanel(UILogSink& uiSink)
 
 void EngineUIBridge::draw()
 {
-	auto& contextManager = ImGuiContextManager::getInstance();
-
-	if(!contextManager.ensureContextActive())
-	{
-		m_logger.log(LogLevel::Error, "Failed to active ImGui context in EngineUIBridge::Draw()");
-		return;
-	}
 	drawMenuBar();
 	//ImGui::DockSpaceOverViewPort();
 
@@ -308,7 +350,12 @@ void EngineUIBridge::draw()
 	drawConfigUI();
 	drawLoggingSettingUI();
 	drawEngineSettingsUI();
-	drawLogPanel(m_LogSink);
+	drawLogPanel(*m_engineBridge.getLogSink());
+
+	if(m_showPluginUIs)
+	{
+		//drawPluginUI();
+	}
 }
 
 

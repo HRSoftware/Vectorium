@@ -1,15 +1,19 @@
 #pragma once
+
 #include <filesystem>
 #include <memory>
+#include <shared_mutex>
 #include <string>
 #include <thread>
 #include <unordered_map>
 #include <vector>
-
+#include <spdlog/spdlog.h>
 #include "PluginManagerConfig.h"
 #include "Plugin/PluginInstance.h"
-#include "spdlog/sinks/sink.h"
 
+#include "Services/ServiceContainer.h"
+
+class IUIService;
 class UILogSink;
 class IRestClient;
 struct PluginDescriptor;
@@ -33,7 +37,11 @@ class PluginManager
 {
 public:
 
-	PluginManager(ILogger& logger, DataPacketRegistry& ptrDataPacketReg, std::shared_ptr<IRestClient> RESTClient, spdlog::sink_ptr uiLogSink);
+	PluginManager(ILogger& logger,
+		DataPacketRegistry& ptrDataPacketReg,
+		spdlog::sink_ptr uiLogSink,
+		 ServiceContainer& services
+		);
 	std::unique_ptr<IPluginContext> createContextForPlugin(const PluginDescriptor* desc, const std::string& pluginName);
 	bool loadConfig();
 	bool saveConfig() const;
@@ -73,7 +81,8 @@ public:
 
 	bool isPluginFolderWatcherEnabled() const;
 
-    
+
+	void renderAllPlugins() const;
 
     void startPluginAutoScan();
     void stopPluginAutoScan();
@@ -126,10 +135,14 @@ private:
 
 	//Services from Engine
 	ILogger& m_baseLogger;
-	std::shared_ptr<IRestClient> m_restClient;
+	ServiceContainer& m_services;
+
+
 	std::string m_configurationFileName = "plugins_config.json";
 
 	PluginManagerConfig m_config;
 
-	std::jthread               m_scanningThread;
+	std::jthread m_scanningThread;
+
+	mutable std::shared_mutex m_pluginsMutex;  // Add thread safety
 };

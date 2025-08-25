@@ -2,6 +2,8 @@
 #include "Services/IService.h"
 
 // Then include all the service interfaces
+#include "../../ui/include/Services/UI/IUIService.h"
+#include "../../ui/include/Services/UI/UIService_ImGui.h"
 #include "REST/RestClient_Cpr.h"
 #include "REST/RestClient_HttpLib.h"
 #include "Services/Logging/ILogger.h"
@@ -99,4 +101,34 @@ struct NullObjectImpl<RESTClient_Cpr> : IRestClient
 	}
 
 	void setBaseUrl(std::string url) override {}
+};
+
+template<>
+struct NullObjectImpl<IUIService> : IUIService
+{
+	ImGuiContext* getImGuiContext() override { return nullptr; }
+	void          setImGuiContext(ImGuiContext* context) override {}
+	void          registerPluginUI(const std::string& pluginName, std::function<void()> renderCallback) override {}
+	void          unregisterPluginUI(const std::string& pluginName) override {}
+	void          renderPluginUIs() override {}
+	bool          isContextValid() const override { return false; }
+	bool          executeWithContext(std::function<void()> imguiCode, const std::string& operationName) override { return false; }
+	std::string   getDiagnosticInfo() const override { return {}; }
+	size_t        getRegisteredPluginCount() const override { return 0; }
+	void          setErrorCallback(std::function<void(const std::string&)> callback) override {}
+};
+
+template<>
+struct NullObjectImpl<UIService_ImGui> : IUIService
+{
+	ImGuiContext* getImGuiContext() override { return nullptr; }
+	void          setImGuiContext(ImGuiContext* context) override {}
+	void          registerPluginUI(const std::string& pluginName, std::function<void()> renderCallback) override {}
+	void          unregisterPluginUI(const std::string& pluginName) override {}
+	void          renderPluginUIs() override {}
+	bool          isContextValid() const override { return false; }
+	bool          executeWithContext(std::function<void()> imguiCode, const std::string& operationName) override { return false; }
+	std::string   getDiagnosticInfo() const override { return {}; }
+	size_t        getRegisteredPluginCount() const override { return 0; }
+	void          setErrorCallback(std::function<void(const std::string&)> callback) override {}
 };

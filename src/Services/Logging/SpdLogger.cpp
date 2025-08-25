@@ -1,7 +1,6 @@
 
-
-#include <string>
 #include <Services/Logging/SpdLogger.h>
+#include <string>
 #include "spdlog/spdlog.h"
 
 SpdLogger::SpdLogger(const std::string& name, const std::vector<spdlog::sink_ptr>& sinks)

@@ -96,7 +96,17 @@ class ServiceProxy
 	std::unique_ptr<IServiceWrapper<T>> wrapper_;
 
 public:
-	ServiceProxy() : wrapper_(std::make_unique < NullService<T>>()){}
+	ServiceProxy() : wrapper_(std::make_unique <NullService<T>>())
+	{
+		if constexpr (has_null_impl<T>::value)
+		{
+			wrapper_ = std::make_unique<NullService<T>>();
+		}
+		else
+		{
+			wrapper_ = std::make_unique<RefService<T>>(nullptr);
+		}
+	}
 
 	explicit ServiceProxy(std::unique_ptr<IServiceWrapper<T>> wrapper)
 		: wrapper_(std::move(wrapper)) {}
@@ -104,16 +114,37 @@ public:
 	// Forward all calls to the wrapper
 	T* operator->()
 	{
+		if(!wrapper_)
+		{
+			if constexpr (has_null_impl<T>::value)
+			{
+				wrapper_ = std::make_unique<NullService<T>>();
+			}
+			else
+			{
+				// Return nullptr and let it crash with a more obvious error
+				return nullptr;
+			}
+		}
+
 		return wrapper_->operator->();
 	}
 
 	T& operator*()
 	{
+		if (!wrapper_)
+		{
+			wrapper_ = std::make_unique<NullService<T>>();
+		}
 		return wrapper_->operator*();
 	}
 
 	bool isAvailable() const
 	{
+		if (!wrapper_)
+		{
+			return false;  // Safe return instead of crash
+		}
 		return wrapper_->isAvailable();
 	}
 

@@ -8,6 +8,7 @@
 #include <condition_variable>
 
 #include "Plugin/IPlugin.h"
+#include "UI/PluginUIHelpers.h"
 
 struct PolygonIO_Candle
 {
@@ -63,12 +64,19 @@ class PolygonIO_Plugin : public IPlugin
 
 		const std::vector<PolygonIO_Candle>& getCandles() const;
 		void tick() override;
+
 	private:
 		void queryLatestCandles();
 
 		void runAPIThread(std::stop_token);
 		void testConnection();
 		void renderMainWindow();
+
+	private:
+		void updateUIData();
+		ImU32 getCandleColor(const PolygonIO_Candle& candle) const;
+		std::string formatTimestamp(const std::chrono::system_clock::time_point& time) const;
+		std::string formatCurrency(double value) const;
 
 		//UI Related
 	public:
@@ -80,7 +88,6 @@ class PolygonIO_Plugin : public IPlugin
 
 	private:
 
-		IPluginContext* m_pluginContext = nullptr;
 		std::vector<PolygonIO_Candle> m_candleHistory;
 		std::mutex                    m_dataMutex;
 
@@ -92,8 +99,10 @@ class PolygonIO_Plugin : public IPlugin
 		std::string m_symbol = "AAPL";
 		std::chrono::seconds m_pollInterval = std::chrono::seconds(10);
 
-		ServiceProxy<ILogger>     m_logger{nullptr};
-		ServiceProxy<IRestClient> m_RESTClient{nullptr};
+		ServiceProxy<ILogger>     m_logger{ nullptr };
+		ServiceProxy<IRestClient> m_RESTClient{ nullptr };
+		ServiceProxy<IUIService>  m_uiService{ nullptr };
+
 		std::string               m_pluginName = "PolygonIO";
 		std::string               m_baseURL = "https://api.polygon.io";
 

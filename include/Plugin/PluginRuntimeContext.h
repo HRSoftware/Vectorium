@@ -5,7 +5,7 @@
 #include <mutex>
 
 #include "IPlugin.h"
-
+#include "Services/ServiceContainer.h"
 class ILogger;
 class DataPacketRegistry;
 
@@ -13,11 +13,12 @@ class PluginRuntimeContext : public IPluginContext
 {
 public:
 	PluginRuntimeContext(std::shared_ptr<ILogger> pluginLogger
-						,DataPacketRegistry& registry
-						,std::string pluginName);
+		                     , DataPacketRegistry&    registry
+		                     , std::string            pluginName
+		                     , ServiceContainer&      services );
 
 	template<typename T>
-	void registerService(std::shared_ptr<T> service);
+	void registerService(const std::shared_ptr<T>& service);
 
 	template<typename T>
 	void unregisterService();
@@ -28,12 +29,16 @@ public:
 	std::string getPluginName() const override;
 	void        log(LogLevel level, const std::string& message) const override;
 
+	private:
+		void populateServices();
+
 private:
-	DataPacketRegistry& m_registry;
+	DataPacketRegistry& m_dataPacketRegistry;
 	std::shared_ptr<ILogger> m_pluginLogger;
 	std::string m_pluginName;
 
-	std::unordered_map<std::type_index, std::shared_ptr<void>> m_services;
+	ServiceContainer& m_services;
+	std::unordered_map<std::type_index, std::shared_ptr<void>> m_localServices;
 	mutable std::shared_mutex m_mutex;
 
 	std::function<void*()> m_getImGuiContextFunc;
@@ -53,21 +58,16 @@ public:
 	void* getMainAppImGuiContext() override;
 	bool  setImGuiContext(void* ctx) override;
 	void  setImGuiContextFunctions(std::function<void*()> getFunc, std::function<bool(void*)> setFunc);
-	void  uiSetNextWindowSize(float width, float height, int cond) override;
-	bool  uiBegin(const char* name, bool* p_open) override;
-	void  uiEnd() override;
-	void  uiText(const char* text) override;
-	bool  uiButton(const char* label) override;
 };
 
-template <typename T> void PluginRuntimeContext::registerService(std::shared_ptr<T> service)
+template <typename T> void PluginRuntimeContext::registerService(const std::shared_ptr<T>& service)
 {
 	std::unique_lock lk(m_mutex);
-	m_services[std::type_index(typeid(T))] = std::static_pointer_cast<void>(service);
+	m_localServices[std::type_index(typeid(T))] = service;
 }
 
 template <typename T> void PluginRuntimeContext::unregisterService()
 {
 	std::unique_lock lock(m_mutex);
-	m_services.erase(std::type_index(typeid(T)));
+	m_localServices.erase(std::type_index(typeid(T)));
 }

@@ -4,18 +4,23 @@
 #include <utility>
 #include "Plugin/PluginRuntimeContext.h"
 
-#include "imgui.h"
 #include "Services/Logging/ILogger.h"
 #include "Services/Logging/SpdLogger.h"
 #include "DataPacket/DataPacketRegistry.h"
 #include "Services/IServiceSpecialisations.h"
 
 
-PluginRuntimeContext::PluginRuntimeContext(std::shared_ptr<ILogger> pluginLogger, DataPacketRegistry& registry, std::string pluginName):
-m_registry(registry)
+PluginRuntimeContext::PluginRuntimeContext(
+	std::shared_ptr<ILogger> pluginLogger
+	, DataPacketRegistry& registry
+	, std::string pluginName
+	, ServiceContainer& services):
+m_dataPacketRegistry(registry)
 , m_pluginLogger(std::move(pluginLogger))
 , m_pluginName(std::move(pluginName))
+, m_services(services)
 {
+	populateServices();
 }
 
 std::shared_ptr<ILogger> PluginRuntimeContext::getLoggerShared()
@@ -26,33 +31,38 @@ std::shared_ptr<ILogger> PluginRuntimeContext::getLoggerShared()
 bool PluginRuntimeContext::registerDataPacketHandler(const std::type_index type, std::shared_ptr<IDataPacketHandler> handler)
 {
 	log(LogLevel::Info, std::format("Registered handle for {}", type.name()));
-	return m_registry.registerDataPacketHandler(type, std::move(handler), m_pluginName);
+	return m_dataPacketRegistry.registerDataPacketHandler(type, std::move(handler), m_pluginName);
 }
 
 void PluginRuntimeContext::dispatch(const DataPacket& packet)
 {
 	if (!packet.payload) return;
 
-	m_registry.dispatch(packet);
+	m_dataPacketRegistry.dispatch(packet);
 }
 
 std::expected<std::shared_ptr<void>, std::string> PluginRuntimeContext::getServiceByTypeIndex(std::type_index tIdx)
 {
-	std::shared_lock lock(m_mutex);
-
-	if (const auto it = m_services.find(tIdx); it != m_services.end() && it->second)
+	// First check local services (plugin-specific)
+	auto it = m_localServices.find(tIdx);
+	if (it != m_localServices.end())
 	{
 		return it->second;
 	}
 
-	return std::unexpected("Service not found or unavailable");
+	// Fallback to global service container
+	if (auto service = m_services.getService(tIdx))
+	{
+		return service;
+	}
+
+	return std::unexpected("Service not found");
 }
 
 bool PluginRuntimeContext::hasServiceByTypeIndex(std::type_index tIdx) const
 {
 	std::shared_lock lock(m_mutex);
-	const auto it = m_services.find(tIdx);
-	return it != m_services.end() && it->second != nullptr;
+	return m_services.hasService(tIdx);
 }
 
 void* PluginRuntimeContext::getMainAppImGuiContext()
@@ -83,73 +93,10 @@ void PluginRuntimeContext::setImGuiContextFunctions(std::function<void*()> getFu
 	log(LogLevel::Debug, "ImGui context functions set in plugin runtime context");
 }
 
-void PluginRuntimeContext::uiSetNextWindowSize(float width, float height, int cond)
-{
-	// Call main app's ImGui through the context functions
-	if (m_getImGuiContextFunc && m_setImGuiContextFunc)
-	{
-		void* ctx = m_getImGuiContextFunc();
-		if (ctx && m_setImGuiContextFunc(ctx))
-		{
-			ImGui::SetNextWindowSize(ImVec2(width, height), cond);
-		}
-	}
-}
-
-bool PluginRuntimeContext::uiBegin(const char* name, bool* p_open)
-{
-	if (m_getImGuiContextFunc && m_setImGuiContextFunc)
-	{
-		void* ctx = m_getImGuiContextFunc();
-		if (ctx && m_setImGuiContextFunc(ctx))
-		{
-			return ImGui::Begin(name, p_open);
-		}
-	}
-	return false;
-}
-
-void PluginRuntimeContext::uiEnd()
-{
-	if (m_getImGuiContextFunc && m_setImGuiContextFunc)
-	{
-		void* ctx = m_getImGuiContextFunc();
-		if (ctx && m_setImGuiContextFunc(ctx))
-		{
-			ImGui::End();
-		}
-	}
-}
-
-void PluginRuntimeContext::uiText(const char* text)
-{
-	if (m_getImGuiContextFunc && m_setImGuiContextFunc)
-	{
-		void* ctx = m_getImGuiContextFunc();
-		if (ctx && m_setImGuiContextFunc(ctx))
-		{
-			ImGui::Text("%s", text);
-		}
-	}
-}
-
-bool PluginRuntimeContext::uiButton(const char* label)
-{
-	if (m_getImGuiContextFunc && m_setImGuiContextFunc)
-	{
-		void* ctx = m_getImGuiContextFunc();
-		if (ctx && m_setImGuiContextFunc(ctx))
-		{
-			return ImGui::Button(label);
-		}
-	}
-	return false;
-}
-
 //Needed? Move to base class?
 void PluginRuntimeContext::unregisterDataPacketHandler()
 {
-	m_registry.unregisterDataPacketHandlerForPlugin(m_pluginName);
+	m_dataPacketRegistry.unregisterDataPacketHandlerForPlugin(m_pluginName);
 	log(LogLevel::Info, std::format("Unregistered handles for {}", m_pluginName));
 }
 
@@ -161,4 +108,24 @@ std::string PluginRuntimeContext::getPluginName() const
 void PluginRuntimeContext::log(LogLevel level, const std::string& message) const
 {
 	m_pluginLogger->log(level, message);
+}
+
+void PluginRuntimeContext::populateServices()
+{
+		// Store references to services that plugins commonly need
+		if (auto logger = m_services.getService<ILogger>())
+		{
+			registerService<ILogger>(logger);
+		}
+
+		if (auto restClient = m_services.getService<IRestClient>())
+		{
+			registerService<IRestClient>(restClient);
+		}
+
+		if(auto uiService = m_services.getService<IUIService>())
+		{
+			registerService<IUIService>(uiService);
+		}
+		// Add other services as needed
 }

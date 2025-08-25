@@ -9,8 +9,8 @@
 #include <utility>
 #include <nlohmann/json.hpp>
 
-#include "ImguiContextManager.h"
-#include "imgui_internal.h"
+#include "../out/build/x64-debug/_deps/imgui-src/imgui.h"
+#include "../ui/include/Services/UI/IUIService.h"
 #include "DataPacket/DataPacketRegistry.h"
 #include "Plugin/PluginInstance.h"
 #include "Plugin/PluginRuntimeContext.h"
@@ -20,7 +20,7 @@
 #include "Services/Logging/PluginLogger.h"
 #include "Services/Logging/SpdLogger.h"
 #include "Services/REST/RestClient_HttpLib.h"
-#include "spdlog/common.h"
+#include "spdlog/spdlog.h"
 #include "spdlog/sinks/stdout_color_sinks.h"
 #include "Utils/range_utils.h"
 
@@ -84,13 +84,13 @@ namespace
 
 
 PluginManager::PluginManager(ILogger& logger,
-	DataPacketRegistry& ptrDataPacketReg
-	, std::shared_ptr<IRestClient> RESTClient
-	, spdlog::sink_ptr uiLogSink)
+	DataPacketRegistry& ptrDataPacketReg,
+	spdlog::sink_ptr uiLogSink,
+	ServiceContainer& services)
 	: m_uiLogSink(std::move(uiLogSink))
 	, m_dataPacketRegistry(ptrDataPacketReg)
 	, m_baseLogger(logger)
-	, m_restClient(std::move(RESTClient))
+	, m_services(services)
 {
 }
 
@@ -187,6 +187,41 @@ void PluginManager::init()
 bool PluginManager::isPluginFolderWatcherEnabled() const
 {
 	return m_scanningThread.joinable();
+}
+
+void PluginManager::renderAllPlugins() const
+{
+	// Check if ImGui context is valid
+	if (!ImGui::GetCurrentContext())
+	{
+		log(LogLevel::Warning, "No ImGui context available for plugin rendering");
+		return;
+	}
+
+	// Check if we're in a valid frame
+	ImGuiIO& io = ImGui::GetIO();
+	if (!io.WantCaptureMouse && !io.WantCaptureKeyboard)
+	{
+		// Might not be in a valid render state
+		log(LogLevel::Debug, "ImGui not in active render state");
+		return;
+	}
+
+	for(const auto& [name, plugin] : m_loadedPlugins)
+	{
+		if(plugin && plugin->getPlugin())
+		{
+			try
+			{
+				plugin->getPlugin()->onRender();
+			}
+			catch (const std::exception& e)
+			{
+				log(LogLevel::Error, std::format("Plugin '{}' onRender error: {}", name, e.what()));
+			}
+		}
+	}
+
 }
 
 PluginInfo& PluginManager::getOrAddPluginInfo(const std::string& pluginName, const std::filesystem::path& pluginPath)
@@ -332,13 +367,23 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 		auto pluginLogger = createPluginLogger(pluginName);
 
 		// Construct plugin and context(currently just one type of Context)
-		auto assignedPluginContext = std::make_unique<PluginRuntimeContext>(pluginLogger, m_dataPacketRegistry, pluginName);
+		auto assignedPluginContext = std::make_unique<PluginRuntimeContext>(pluginLogger, m_dataPacketRegistry, pluginName, m_services);
+
 		assignedPluginContext->registerService<ILogger>(pluginLogger);
-		assignedPluginContext->registerService<IRestClient>(m_restClient); // This might be wrong
+
+		if(const auto restClient = m_services.getService<IRestClient>())
+		{
+			assignedPluginContext->registerService<IRestClient>(restClient); // This might be wrong
+		}
+
+		if(const auto uiService = m_services.getService<IUIService>())
+		{
+			assignedPluginContext->registerService<IUIService>(uiService);
+		}
 
 		std::unique_ptr<IPlugin> plugin(pluginEntryFunction());
 
-		assignedPluginContext->setImGuiContextFunctions(
+		/*assignedPluginContext->setImGuiContextFunctions(
 			[]() -> void*
 				{
 					return static_cast<void*>(ImGui::GetCurrentContext());
@@ -348,7 +393,7 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 					ImGui::SetCurrentContext(static_cast<ImGuiContext*>(ctx));
 					return ImGui::GetCurrentContext() == static_cast<ImGuiContext*>(ctx);
 				}
-			);
+			);*/
 
 		log(LogLevel::Debug, std::format("ImGui context functions set for plugin '{}'", pluginName));
 
@@ -391,20 +436,51 @@ bool PluginManager::loadPlugin(const std::filesystem::path& path, const std::str
 
 bool PluginManager::unloadPlugin(const std::string& name)
 {
-	const auto pluginItr = m_loadedPlugins.find(name);
-	if(pluginItr != m_loadedPlugins.end())
+	// Add null/validity checks
+	if (name.empty())
 	{
-		// Unload and remove from collection of loaded plugins
-		m_loadedPlugins.erase(pluginItr);
+		log(LogLevel::Error, "Cannot unload plugin with empty name");
+		return false;
+	}
 
-		// Update the collection of all known plugins
-		auto discovered = m_discoveredPlugins.find(name);
-		if(discovered != m_discoveredPlugins.end())
+	try
+	{
+		log(LogLevel::Debug, std::format("m_discoveredPlugins size: {}", m_discoveredPlugins.size()));
+		log(LogLevel::Debug, std::format("m_loadedPlugins size: {}", m_loadedPlugins.size()));
+	}
+	catch (const std::exception& e)
+	{
+		log(LogLevel::Error, std::format("Map corruption detected: {}", e.what()));
+		return false;
+	}
+
+	try
+	{
+		std::unique_lock lock(m_pluginsMutex);
+
+		const auto pluginItr = m_loadedPlugins.find(name);
+		if (pluginItr != m_loadedPlugins.end())
 		{
-			discovered->second.loaded = false;
-		}
+			log(LogLevel::Debug, std::format("Found loaded plugin '{}', removing...", name));
 
-		return true;
+			// Unload and remove from collection of loaded plugins
+			m_loadedPlugins.erase(pluginItr);
+
+			// Update the collection of all known plugins
+			auto discovered = m_discoveredPlugins.find(name);
+			if (discovered != m_discoveredPlugins.end())
+			{
+				discovered->second.loaded = false;
+			}
+
+			log(LogLevel::Info, std::format("Successfully unloaded plugin '{}'", name));
+			return true;
+		}
+	}
+	catch (const std::exception& e)
+	{
+		log(LogLevel::Error, std::format("Exception during plugin unload: {}", e.what()));
+		return false;
 	}
 
 	log(LogLevel::Error, std::format("Plugin '{}' is not loaded; cannot unload.", name));
@@ -416,6 +492,8 @@ std::vector<std::string> PluginManager::getNamesOfAllLoadedPlugins() const
 {
 	std::vector<std::string> keys;
 	keys.reserve(m_loadedPlugins.size());
+
+	std::shared_lock lock(m_pluginsMutex);
 
 	for(const auto& key : m_loadedPlugins | std::views::keys )
 	{
@@ -578,7 +656,10 @@ void PluginManager::registerServicesForPlugin(PluginRuntimeContext* context, con
 	// Simple policy logic inline
 	if (isTrustedPlugin(desc->name))
 	{
-		context->registerService<IRestClient>(m_restClient);
+		if(const auto resClient = m_services.getService<IRestClient>())
+		{
+			context->registerService<IRestClient>(resClient);
+		}
 		//context->registerService<IFileSystem>(m_fileSystem);
 	}
 
@@ -590,7 +671,10 @@ void PluginManager::registerServicesForPlugin(PluginRuntimeContext* context, con
 	// Network plugins get REST client
 	if (needsNetworkAccess(desc))
 	{
-		context->registerService<IRestClient>(m_restClient);
+		if(const auto restClient = m_services.getService<IRestClient>())
+		{
+			context->registerService<IRestClient>(restClient);
+		}
 	}
 }
 

@@ -1,8 +1,17 @@
 #pragma once
 #include <any>
+#include <chrono>
+#include <functional>
 #include <memory>
-#include "spdlog/logger.h"
-#include "spdlog/sinks/stdout_color_sinks.h"
+#include "IEngineUIBridge.h"
+#include "Services/ServiceContainer.h"
+
+class IUIService;
+
+namespace spdlog
+{
+	class logger;
+}
 
 class SpdLogger;
 class IRestClient;
@@ -57,28 +66,32 @@ class EngineSettings final
 		std::function<void(const std::string& settingName, const std::any& newValue)> onSettingChanged;
 };
 
-class Engine final
+class Engine final : public IEngineUIBridge
 {
 public:
 
 	Engine();
-	~Engine();
+	~Engine() override;
 
 	void init() const;
 	bool shouldTick() const;
 	void tick();
 	void shutdown() const;
 
-	[[nodiscard]] DataPacketRegistry* getDataPacketRegistry() const;
-	[[nodiscard]] PluginManager*      getPluginManager() const;
-	std::shared_ptr<ILogger>          getLogger();
-	std::shared_ptr<UILogSink>        getLogSink() const;
+	[[nodiscard]] DataPacketRegistry* getDataPacketRegistry() const override;
+	[[nodiscard]] PluginManager*      getPluginManager() const override;
+	std::shared_ptr<ILogger>          getLogger() const override;
+	std::shared_ptr<UILogSink>        getLogSink() const override;
 	void                              enableEngineDebugLogging();
 	void                              disableEngineDebugLogging();
 	bool                              isEngineDebugLoggingEnabled() const;
-	EngineSettings&                   getEngineSettings();
+	EngineSettings&                   getEngineSettings() override;
 	void                              handleSettingChanged(const std::string& setting, const std::any& value);
 	void                              updateLoggerFromSettings();
+	void                              notifyUIInitialised() override;
+
+	void                        setUIService(std::shared_ptr<IUIService> uiService) override;
+	std::shared_ptr<IUIService> getUIService() const override;
 
 private:
 
@@ -89,10 +102,12 @@ private:
 
 	//Services
 	std::shared_ptr<IRestClient> m_pRestClient;
-	std::shared_ptr<ILogger> m_engineLogger;
+	std::shared_ptr<ILogger> m_loggingService;
+	std::shared_ptr<IUIService> m_uiService;
 
 
 	std::chrono::high_resolution_clock::time_point m_lastUpdateTime;
 
-	std::shared_ptr<spdlog::logger>     m_combinedLogger; // TODO - remove coupling with SPDLog
+	std::shared_ptr<spdlog::logger> m_combinedLogger; // TODO - remove coupling with SPDLog
+	ServiceContainer m_serviceContainer;
 };

@@ -59,11 +59,11 @@ public:
 	virtual void* getMainAppImGuiContext() = 0;
 	virtual bool setImGuiContext(void* ctx) = 0;
 
-	virtual void uiSetNextWindowSize(float width, float height, int cond) = 0;
+	/*virtual void uiSetNextWindowSize(float width, float height, int cond) = 0;
 	virtual bool uiBegin(const char* name, bool* p_open) = 0;
 	virtual void uiEnd() = 0;
 	virtual void uiText(const char* text) = 0;
-	virtual bool uiButton(const char* label) = 0;
+	virtual bool uiButton(const char* label) = 0;*/
 
 protected:
 	virtual bool registerDataPacketHandler(std::type_index type,

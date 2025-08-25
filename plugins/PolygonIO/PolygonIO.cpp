@@ -16,7 +16,12 @@ PolygonIO_Plugin::~PolygonIO_Plugin()
 
 std::expected<void, std::string> PolygonIO_Plugin::onPluginLoad(IPluginContext& context)
 {
-	m_pluginContext = &context;
+
+	// Debug: Check context received
+	std::cout << "PolygonIO onPluginLoad - Context address: " << (void*)&context << std::endl;
+	std::cout << "Plugin name from context: " << context.getPluginName() << std::endl;
+
+
 	if(context.hasService<ILogger>())
 	{
 		m_logger = ServiceProxy(context.getService<ILogger>());
@@ -28,9 +33,10 @@ std::expected<void, std::string> PolygonIO_Plugin::onPluginLoad(IPluginContext& 
 		context.log(LogLevel::Error, "Context does not have the service 'ILogger'");
 	}
 
-	if (context.hasService<IRestClient>()) 
+	if (context.hasService<IRestClient>())
 	{
 		m_RESTClient = ServiceProxy(context.getService<IRestClient>());
+		m_logger->log(LogLevel::Info, "REST service added");
 
 		m_RESTClient->set_bearer_token(m_APIKey);
 		m_RESTClient->setBaseUrl(m_baseURL);
@@ -52,6 +58,28 @@ std::expected<void, std::string> PolygonIO_Plugin::onPluginLoad(IPluginContext& 
 		return std::unexpected("Context does not have the service 'IRestClient'");
 	}
 
+	if(context.hasService<IUIService>())
+	{
+		m_uiService = ServiceProxy(context.getService<IUIService>());
+		m_logger->log(LogLevel::Info, "UI service added");
+
+		if(m_uiService.isAvailable())
+		{
+			//Register the main UI callback with the service
+			m_uiService->registerPluginUI(context.getPluginName(), [this]()
+			{
+				renderMainWindow();
+			});
+
+			m_logger->log(LogLevel::Info, "UI service registered");
+		}
+	}
+	else
+	{
+		m_logger->log(LogLevel::Info, "No UI service available - running headless");
+	}
+
+
 	m_running = true;
 	m_showMainWindow = true;
 
@@ -65,6 +93,13 @@ std::expected<void, std::string> PolygonIO_Plugin::onPluginLoad(IPluginContext& 
 
 void PolygonIO_Plugin::onPluginUnload()
 {
+	m_logger->log(LogLevel::Info, "PolygonIO Plugin unloading");
+
+	if (m_uiService.isAvailable())
+	{
+		m_uiService->unregisterPluginUI(m_pluginName);
+	}
+
 	m_running = false;
 	if(m_apiThread.joinable())
 	{
@@ -78,13 +113,30 @@ void PolygonIO_Plugin::onRender()
 	static int call_count = 0;
 	call_count++;
 
+	// Check if ImGui context is valid
+	ImGui::SetCurrentContext(m_uiService->getImGuiContext());
+	if (!ImGui::GetCurrentContext())
+	{
+		m_logger->log(LogLevel::Warning, "No ImGui context available for plugin rendering");
+		return;
+	}
+
+	// Check if we're in a valid frame
+	ImGuiIO& io = ImGui::GetIO();
+	if (!io.WantCaptureMouse && !io.WantCaptureKeyboard)
+	{
+		// Might not be in a valid render state
+		m_logger->log(LogLevel::Debug, "ImGui not in active render state");
+		return;
+	}
+
 	m_logger->log(LogLevel::Debug, std::format("PolygonIO::onRender() call #{}", call_count));
 
 	if (m_showMainWindow)
 	{
 		try
 		{
-			renderMainWindow();  // Back to normal ImGui calls!
+			renderMainWindow();
 		}
 		catch (const std::exception& e)
 		{
@@ -140,17 +192,23 @@ void PolygonIO_Plugin::runAPIThread(std::stop_token token)
 		{
 			queryLatestCandles();
 			//testConnection();
+			auto timeout = std::chrono::seconds(1);  // Check every second instead of full interval
+			auto remaining = m_pollInterval;
 
-			std::unique_lock lock(m_dataMutex);
-			m_sleepCondition.wait_for(
-				lock,
-				token,
-				std::chrono::seconds(m_pollInterval),
-				[&token]
+			while(remaining > std::chrono::seconds(0) && !token.stop_requested() && m_running)
 			{
-				return token.stop_requested();
+				auto sleepTime = std::min(timeout, remaining);
+
+				std::unique_lock lock(m_dataMutex);
+				auto result = m_sleepCondition.wait_for(lock, sleepTime);
+				lock.unlock();  // Release lock immediately
+
+				if (token.stop_requested() || !m_running) {
+					break;
+				}
+
+				remaining -= sleepTime;
 			}
-			);
 		}
 		catch (const std::exception& ex)
 		{
@@ -204,17 +262,17 @@ void PolygonIO_Plugin::testConnection()
 
 void PolygonIO_Plugin::renderMainWindow()
 {
-	if (m_pluginContext->uiBegin("PolygonIO Market Data", &m_showMainWindow))
+	if (ImGui::Begin("PolygonIO Market Data", &m_showMainWindow))
 	{
-		m_pluginContext->uiText("Hello from PolygonIO Plugin!");
+		ImGui::Text("Hello from PolygonIO Plugin!");
 
-		std::string status = "Connection Status: " + m_uiState.connectionStatus;
-		m_pluginContext->uiText(status.c_str());
 
-		std::string requests = "Requests Made: " + std::to_string(m_uiState.requestCount);
-		m_pluginContext->uiText(requests.c_str());
+		ImGui::Text("Connection Status: {}", m_uiState.connectionStatus);
 
-		if (m_pluginContext->uiButton("Test Button")) {
+		ImGui::Text("Requests Made: {}", m_uiState.requestCount);
+
+		if (ImGui::Button("Test Button"))
+		{
 			m_logger->log(LogLevel::Info, "Test button clicked!");
 		}
 
@@ -222,7 +280,7 @@ void PolygonIO_Plugin::renderMainWindow()
 			applyConfiguration();
 		}*/
 	}
-	m_pluginContext->uiEnd();
+	ImGui::End();
 }
 
 bool PolygonIO_Plugin::hasUIWindow() const

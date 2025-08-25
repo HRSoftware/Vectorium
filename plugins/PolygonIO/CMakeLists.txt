@@ -23,7 +23,7 @@ target_link_libraries(PolygonIO PRIVATE
 	logger 
 	REST_Client
 	nlohmann_json::nlohmann_json
-	ui_services
+	ui
 )
 
 target_include_directories (PolygonIO PRIVATE 

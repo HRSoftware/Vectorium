@@ -1,10 +1,6 @@
-
 cmake_minimum_required(VERSION 3.16)
 
 add_subdirectory(Services)
-
-
-
 
 add_library(engine "Engine.cpp" 
 "PluginInstance.cpp" 
@@ -12,9 +8,6 @@ add_library(engine "Engine.cpp"
 "DataPacketRegistry.cpp"
 "Plugin/PluginRuntimeContext.cpp"  
 "Plugin/IPluginContext.cpp"
-#"RestClient/RestClient_HttpLib.cpp" 
-"Services/Logging/SpdLogger.cpp"
-"Services/Logging/UILogSink.cpp"
 )
 
 target_include_directories(engine PUBLIC
@@ -28,13 +21,10 @@ set_target_properties(engine PROPERTIES CXX_STANDARD 23)
 target_link_libraries(engine PUBLIC 
 logger 
 nlohmann_json::nlohmann_json 
-REST_Client
-ui_services
-)
+REST_Client)
 
 if (WIN32)
     target_compile_definitions(engine PRIVATE PLATFORM_WINDOWS)
-	target_compile_options(engine PRIVATE /bigobj)
 	set_target_properties(engine PROPERTIES
         LINK_FLAGS "/FORCE:UNRESOLVED" )
 elseif(UNIX)
