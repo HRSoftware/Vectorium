@@ -169,7 +169,6 @@ std::shared_ptr<IPluginUIService> UI::getUIService() const
 
 void UI::createUIService()
 {
-	// Add detailed ImGui state debugging
 	if (ImGui::GetCurrentContext())
 	{
 		ImGuiIO& io = ImGui::GetIO();
@@ -189,7 +188,7 @@ void UI::createUIService()
 		m_logger->log(LogLevel::Info, "Creating UI service...");
 
 		//Create the UI and set the ImGui context for it
-		m_uiService = std::make_shared<PluginUIService_ImGui>(m_logger);
+		m_uiService = std::make_shared<PluginUIService_ImGui>(); // How to add logger to this service?
 		m_uiService->setImGuiContext(ImGui::GetCurrentContext());
 		m_engineBridge.setUIService(m_uiService);
 
@@ -310,8 +309,8 @@ void UI::renderPluginUIs() const
 
 	if(m_uiService && m_uiService->isUIAvailable())
 	{
-		const auto imguiService = std::static_pointer_cast<PluginUIService_ImGui>(m_uiService);
-		imguiService->renderPluginUIs();
+		//const auto imguiService = std::static_pointer_cast<PluginUIService_ImGui>(m_uiService);
+		m_uiService->renderPluginUIs();
 	}
 }
 

@@ -1,6 +1,5 @@
 #pragma once
 
-
 #include "Plugin/IPlugin.h"
 #include "Services/IService.h"
 

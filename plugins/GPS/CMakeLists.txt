@@ -16,6 +16,9 @@ set_target_properties(GPS_Plugin PROPERTIES
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins # for DLLs
 )
 
-target_link_libraries(GPS_Plugin PRIVATE logger)
+target_link_libraries(GPS_Plugin PRIVATE 
+	
+	services_core 
+	services_logging)
 
 target_include_directories (GPS_Plugin PRIVATE ${CMAKE_SOURCE_DIR}/include)

@@ -1,7 +1,9 @@
 #include "PolygonIO.h"
-
-#include <utility>
 #include "Services/IServiceSpecialisations.h"
+#include <utility>
+#include "Services/Logging/ILogger.h"
+
+#include "Services/REST/IPluginRESTService.h"
 
 PolygonIO_Plugin::~PolygonIO_Plugin()
 {

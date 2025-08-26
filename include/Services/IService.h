@@ -3,7 +3,7 @@
 #include <string>
 #include <memory>
 #include <type_traits>
-
+#include <utility>
 
 template<typename T>
 struct NullObjectImpl;
@@ -37,7 +37,7 @@ class RefService : public IServiceWrapper<T>
 {
 	std::shared_ptr<T> m_service;
 public:
-	explicit RefService(std::shared_ptr<T> service) : m_service(service)
+	explicit RefService(std::shared_ptr<T> service) : m_service(std::move(service))
 	{}
 
 	T* operator->() override

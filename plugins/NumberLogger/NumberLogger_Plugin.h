@@ -3,6 +3,9 @@
 #include "Plugin/IPlugin.h"
 #include "DataPacket/IDataPacketHandler.h"
 #include "Services/IService.h"
+#include "Services/Logging/ILogger.h"
+
+class ILogger;
 
 class NumberLoggerHandler : public ITypedDataPacketHandler<int>
 {

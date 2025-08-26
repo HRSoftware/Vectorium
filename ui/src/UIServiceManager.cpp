@@ -35,7 +35,7 @@ bool UIServiceManager::initialise()
 	}
 
 	// Create ImGui service
-	m_imguiService = std::make_shared<PluginUIService_ImGui>(m_logger);
+	m_imguiService = std::make_shared<PluginUIService_ImGui>(); // How to add logger to this service?
 	m_imguiService->setImGuiContext(m_contextManager->getContext());
 
 	m_initialised = true;

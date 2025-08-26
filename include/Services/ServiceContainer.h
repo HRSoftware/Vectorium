@@ -3,8 +3,6 @@
 #include <unordered_map>
 #include <typeindex>
 
-
-
 class ServiceContainer
 {
 public:

@@ -1,5 +1,7 @@
 #include "NumberLogger_Plugin.h"
 #include "Services/IServiceSpecialisations.h"
+#include "Services/Logging/ILogger.h"
+#include "Services/Logging/LogLevel.h"
 
 NumberLoggerHandler::NumberLoggerHandler(ServiceProxy<ILogger> logger): m_logger(std::move(logger))
 {

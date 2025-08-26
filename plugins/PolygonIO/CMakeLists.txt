@@ -20,8 +20,10 @@ set_target_properties(PolygonIO PROPERTIES
 #target_compile_definitions(PolygonIO PRIVATE VECTORIUM_UI_ENABLED)
 
 target_link_libraries(PolygonIO PRIVATE 
-	logger 
-	REST_Client
+	
+	services_core
+	services_logging 
+	services_REST
 	nlohmann_json::nlohmann_json
 	ui
 )

@@ -1,15 +1,26 @@
 #pragma once
 #include "Services/IService.h"
 
-// Then include all the service interfaces
+// Logging
+#include "Services/Logging/ILogger.h"
+#include "Logging/SpdLogger.h"
+
+// REST
+#include "Services/REST/IPluginRESTService.h"
+#ifdef USE_CPR
+#include "Services/REST/PluginRESTService_Cpr.h"
+#endif
+#ifdef USE_HTTPLIB
+#include "Services/REST/PluginRESTService_HttpLib.h"
+#endif
+
+// UI
 #include "../../ui/include/Services/UI/IPluginUIService.h"
 #include "../../ui/include/Services/UI/PluginUIService_ImGui.h"
-#include "REST/PluginRESTService_Cpr.h"
-#include "REST/PluginRESTService_HttpLib.h"
-#include "Services/Logging/ILogger.h"
-#include "Services/Logging/SpdLogger.h"
-#include "Services/REST/IPluginRESTService.h"
 
+class PluginUIService_ImGui;
+
+//	Logging
 template<>
 struct NullObjectImpl<ILogger> : ILogger
 {
@@ -32,6 +43,7 @@ struct NullObjectImpl<SpdLogger> : ILogger
 	void setPluginName(const std::string& name) override {}
 };
 
+//	REST
 template<>
 struct NullObjectImpl<IPluginRESTService> : IPluginRESTService
 {
@@ -79,6 +91,10 @@ struct NullObjectImpl<PluginRESTService_HttpLib> : IPluginRESTService
 	}
 
 	void setBaseUrl(std::string url) override {}
+
+	// ADD THIS: Explicit template instantiation
+	template class NullService<PluginRESTService_HttpLib>;
+
 };
 #endif
 
@@ -105,9 +121,14 @@ struct NullObjectImpl<PluginRESTService_Cpr> : IPluginRESTService
 	}
 
 	void setBaseUrl(std::string url) override {}
+
+
+	template class NullService<PluginRESTService_Cpr>;
 };
 #endif
 
+
+// UI
 template<>
 struct NullObjectImpl<IPluginUIService> : IPluginUIService
 {
@@ -123,17 +144,18 @@ struct NullObjectImpl<IPluginUIService> : IPluginUIService
 	bool isUIAvailable() const override { return false; }
 };
 
-template<>
-struct NullObjectImpl<PluginUIService_ImGui> : IPluginUIService
-{
-	ImGuiContext* getImGuiContext() override { return nullptr; }
-	void          setImGuiContext(ImGuiContext* context) override {}
-	void          registerPluginUIRenderer(const std::string& pluginName, std::function<void()> renderCallback) override {}
-	void          unregisterPluginUIRenderer(const std::string& pluginName) override {}
-	void          renderPluginUIs() override {}
-	bool          isContextValid() const override { return false; }
-	std::string   getDiagnosticInfo() const override { return {}; }
-	size_t        getRegisteredPluginCount() const override { return 0; }
-	void          setErrorCallback(std::function<void(const std::string&)> callback) override {}
-	bool isUIAvailable() const override { return false; }
-};
+//template<>
+//struct NullObjectImpl<PluginUIService_ImGui> : IPluginUIService
+//{
+//	ImGuiContext* getImGuiContext() override { return nullptr; }
+//	void          setImGuiContext(ImGuiContext* context) override {}
+//	void          registerPluginUIRenderer(const std::string& pluginName, std::function<void()> renderCallback) override {}
+//	void          unregisterPluginUIRenderer(const std::string& pluginName) override {}
+//	void          renderPluginUIs() override {}
+//	bool          isContextValid() const override { return false; }
+//	std::string   getDiagnosticInfo() const override { return {}; }
+//	size_t        getRegisteredPluginCount() const override { return 0; }
+//	void          setErrorCallback(std::function<void(const std::string&)> callback) override {}
+//	bool isUIAvailable() const override { return false; }
+//};
+

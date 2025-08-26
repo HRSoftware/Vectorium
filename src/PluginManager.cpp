@@ -9,7 +9,8 @@
 #include <utility>
 #include <nlohmann/json.hpp>
 #include <Services/REST/IPluginRESTService.h>
-#include <Services/IServiceSpecialisations.h>
+#include "Services/IServiceSpecialisations.h"
+//#include "../../ui/include/Services/UI/IPluginUIService.h";
 #include "DataPacket/DataPacketRegistry.h"
 #include "Plugin/PluginInstance.h"
 #include "Plugin/PluginRuntimeContext.h"

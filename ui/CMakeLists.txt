@@ -35,8 +35,7 @@ add_library(imgui_backend STATIC
     ${imgui_SOURCE_DIR}/imgui_widgets.cpp
     ${imgui_SOURCE_DIR}/imgui_demo.cpp
     ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
-    ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp
-)
+    ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp)
 
 target_include_directories(imgui_backend PUBLIC
     ${imgui_SOURCE_DIR}
@@ -64,8 +63,7 @@ set_target_properties(imgui_backend PROPERTIES
 add_library(imgui_service STATIC
     # ONLY UI service implementations - NO UI components here
     "src/Services/UI/PluginUIService_ImGui.cpp"
-    "src/Services/UI/UIContextProvider.cpp"
-)
+	"src/Services/UI/PluginUIService_NullObjects.cpp")
 
 target_include_directories(imgui_service PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
@@ -77,7 +75,7 @@ target_include_directories(imgui_service PUBLIC
 # FIXED: Only link to what services actually need (no engine!)
 target_link_libraries(imgui_service PUBLIC 
     imgui_backend  # Need ImGui for context management
-    logger         # Need logging
+    services_logging         # Need logging
 
 )
 
@@ -96,25 +94,28 @@ add_library(ui STATIC
     # UI management (these need access to engine)
     src/ImGuiContextManager.cpp
     src/UIServiceManager.cpp
-)
+	src/Services/UI/PluginUIService_ImGui.cpp
+	src/Services/UI/PluginUIService_NullObjects.cpp)
 
 target_include_directories(ui
-    PUBLIC
+      PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
+    PRIVATE
         ${PROJECT_SOURCE_DIR}/include
+        ${CMAKE_CURRENT_SOURCE_DIR}/src
         ${imgui_SOURCE_DIR}
         ${glfw_SOURCE_DIR}/include
-    PRIVATE
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${PROJECT_SOURCE_DIR}/src
 )
 
 # Main UI library can link to engine (this is where engine access happens)
 target_link_libraries(ui
-    PUBLIC
-        imgui_backend      # For ImGui functionality
-        imgui_service      # For UI services
-        logger
+    PUBLIC 
+		 # For ServiceProxy<T> templates
+		services_core		
+		services_logging
+        imgui_backend		# For ImGui functionality
+        imgui_service		# For UI services
+       
     PRIVATE
         engine             # UI components can access engine via interface
         glfw

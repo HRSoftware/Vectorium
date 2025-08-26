@@ -6,8 +6,12 @@
 #include "IPlugin.h"
 #include "Services/ServiceContainer.h"
 
-class IPluginUIService;
-class ILogger;
+#include "../../ui/include/Services/UI/IPluginUIService.h"
+#include "Services/Logging/ILogger.h"
+
+
+//class IPluginUIService;
+//class ILogger;
 class DataPacketRegistry;
 
 class PluginRuntimeContext : public IPluginContext

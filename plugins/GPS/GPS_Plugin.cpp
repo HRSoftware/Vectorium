@@ -1,6 +1,9 @@
 #include "GPS_Plugin.h"
 #include "Services/IServiceSpecialisations.h"
 
+#include <Services/Logging/ILogger.h>
+#include "Services/Logging/LogLevel.h"
+
 bool GPSDataHandler::handleType(const std::shared_ptr<GPSDataPacket>& packet)
 {
 	//log(LogLevel::Info, std::format("lat:{}, long:{}, alt:{}", packet->lat, packet->lng, packet->alt));

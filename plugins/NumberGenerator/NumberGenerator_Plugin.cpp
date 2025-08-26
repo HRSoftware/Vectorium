@@ -1,8 +1,8 @@
 #include "NumberGenerator_Plugin.h"
-
-#include <iostream>
-
 #include "Services/IServiceSpecialisations.h"
+#include <iostream>
+#include "Services/Logging/ILogger.h"
+
 
 bool NumberHandler::handle(const DataPacket& packet)
 {

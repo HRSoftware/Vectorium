@@ -1,24 +1,25 @@
 ﻿cmake_minimum_required(VERSION 3.16)
 
-add_library(REST_Client STATIC)
+add_library(services_REST STATIC)
 
-set_target_properties(REST_Client PROPERTIES 
+set_target_properties(services_REST PROPERTIES 
     CXX_STANDARD 23
     POSITION_INDEPENDENT_CODE ON
 )
 
 set(USE_HTTPLIB OFF CACHE BOOL "Use cpp-httplib as REST client backend. Fall back to CPR otherwise" FORCE)
 
-target_sources(REST_Client PRIVATE "PluginRESTServiceFactory.cpp")
+target_sources(services_REST PRIVATE 
+	"PluginRESTServiceFactory.cpp")
 
 # === cpp-httplib Implementation ===
 if(USE_HTTPLIB)
     message(STATUS "Using cpp-httplib REST client implementation")
     
-	target_compile_definitions(REST_Client PRIVATE USE_HTTPLIB)
+	target_compile_definitions(services_REST PRIVATE USE_HTTPLIB)
 
     # Add implementation source
-    target_sources(REST_Client PRIVATE PluginRESTService_HttpLib.cpp)
+    target_sources(services_REST PRIVATE "PluginRESTService_HttpLib.cpp")
     
     # Fetch cpp-httplib dependency
     include(FetchContent)
@@ -51,9 +52,9 @@ if(USE_HTTPLIB)
         target_link_libraries(httplib_interface INTERFACE ws2_32)
     endif()
     
-    # Link httplib to REST_Client
-    target_link_libraries(REST_Client PRIVATE httplib_interface)
-    target_compile_definitions(REST_Client PRIVATE USE_HTTPLIB)
+    # Link httplib to services_REST
+    target_link_libraries(services_REST PRIVATE httplib_interface)
+    target_compile_definitions(services_REST PRIVATE USE_HTTPLIB)
     
     message(STATUS "cpp-httplib source dir: ${httplib_SOURCE_DIR}")
 endif()
@@ -61,14 +62,14 @@ endif()
 # === CPR Implementation ===  
 if(NOT USE_HTTPLIB)
     message(STATUS "Using CPR REST client implementation")
-	target_compile_definitions(REST_Client PRIVATE USE_CPR)
+	target_compile_definitions(services_REST PRIVATE USE_CPR)
 
 	message(STATUS "Setting USE_CPR definition (no value)")
-    get_target_property(CPR_DEFS REST_Client COMPILE_DEFINITIONS)
-    message(STATUS "REST_Client compile definitions: ${CPR_DEFS}")
+    get_target_property(CPR_DEFS services_REST COMPILE_DEFINITIONS)
+    message(STATUS "services_REST compile definitions: ${CPR_DEFS}")
 
     # Add implementation source
-    target_sources(REST_Client PRIVATE PluginRESTService_Cpr.cpp)
+    target_sources(services_REST PRIVATE "PluginRESTService_Cpr.cpp")
     
     # Fetch CPR dependency
     include(FetchContent)
@@ -84,15 +85,15 @@ if(NOT USE_HTTPLIB)
     
     FetchContent_MakeAvailable(cpr)
     
-    # Link CPR to REST_Client
-    target_link_libraries(REST_Client PRIVATE cpr::cpr)
-    target_compile_definitions(REST_Client PRIVATE USE_CPR)
+    # Link CPR to services_REST
+    target_link_libraries(services_REST PRIVATE cpr::cpr)
+    target_compile_definitions(services_REST PRIVATE USE_CPR)
 endif()
 
 # === Common Configuration ===
 
 # Include directories
-target_include_directories(REST_Client 
+target_include_directories(services_REST 
     PUBLIC 
         ${PROJECT_SOURCE_DIR}/include
     PRIVATE
@@ -100,13 +101,15 @@ target_include_directories(REST_Client
 )
 
 # Link common dependencies
-target_link_libraries(REST_Client 
+target_link_libraries(services_REST 
     PUBLIC
-        logger  # For logging support
+		
+		services_core
+        services_logging  # For logging support
 )
 
 # Set output directories
-set_target_properties(REST_Client PROPERTIES
+set_target_properties(services_REST PROPERTIES
     ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
     LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
     RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
@@ -114,22 +117,23 @@ set_target_properties(REST_Client PROPERTIES
 
 # Platform-specific configuration
 if(WIN32)
-    set_target_properties(REST_Client PROPERTIES OUTPUT_NAME "REST_Client" PREFIX "")
-    target_compile_definitions(REST_Client PRIVATE PLATFORM_WINDOWS)
+    set_target_properties(services_REST PROPERTIES OUTPUT_NAME "services_REST" PREFIX "")
+    target_compile_definitions(services_REST PRIVATE PLATFORM_WINDOWS)
 else()
-    set_target_properties(REST_Client PROPERTIES OUTPUT_NAME "REST_Client")
-    target_compile_definitions(REST_Client PRIVATE PLATFORM_LINUX)
+    set_target_properties(services_REST PROPERTIES OUTPUT_NAME "services_REST")
+    target_compile_definitions(services_REST PRIVATE PLATFORM_LINUX)
 endif()
 
 # Debug information
-message(STATUS "REST_Client configuration:")
+message(STATUS "services_REST configuration:")
 if(${USE_HTTPLIB})
 	message(STATUS "  - Implementation: HttpLib")
+	message(STATUS "  - SSL Support: ${HTTPLIB_ENABLE_SSL}")
 else()
 	message(STATUS "  - Implementation: CPR")
 endif()
-message(STATUS "  - SSL Support: ${HTTPLIB_ENABLE_SSL}")
+
 message(STATUS "  - Output directory: ${CMAKE_BINARY_DIR}/lib")
 
 # Export target for use by other parts of the project
-set_target_properties(REST_Client PROPERTIES EXPORT_NAME RESTClient)
+#set_target_properties(services_REST PROPERTIES EXPORT_NAME RESTClient)
