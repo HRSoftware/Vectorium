@@ -2,7 +2,6 @@
 
 add_library(REST_Client STATIC)
 
-
 set_target_properties(REST_Client PROPERTIES 
     CXX_STANDARD 23
     POSITION_INDEPENDENT_CODE ON
@@ -10,14 +9,11 @@ set_target_properties(REST_Client PROPERTIES
 
 set(USE_HTTPLIB OFF CACHE BOOL "Use cpp-httplib as REST client backend. Fall back to CPR otherwise" FORCE)
 
-
 target_sources(REST_Client PRIVATE "PluginRESTServiceFactory.cpp")
 
 # === cpp-httplib Implementation ===
 if(USE_HTTPLIB)
     message(STATUS "Using cpp-httplib REST client implementation")
-
-	set(USE_CPR OFF)
     
 	target_compile_definitions(REST_Client PRIVATE USE_HTTPLIB)
 
@@ -64,7 +60,6 @@ endif()
 
 # === CPR Implementation ===  
 if(NOT USE_HTTPLIB)
-	set(USE_CPR ON)
     message(STATUS "Using CPR REST client implementation")
 	target_compile_definitions(REST_Client PRIVATE USE_CPR)
 
@@ -128,7 +123,11 @@ endif()
 
 # Debug information
 message(STATUS "REST_Client configuration:")
-message(STATUS "  - Implementation: ${USE_HTTPLIB} (HttpLib) / ${USE_CPR} (CPR)")
+if(${USE_HTTPLIB})
+	message(STATUS "  - Implementation: HttpLib")
+else()
+	message(STATUS "  - Implementation: CPR")
+endif()
 message(STATUS "  - SSL Support: ${HTTPLIB_ENABLE_SSL}")
 message(STATUS "  - Output directory: ${CMAKE_BINARY_DIR}/lib")
 
