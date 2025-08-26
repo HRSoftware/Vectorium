@@ -57,6 +57,7 @@ struct NullObjectImpl<IPluginRESTService> : IPluginRESTService
 	void        testConnection() override {}
 };
 
+#ifdef USE_HTTPLIB
 template<>
 struct NullObjectImpl<PluginRESTService_HttpLib> : IPluginRESTService
 {
@@ -79,7 +80,10 @@ struct NullObjectImpl<PluginRESTService_HttpLib> : IPluginRESTService
 
 	void setBaseUrl(std::string url) override {}
 };
+#endif
 
+
+#ifdef USE_CPR
 template<>
 struct NullObjectImpl<PluginRESTService_Cpr> : IPluginRESTService
 {
@@ -102,6 +106,7 @@ struct NullObjectImpl<PluginRESTService_Cpr> : IPluginRESTService
 
 	void setBaseUrl(std::string url) override {}
 };
+#endif
 
 template<>
 struct NullObjectImpl<IPluginUIService> : IPluginUIService

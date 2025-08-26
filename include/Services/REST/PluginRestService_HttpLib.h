@@ -1,6 +1,7 @@
 #pragma once
+#ifdef USE_HTTPLIB
 
-#include "Services/REST/IPluginRESTService.h"
+#include "Services/REST/IPluginRESTServiceImpl.h"
 
 #include <mutex>
 #include <variant>
@@ -11,7 +12,7 @@ namespace httplib
 	class Client;
 }
 
-class PluginRESTService_HttpLib : public IPluginRESTService
+class PluginRESTService_HttpLib : public IPluginRESTServiceImpl
 {
 	public:
 		explicit PluginRESTService_HttpLib(std::string baseUrl = "", bool bUseHttps = true);
@@ -52,3 +53,5 @@ class PluginRESTService_HttpLib : public IPluginRESTService
 
 		std::mutex m_mutex;
 };
+
+#endif

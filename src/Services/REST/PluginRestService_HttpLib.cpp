@@ -1,3 +1,4 @@
+#ifdef USE_HTTPLIB
 #include "Services/REST/PluginRESTService_HttpLib.h"
 
 #include <string>
@@ -172,3 +173,5 @@ std::string PluginRESTService_HttpLib::getBaseUrl() const
 {
 	return m_baseUrl;
 }
+
+#endif

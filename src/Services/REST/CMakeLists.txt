@@ -1,90 +1,136 @@
 ﻿cmake_minimum_required(VERSION 3.16)
 
 add_library(REST_Client STATIC)
-target_sources(REST_Client PRIVATE "PluginRESTService_HttpLib.cpp" "PluginRESTService_Cpr.cpp") 
 
-set_property(TARGET REST_Client PROPERTY CXX_STANDARD 23)
 
-# --- httplib: header-only via FetchContent
-include(FetchContent)
-
-FetchContent_Declare(httplib
-  GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
-  GIT_TAG v0.15.0 # Pin to stable version
+set_target_properties(REST_Client PROPERTIES 
+    CXX_STANDARD 23
+    POSITION_INDEPENDENT_CODE ON
 )
 
-# Configure httplib to use system OpenSSL and disable BoringSSL
-set(HTTPLIB_USE_OPENSSL_IF_AVAILABLE ON CACHE BOOL "Use OpenSSL if available" FORCE)
-set(HTTPLIB_USE_BROTLI_IF_AVAILABLE OFF CACHE BOOL "Disable Brotli" FORCE)
-set(HTTPLIB_USE_ZLIB_IF_AVAILABLE OFF CACHE BOOL "Disable zlib" FORCE)
+set(USE_HTTPLIB OFF CACHE BOOL "Use cpp-httplib as REST client backend. Fall back to CPR otherwise" FORCE)
 
-FetchContent_GetProperties(httplib)
-if (NOT httplib_POPULATED)
-  FetchContent_Populate(httplib)
+
+target_sources(REST_Client PRIVATE "PluginRESTServiceFactory.cpp")
+
+# === cpp-httplib Implementation ===
+if(USE_HTTPLIB)
+    message(STATUS "Using cpp-httplib REST client implementation")
+
+	set(USE_CPR OFF)
+    
+	target_compile_definitions(REST_Client PRIVATE USE_HTTPLIB)
+
+    # Add implementation source
+    target_sources(REST_Client PRIVATE PluginRESTService_HttpLib.cpp)
+    
+    # Fetch cpp-httplib dependency
+    include(FetchContent)
+    FetchContent_Declare(httplib
+        GIT_REPOSITORY https://github.com/yhirose/cpp-httplib.git
+        GIT_TAG v0.15.0
+    )
+    
+    # Configure httplib options
+    set(HTTPLIB_BUILD_EXAMPLES OFF CACHE BOOL "" FORCE)
+    set(HTTPLIB_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    
+    FetchContent_MakeAvailable(httplib)
+    
+    # Create interface target for httplib
+    add_library(httplib_interface INTERFACE)
+    target_include_directories(httplib_interface INTERFACE "${httplib_SOURCE_DIR}")
+    
+    # Optional: HTTPS support
+    option(HTTPLIB_ENABLE_SSL "Enable HTTPS support in cpp-httplib" OFF)
+    if(HTTPLIB_ENABLE_SSL)
+        find_package(OpenSSL REQUIRED)
+        target_compile_definitions(httplib_interface INTERFACE CPPHTTPLIB_OPENSSL_SUPPORT)
+        target_link_libraries(httplib_interface INTERFACE OpenSSL::SSL OpenSSL::Crypto)
+        message(STATUS "cpp-httplib: HTTPS support enabled")
+    endif()
+    
+    # Platform-specific libraries
+    if(WIN32)
+        target_link_libraries(httplib_interface INTERFACE ws2_32)
+    endif()
+    
+    # Link httplib to REST_Client
+    target_link_libraries(REST_Client PRIVATE httplib_interface)
+    target_compile_definitions(REST_Client PRIVATE USE_HTTPLIB)
+    
+    message(STATUS "cpp-httplib source dir: ${httplib_SOURCE_DIR}")
 endif()
 
-FetchContent_MakeAvailable(httplib)
+# === CPR Implementation ===  
+if(NOT USE_HTTPLIB)
+	set(USE_CPR ON)
+    message(STATUS "Using CPR REST client implementation")
+	target_compile_definitions(REST_Client PRIVATE USE_CPR)
 
-### cpr (C++ Requests)
-FetchContent_Declare(
-  cpr 
-  GIT_REPOSITORY https://github.com/libcpr/cpr.git
-  GIT_TAG 1.10.5
+	message(STATUS "Setting USE_CPR definition (no value)")
+    get_target_property(CPR_DEFS REST_Client COMPILE_DEFINITIONS)
+    message(STATUS "REST_Client compile definitions: ${CPR_DEFS}")
+
+    # Add implementation source
+    target_sources(REST_Client PRIVATE PluginRESTService_Cpr.cpp)
+    
+    # Fetch CPR dependency
+    include(FetchContent)
+    FetchContent_Declare(cpr
+        GIT_REPOSITORY https://github.com/libcpr/cpr.git
+        GIT_TAG 1.10.5
+    )
+    
+    # Configure CPR options
+    set(CPR_BUILD_TESTS OFF CACHE BOOL "" FORCE)
+    set(CPR_BUILD_TESTS_SSL OFF CACHE BOOL "" FORCE)
+    set(CPR_ENABLE_SSL ON CACHE BOOL "" FORCE)
+    
+    FetchContent_MakeAvailable(cpr)
+    
+    # Link CPR to REST_Client
+    target_link_libraries(REST_Client PRIVATE cpr::cpr)
+    target_compile_definitions(REST_Client PRIVATE USE_CPR)
+endif()
+
+# === Common Configuration ===
+
+# Include directories
+target_include_directories(REST_Client 
+    PUBLIC 
+        ${PROJECT_SOURCE_DIR}/include
+    PRIVATE
+        ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
-# Configure cpr options
-set(CPR_USE_SYSTEM_CURL OFF CACHE BOOL "Use system curl")
-set(CPR_BUILD_TESTS OFF CACHE BOOL "Don't build cpr tests")
-set(CPR_ENABLE_SSL ON CACHE BOOL "Enable SSL support")
+# Link common dependencies
+target_link_libraries(REST_Client 
+    PUBLIC
+        logger  # For logging support
+)
 
-FetchContent_MakeAvailable(cpr)
-
-# Verify where the header actually is
-if (EXISTS "${httplib_SOURCE_DIR}/httplib.h")
-  set(_httplib_inc "${httplib_SOURCE_DIR}")
-elseif (EXISTS "${httplib_SOURCE_DIR}/include/httplib.h")
-  set(_httplib_inc "${httplib_SOURCE_DIR}/include")
-else()
-  message(FATAL_ERROR "cpp-httplib: couldn't find httplib.h under ${httplib_SOURCE_DIR}")
-endif()
-
-# Create an interface target to expose includes & optional flags
-add_library(httplib_interface INTERFACE)
-target_include_directories(httplib_interface INTERFACE "${_httplib_inc}")
-
-# Check if we have OpenSSL available (from vcpkg or system)
-find_package(OpenSSL QUIET)
-if(OpenSSL_FOUND) 
-  set(HTTPLIB_ENABLE_SSL ON)
-  message(STATUS "REST_Client: Using OpenSSL ${OPENSSL_VERSION}")
-  target_compile_definitions(httplib_interface INTERFACE CPPHTTPLIB_OPENSSL_SUPPORT)
-  target_link_libraries(httplib_interface INTERFACE OpenSSL::SSL OpenSSL::Crypto)
-else()
-  set(HTTPLIB_ENABLE_SSL OFF)
-  message(STATUS "REST_Client: OpenSSL not found - HTTPS support disabled")
- 
-endif()
-
-# Platform-specific linking
-if(WIN32)
-	set_target_properties(REST_Client PROPERTIES OUTPUT_NAME "REST_Client" PREFIX "")
-	target_link_libraries(httplib_interface INTERFACE ws2_32) # Windows needs WinSock for sockets
-else()
-	set_target_properties(REST_Client PROPERTIES OUTPUT_NAME "REST_Client")
-endif()
-
+# Set output directories
 set_target_properties(REST_Client PROPERTIES
-    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins
-    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/plugins # for DLLs
+    ARCHIVE_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    LIBRARY_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/lib
+    RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR}/bin
 )
 
-message(STATUS "httplib source dir: ${httplib_SOURCE_DIR}")
-message(STATUS "Using include: ${_httplib_inc}")
-message(STATUS "SSL support: ${HTTPLIB_ENABLE_SSL}")
+# Platform-specific configuration
+if(WIN32)
+    set_target_properties(REST_Client PROPERTIES OUTPUT_NAME "REST_Client" PREFIX "")
+    target_compile_definitions(REST_Client PRIVATE PLATFORM_WINDOWS)
+else()
+    set_target_properties(REST_Client PROPERTIES OUTPUT_NAME "REST_Client")
+    target_compile_definitions(REST_Client PRIVATE PLATFORM_LINUX)
+endif()
 
-target_link_libraries(REST_Client PRIVATE 
-logger 
-httplib_interface 
-cpr::cpr)
+# Debug information
+message(STATUS "REST_Client configuration:")
+message(STATUS "  - Implementation: ${USE_HTTPLIB} (HttpLib) / ${USE_CPR} (CPR)")
+message(STATUS "  - SSL Support: ${HTTPLIB_ENABLE_SSL}")
+message(STATUS "  - Output directory: ${CMAKE_BINARY_DIR}/lib")
 
-target_include_directories(REST_Client PRIVATE ${PROJECT_SOURCE_DIR}/include ${_httplib_inc})
+# Export target for use by other parts of the project
+set_target_properties(REST_Client PROPERTIES EXPORT_NAME RESTClient)

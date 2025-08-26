@@ -2,13 +2,13 @@
 
 #include <mutex>
 
-#include "IPluginRESTService.h"
+#include "IPluginRESTServiceImpl.h"
 
 namespace cpr
 {
 	class Session;
 }
-class PluginRESTService_Cpr : public IPluginRESTService
+class PluginRESTService_Cpr : public IPluginRESTServiceImpl
 {
 	public:
 		PluginRESTService_Cpr(const std::string& baseUrl = "");
