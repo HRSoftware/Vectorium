@@ -48,5 +48,5 @@ set_target_properties(Vectorium PROPERTIES CXX_STANDARD 23)
 target_link_libraries(Vectorium PRIVATE engine ui)
 
 add_subdirectory(plugins)
-add_subdirectory(ui)
+add_subdirectory(UI)
 add_subdirectory(src)
