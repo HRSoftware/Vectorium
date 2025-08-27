@@ -66,7 +66,7 @@ if(NOT USE_HTTPLIB)
     get_target_property(CPR_DEFS services_REST COMPILE_DEFINITIONS)
 
     # Add implementation source
-    target_sources(services_REST PRIVATE "PluginRESTService_Cpr.tmp")
+    target_sources(services_REST PRIVATE "PluginRESTService_Cpr.cpp")
     
     # Fetch CPR dependency
     include(FetchContent)
