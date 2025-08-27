@@ -19,11 +19,10 @@ target_compile_features(engine PUBLIC cxx_std_23)
 set_target_properties(engine PROPERTIES CXX_STANDARD 23)
 
 target_link_libraries(engine PUBLIC
-
-services_core
-services_logging
-services_REST
-nlohmann_json::nlohmann_json
+	services_core
+	services_logging
+	services_REST
+	nlohmann_json::nlohmann_json
 )
 
 if (WIN32)

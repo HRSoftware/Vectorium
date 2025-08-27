@@ -35,7 +35,6 @@ target_include_directories(services_logging
 
 # Link against spdlog
 target_link_libraries(services_logging PUBLIC
-	
 	services_core
     spdlog
 		

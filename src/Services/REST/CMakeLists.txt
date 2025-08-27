@@ -61,15 +61,12 @@ endif()
 
 # === CPR Implementation ===  
 if(NOT USE_HTTPLIB)
-    message(STATUS "Using CPR REST client implementation")
 	target_compile_definitions(services_REST PRIVATE USE_CPR)
 
-	message(STATUS "Setting USE_CPR definition (no value)")
     get_target_property(CPR_DEFS services_REST COMPILE_DEFINITIONS)
-    message(STATUS "services_REST compile definitions: ${CPR_DEFS}")
 
     # Add implementation source
-    target_sources(services_REST PRIVATE "PluginRESTService_Cpr.cpp")
+    target_sources(services_REST PRIVATE "PluginRESTService_Cpr.tmp")
     
     # Fetch CPR dependency
     include(FetchContent)
@@ -101,9 +98,7 @@ target_include_directories(services_REST
 )
 
 # Link common dependencies
-target_link_libraries(services_REST 
-    PUBLIC
-		
+target_link_libraries(services_REST PUBLIC
 		services_core
         services_logging  # For logging support
 )

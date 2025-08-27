@@ -17,7 +17,6 @@ set_target_properties(NumberGenerator_Plugin PROPERTIES
 )
 
 target_link_libraries(NumberGenerator_Plugin PRIVATE 
-	
 	services_core 
 	services_logging services_REST)
 

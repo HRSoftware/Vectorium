@@ -74,8 +74,8 @@ target_include_directories(imgui_service PUBLIC
 
 # FIXED: Only link to what services actually need (no engine!)
 target_link_libraries(imgui_service PUBLIC 
-    imgui_backend  # Need ImGui for context management
-    services_logging         # Need logging
+    imgui_backend			# Need ImGui for context management
+    services_logging        # Need logging
 
 )
 
@@ -110,7 +110,6 @@ target_include_directories(ui
 # Main UI library can link to engine (this is where engine access happens)
 target_link_libraries(ui
     PUBLIC 
-		 # For ServiceProxy<T> templates
 		services_core		
 		services_logging
         imgui_backend		# For ImGui functionality

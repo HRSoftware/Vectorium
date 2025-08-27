@@ -20,7 +20,6 @@ set_target_properties(PolygonIO PROPERTIES
 #target_compile_definitions(PolygonIO PRIVATE VECTORIUM_UI_ENABLED)
 
 target_link_libraries(PolygonIO PRIVATE 
-	
 	services_core
 	services_logging 
 	services_REST

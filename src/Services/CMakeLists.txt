@@ -12,6 +12,7 @@ add_subdirectory(Logging)
 add_subdirectory(REST)
 
 add_library(services INTERFACE)
+
 target_link_libraries(services INTERFACE
 	services_core
 	services_logging

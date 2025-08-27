@@ -17,7 +17,6 @@ set_target_properties(NumberLogger_Plugin PROPERTIES
 )
 
 target_link_libraries(NumberLogger_Plugin PRIVATE 
-	
 	services_core
 	services_logging)
 

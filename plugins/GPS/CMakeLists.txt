@@ -17,7 +17,6 @@ set_target_properties(GPS_Plugin PROPERTIES
 )
 
 target_link_libraries(GPS_Plugin PRIVATE 
-	
 	services_core 
 	services_logging)
 
