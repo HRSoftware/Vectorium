@@ -3,7 +3,7 @@
 #include <iostream>
 #include <utility>
 
-#include "../ui/include/Services/UI/PluginUIService_ImGui.h"
+#include "../UI/include/Services/UI/PluginUIService_ImGui.h"
 #include "DataPacket/DataPacketRegistry.h"
 #include "Services/Logging/SpdLogger.h"
 #include "Plugin/PluginManager.h"

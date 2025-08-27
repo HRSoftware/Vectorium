@@ -6,7 +6,7 @@
 #include "IPlugin.h"
 #include "Services/ServiceContainer.h"
 
-#include "../../ui/include/Services/UI/IPluginUIService.h"
+#include "../../UI/include/Services/UI/IPluginUIService.h"
 #include "Services/Logging/ILogger.h"
 
 

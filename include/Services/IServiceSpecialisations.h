@@ -15,8 +15,8 @@
 #endif
 
 // UI
-#include "../../ui/include/Services/UI/IPluginUIService.h"
-#include "../../ui/include/Services/UI/PluginUIService_ImGui.h"
+#include "../../UI/include/Services/UI/IPluginUIService.h"
+#include "../../UI/include/Services/UI/PluginUIService_ImGui.h"
 
 class PluginUIService_ImGui;
 
