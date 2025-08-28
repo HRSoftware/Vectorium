@@ -54,3 +54,7 @@ Makefile
 build/
 *.cmake
 .idea/
+
+#but do include the top level cmake folder and contents
+!/cmake/
+!/cmake/*.cmake
