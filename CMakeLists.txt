@@ -1,5 +1,11 @@
 ﻿cmake_minimum_required (VERSION 3.16)
 
+include(${CMAKE_SOURCE_DIR}/cmake/CompilerSettings.cmake)
+
+# Affect all projects onwards
+set(CMAKE_CXX_STANDARD 23)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
 # Enable Hot Reload for MSVC compilers if supported.
 if (POLICY CMP0141)
   cmake_policy(SET CMP0141 NEW)
@@ -7,6 +13,7 @@ if (POLICY CMP0141)
 endif()
 
 project ("Vectorium")
+
 
 # Check if vcpkg toolchain is available
 if(DEFINED CMAKE_TOOLCHAIN_FILE)
@@ -43,10 +50,13 @@ FetchContent_MakeAvailable(json)
 # Add source to this project's executable.
 add_executable (Vectorium "Vectorium.cpp")
 
-set_target_properties(Vectorium PROPERTIES CXX_STANDARD 23)
+
 
 target_link_libraries(Vectorium PRIVATE engine ui)
 
 add_subdirectory(plugins)
 add_subdirectory(UI)
 add_subdirectory(src)
+
+
+APPLY_STRICT_COMPILER_SETTINGS(Vectorium)

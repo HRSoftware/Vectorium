@@ -1,5 +1,6 @@
 cmake_minimum_required(VERSION 3.16)
 
+include(${CMAKE_SOURCE_DIR}/cmake/CompilerSettings.cmake)
 add_subdirectory(Services)
 
 add_library(engine "Engine.cpp" 
@@ -10,9 +11,10 @@ add_library(engine "Engine.cpp"
 	"Plugin/IPluginContext.cpp"
 	"Services/ServiceContainer.cpp")
 
-target_include_directories(engine PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}
-    ${PROJECT_SOURCE_DIR}/include
+target_include_directories(engine 
+	PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}
+		${PROJECT_SOURCE_DIR}/include
 )
 
 target_compile_features(engine PUBLIC cxx_std_23)
@@ -32,3 +34,5 @@ if (WIN32)
 elseif(UNIX)
     target_compile_definitions(engine PRIVATE PLATFORM_LINUX)
 endif()
+
+APPLY_STRICT_COMPILER_SETTINGS(engine)

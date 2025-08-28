@@ -100,8 +100,8 @@ bool PluginRuntimeContext::setImGuiContext(void* ctx)
 
 void PluginRuntimeContext::setImGuiContextFunctions(std::function<void*()> getFunc, std::function<bool(void*)> setFunc)
 {
-	m_getImGuiContextFunc = getFunc;
-	m_setImGuiContextFunc = setFunc;
+	m_getImGuiContextFunc = std::move(getFunc);
+	m_setImGuiContextFunc = std::move(setFunc);
 	log(LogLevel::Debug, "ImGui context functions set in plugin runtime context");
 }
 
@@ -117,7 +117,7 @@ std::string PluginRuntimeContext::getPluginName() const
 	return m_pluginName;
 }
 
-void PluginRuntimeContext::log(LogLevel level, const std::string& message) const
+void PluginRuntimeContext::log(const LogLevel level, const std::string& message) const
 {
 	m_pluginLogger->log(level, message);
 }

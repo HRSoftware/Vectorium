@@ -36,7 +36,9 @@ if(USE_HTTPLIB)
     
     # Create interface target for httplib
     add_library(httplib_interface INTERFACE)
-    target_include_directories(httplib_interface INTERFACE "${httplib_SOURCE_DIR}")
+    target_include_directories(httplib_interface 
+		SYSTEM INTERFACE 
+			"${httplib_SOURCE_DIR}")
     
     # Optional: HTTPS support
     option(HTTPLIB_ENABLE_SSL "Enable HTTPS support in cpp-httplib" OFF)

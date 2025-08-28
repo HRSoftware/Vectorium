@@ -36,8 +36,8 @@ struct IPlugin
 	virtual void onPluginUnload() = 0;
 
 	virtual void            tick() {}
-	virtual void            onDataPacket(const DataPacket& packet) {}
-	virtual void            onEngineEvent(const EngineEventType& event) {}
+	virtual void            onDataPacket([[maybe_unused]] const DataPacket& packet) {}
+	virtual void            onEngineEvent([[maybe_unused]]const EngineEventType& event) {}
 	virtual std::type_index getType() const = 0;
 
 	virtual ~IPlugin() = default;
@@ -47,7 +47,7 @@ struct IPlugin
 	virtual bool        hasUIWindow() const { return false; }
 	virtual std::string getUIWindowTitle() const { return "Plugin Window"; }
 	virtual bool        isUIWindowVisible() const { return false; }
-	virtual void        setUIWindowVisible(bool visible) {}
+	virtual void        setUIWindowVisible([[maybe_unused]]bool visible) {}
 	virtual void        toggleUIWindow() { }
 	//virtual void        renderPluginUI() {} // optional UI overload
 

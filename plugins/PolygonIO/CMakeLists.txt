@@ -27,6 +27,6 @@ target_link_libraries(PolygonIO PRIVATE
 	ui
 )
 
-target_include_directories (PolygonIO PRIVATE 
-	${CMAKE_SOURCE_DIR}/include )
-	#${imgui_SOURCE_DIR})  # Add ImGui include directory
+target_include_directories (PolygonIO 
+	PRIVATE 
+		${CMAKE_SOURCE_DIR}/include )

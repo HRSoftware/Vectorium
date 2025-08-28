@@ -37,9 +37,10 @@ add_library(imgui_backend STATIC
     ${imgui_SOURCE_DIR}/backends/imgui_impl_glfw.cpp
     ${imgui_SOURCE_DIR}/backends/imgui_impl_opengl3.cpp)
 
-target_include_directories(imgui_backend PUBLIC
-    ${imgui_SOURCE_DIR}
-    ${imgui_SOURCE_DIR}/backends
+target_include_directories(imgui_backend 
+	SYSTEM PUBLIC
+		${imgui_SOURCE_DIR}
+		${imgui_SOURCE_DIR}/backends
 )
 
 target_link_libraries(imgui_backend PUBLIC glfw)
@@ -65,11 +66,13 @@ add_library(imgui_service STATIC
     "src/Services/UI/PluginUIService_ImGui.cpp"
 	"src/Services/UI/PluginUIService_NullObjects.cpp")
 
-target_include_directories(imgui_service PUBLIC
-    ${CMAKE_CURRENT_SOURCE_DIR}/include
-    ${PROJECT_SOURCE_DIR}/include
-    ${imgui_SOURCE_DIR}
-    ${imgui_SOURCE_DIR}/backends
+target_include_directories(imgui_service 
+	PUBLIC
+		${CMAKE_CURRENT_SOURCE_DIR}/include
+		${PROJECT_SOURCE_DIR}/include
+	SYSTEM PUBLIC
+		${imgui_SOURCE_DIR}
+		${imgui_SOURCE_DIR}/backends
 )
 
 # FIXED: Only link to what services actually need (no engine!)
@@ -86,25 +89,27 @@ set_target_properties(imgui_service PROPERTIES
 
 # ============================================================================
 # LIBRARY 3: Main UI library (contains UI components, can access engine)
-add_library(ui STATIC
-    # Main UI components
-    src/UI.cpp
-    src/EngineUIBridge.cpp
+add_library(ui 
+	STATIC
+		# Main UI components
+		src/UI.cpp
+		src/EngineUIBridge.cpp
     
-    # UI management (these need access to engine)
-    src/ImGuiContextManager.cpp
-    src/UIServiceManager.cpp
-	src/Services/UI/PluginUIService_ImGui.cpp
-	src/Services/UI/PluginUIService_NullObjects.cpp)
+		# UI management (these need access to engine)
+		src/ImGuiContextManager.cpp
+		src/UIServiceManager.cpp
+		src/Services/UI/PluginUIService_ImGui.cpp
+		src/Services/UI/PluginUIService_NullObjects.cpp)
 
 target_include_directories(ui
-      PUBLIC
+    PUBLIC
         ${CMAKE_CURRENT_SOURCE_DIR}/include
-    PRIVATE
-        ${PROJECT_SOURCE_DIR}/include
-        ${CMAKE_CURRENT_SOURCE_DIR}/src
-        ${imgui_SOURCE_DIR}
-        ${glfw_SOURCE_DIR}/include
+	PRIVATE
+		${PROJECT_SOURCE_DIR}/include
+		${CMAKE_CURRENT_SOURCE_DIR}/src
+	SYSTEM PRIVATE
+		${imgui_SOURCE_DIR}
+		${glfw_SOURCE_DIR}/include
 )
 
 # Main UI library can link to engine (this is where engine access happens)

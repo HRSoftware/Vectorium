@@ -20,4 +20,6 @@ target_link_libraries(GPS_Plugin PRIVATE
 	services_core 
 	services_logging)
 
-target_include_directories (GPS_Plugin PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories (GPS_Plugin 
+	PRIVATE 
+		${CMAKE_SOURCE_DIR}/include)

@@ -25,22 +25,22 @@ template<>
 struct NullObjectImpl<ILogger> : ILogger
 {
 	~NullObjectImpl() override = default;
-	void log(LogLevel level, const std::string& message) override {}
+	void log([[maybe_unused]] LogLevel level, [[maybe_unused]] const std::string& message) override {}
 	void enableDebugLogging() override {}
 	void disableDebugLogging() override {}
 	bool isDebugLoggingEnabled() const override { return false; }
-	void setPluginName(const std::string& name) override {}
+	void setPluginName([[maybe_unused]] const std::string& name) override {}
 };
 
 template<>
 struct NullObjectImpl<SpdLogger> : ILogger
 {
 	~NullObjectImpl() override = default;
-	void log(LogLevel level, const std::string& message) override {}
+	void log([[maybe_unused]] LogLevel level, [[maybe_unused]] const std::string& message) override {}
 	void enableDebugLogging() override {}
 	void disableDebugLogging() override {}
 	bool isDebugLoggingEnabled() const override { return false; }
-	void setPluginName(const std::string& name) override {}
+	void setPluginName([[maybe_unused]] const std::string& name) override {}
 };
 
 //	REST
@@ -48,23 +48,23 @@ template<>
 struct NullObjectImpl<IPluginRESTService> : IPluginRESTService
 {
 	~NullObjectImpl() override = default;
-	void set_default_headers(HeaderMap headers) override {}
-	void set_timeout(std::chrono::milliseconds ms) override {}
-	void set_bearer_token(std::string_view token) override {}
+	void set_default_headers([[maybe_unused]] HeaderMap headers) override {}
+	void set_timeout([[maybe_unused]] std::chrono::milliseconds ms) override {}
+	void set_bearer_token([[maybe_unused]] std::string_view token) override {}
 
-	std::expected<RESTResponse, RESTError> GET(std::string_view path, const HeaderMap& headers) override
+	std::expected<RESTResponse, RESTError> GET([[maybe_unused]] std::string_view path, [[maybe_unused]] const HeaderMap& headers) override
 	{
 		return std::unexpected(RESTError{"Service not available"});
 	}
 
-	std::expected<RESTResponse, RESTError> POST(std::string_view path,
-		std::string_view body,
-		const HeaderMap& headers,
-		std::string_view content_type) override {
+	std::expected<RESTResponse, RESTError> POST([[maybe_unused]] std::string_view path,
+		[[maybe_unused]] std::string_view body,
+		[[maybe_unused]] const HeaderMap& headers,
+		[[maybe_unused]] std::string_view content_type) override {
 		return std::unexpected(RESTError{"Service not available"});
 	}
 
-	void        setBaseUrl(std::string url) override {}
+	void        setBaseUrl([[maybe_unused]] std::string url) override {}
 	std::string getBaseUrl() const override { return ""; }
 	void        testConnection() override {}
 };
@@ -74,23 +74,23 @@ template<>
 struct NullObjectImpl<PluginRESTService_HttpLib> : IPluginRESTService
 {
 	~NullObjectImpl() override = default;
-	void set_default_headers(HeaderMap headers) override {}
-	void set_timeout(std::chrono::milliseconds ms) override {}
-	void set_bearer_token(std::string_view token) override {}
+	void set_default_headers([[maybe_unused]] HeaderMap headers) override {}
+	void set_timeout([[maybe_unused]] std::chrono::milliseconds ms) override {}
+	void set_bearer_token([[maybe_unused]] std::string_view token) override {}
 
-	std::expected<RESTResponse, RESTError> GET(std::string_view path, const HeaderMap& headers) override
+	std::expected<RESTResponse, RESTError> GET([[maybe_unused]] std::string_view path, [[maybe_unused]] const HeaderMap& headers) override
 	{
 		return std::unexpected(RESTError{"Service not available"});
 	}
 
-	std::expected<RESTResponse, RESTError> POST(std::string_view path,
-		std::string_view body,
-		const HeaderMap& headers,
-		std::string_view content_type) override {
+	std::expected<RESTResponse, RESTError> POST([[maybe_unused]] std::string_view path,
+		[[maybe_unused]] std::string_view body,
+		[[maybe_unused]] const HeaderMap& headers,
+		[[maybe_unused]] std::string_view content_type) override {
 		return std::unexpected(RESTError{"Service not available"});
 	}
 
-	void setBaseUrl(std::string url) override {}
+	void setBaseUrl([[maybe_unused]] std::string url) override {}
 
 	// ADD THIS: Explicit template instantiation
 	template class NullService<PluginRESTService_HttpLib>;
@@ -104,23 +104,23 @@ template<>
 struct NullObjectImpl<PluginRESTService_Cpr> : IPluginRESTService
 {
 	~NullObjectImpl() override = default;
-	void set_default_headers(HeaderMap headers) override {}
-	void set_timeout(std::chrono::milliseconds ms) override {}
-	void set_bearer_token(std::string_view token) override {}
+	void set_default_headers([[maybe_unused]] HeaderMap headers) override {}
+	void set_timeout([[maybe_unused]] std::chrono::milliseconds ms) override {}
+	void set_bearer_token([[maybe_unused]] std::string_view token) override {}
 
-	std::expected<RESTResponse, RESTError> GET(std::string_view path, const HeaderMap& headers) override
+	std::expected<RESTResponse, RESTError> GET([[maybe_unused]] std::string_view path, [[maybe_unused]] const HeaderMap& headers) override
 	{
 		return std::unexpected(RESTError{ "Service not available" });
 	}
 
-	std::expected<RESTResponse, RESTError> POST(std::string_view path,
-		std::string_view body,
-		const HeaderMap& headers,
-		std::string_view content_type) override {
+	std::expected<RESTResponse, RESTError> POST([[maybe_unused]] std::string_view path,
+		[[maybe_unused]] std::string_view body,
+		[[maybe_unused]] const HeaderMap& headers,
+		[[maybe_unused]] std::string_view content_type) override {
 		return std::unexpected(RESTError{ "Service not available" });
 	}
 
-	void setBaseUrl(std::string url) override {}
+	void setBaseUrl([[maybe_unused]] std::string url) override {}
 
 
 	template class NullService<PluginRESTService_Cpr>;
@@ -133,29 +133,13 @@ template<>
 struct NullObjectImpl<IPluginUIService> : IPluginUIService
 {
 	ImGuiContext* getImGuiContext() override { return nullptr; }
-	void          setImGuiContext(ImGuiContext* context) override {}
-	void          registerPluginUIRenderer(const std::string& pluginName, std::function<void()> renderCallback) override {}
-	void          unregisterPluginUIRenderer(const std::string& pluginName) override {}
+	void          setImGuiContext([[maybe_unused]] ImGuiContext* context) override {}
+	void          registerPluginUIRenderer([[maybe_unused]] const std::string& pluginName, [[maybe_unused]] std::function<void()> renderCallback) override {}
+	void          unregisterPluginUIRenderer([[maybe_unused]] const std::string& pluginName) override {}
 	void          renderPluginUIs() override {}
 	bool          isContextValid() const override { return false; }
 	std::string   getDiagnosticInfo() const override { return {}; }
 	size_t        getRegisteredPluginCount() const override { return 0; }
-	void          setErrorCallback(std::function<void(const std::string&)> callback) override {}
+	void          setErrorCallback([[maybe_unused]] std::function<void(const std::string&)> callback) override {}
 	bool isUIAvailable() const override { return false; }
 };
-
-//template<>
-//struct NullObjectImpl<PluginUIService_ImGui> : IPluginUIService
-//{
-//	ImGuiContext* getImGuiContext() override { return nullptr; }
-//	void          setImGuiContext(ImGuiContext* context) override {}
-//	void          registerPluginUIRenderer(const std::string& pluginName, std::function<void()> renderCallback) override {}
-//	void          unregisterPluginUIRenderer(const std::string& pluginName) override {}
-//	void          renderPluginUIs() override {}
-//	bool          isContextValid() const override { return false; }
-//	std::string   getDiagnosticInfo() const override { return {}; }
-//	size_t        getRegisteredPluginCount() const override { return 0; }
-//	void          setErrorCallback(std::function<void(const std::string&)> callback) override {}
-//	bool isUIAvailable() const override { return false; }
-//};
-
